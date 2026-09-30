@@ -14,7 +14,8 @@ browser, the remote desktop and other programs are not counted, but their load s
 shows in the idle-CPU and memory checks in quiet mode. Logs CPU, memory and GPU every
 30 seconds while a job runs.
 
-    python scripts/run_queue.py "python -m models.btc_15m.rules" "python -m models.btc_15m.diagnostics"
+    python scripts/run_queue.py --cpu-only "python -m models.btc_15m.rules" "python -m models.btc_15m.patterns"
+    python scripts/run_queue.py "python -m models.btc_15m.diagnostics"
     python scripts/run_queue.py --profile full "python -m models.btc_15m.sequence2"
 """
 from __future__ import annotations
@@ -59,7 +60,7 @@ def own_jobs() -> list[str]:
     return [name for pid, (ppid, name) in found.items() if ppid not in found]
 
 
-def room(profile: str, max_jobs: int) -> tuple[bool, str]:
+def room(profile: str, max_jobs: int, needs_gpu: bool = True) -> tuple[bool, str]:
     jobs = own_jobs()
     cpu = psutil.cpu_percent(interval=5)
     free_gb = psutil.virtual_memory().available / 1e9
@@ -70,14 +71,16 @@ def room(profile: str, max_jobs: int) -> tuple[bool, str]:
     if profile == "full":
         return True, state
     q = QUIET
-    ok = (100 - cpu) >= q["min_idle_cpu"] and free_gb >= q["min_free_gb"] and util <= q["max_gpu_util"] and (total - used) >= q["min_free_gpu_gb"]
+    ok = (100 - cpu) >= q["min_idle_cpu"] and free_gb >= q["min_free_gb"]
+    if needs_gpu:
+        ok = ok and util <= q["max_gpu_util"] and (total - used) >= q["min_free_gpu_gb"]
     return ok, state
 
 
-def wait_for_room(profile: str, max_jobs: int, log, samples: int = 3):
+def wait_for_room(profile: str, max_jobs: int, log, samples: int = 3, needs_gpu: bool = True):
     quiet = 0
     while quiet < samples:
-        ok, state = room(profile, max_jobs)
+        ok, state = room(profile, max_jobs, needs_gpu)
         if ok:
             quiet += 1
         else:
@@ -89,6 +92,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--profile", choices=["quiet", "full"], default="quiet")
     ap.add_argument("--max-jobs", type=int, default=2)
+    ap.add_argument("--cpu-only", action="store_true", help="the jobs do not use the GPU, so GPU load does not gate them")
     ap.add_argument("commands", nargs="+")
     a = ap.parse_args()
     LOGS.mkdir(exist_ok=True)
@@ -109,7 +113,7 @@ def main():
         if parts[0] == "python":
             parts[0] = py
         name = next((p for p in parts if p.startswith("models.") or p.endswith(".py")), parts[-1]).split(".")[-1].replace(".py", "")
-        wait_for_room(a.profile, a.max_jobs, log)
+        wait_for_room(a.profile, a.max_jobs, log, needs_gpu=not a.cpu_only)
         log(f"start [{a.profile}] {cmd}")
         out = open(LOGS / f"{name}.log", "w")
         flags = subprocess.BELOW_NORMAL_PRIORITY_CLASS if (a.profile == "quiet" and sys.platform == "win32") else 0

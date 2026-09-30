@@ -48,3 +48,13 @@ def test_room_counts_own_jobs_in_both_profiles(monkeypatch):
     monkeypatch.setattr(run_queue, "gpu", lambda: (0.0, 0.0, 32.0))
     assert not run_queue.room("full", 2)[0]
     assert run_queue.room("full", 3)[0]
+
+
+def test_cpu_only_jobs_ignore_gpu_load(monkeypatch):
+    monkeypatch.setattr(run_queue, "own_jobs", lambda: [])
+    monkeypatch.setattr(run_queue.psutil, "cpu_percent", lambda interval=None: 40.0)
+    class VM: available = 30e9
+    monkeypatch.setattr(run_queue.psutil, "virtual_memory", lambda: VM)
+    monkeypatch.setattr(run_queue, "gpu", lambda: (95.0, 25.0, 32.0))
+    assert not run_queue.room("quiet", 2, needs_gpu=True)[0]
+    assert run_queue.room("quiet", 2, needs_gpu=False)[0]
