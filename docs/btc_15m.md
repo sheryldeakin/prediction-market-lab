@@ -789,6 +789,93 @@ The mined rules are sharper than any single event. Of 423 candidates, 261 surviv
 
 The shapes found almost nothing. One of 24 survives and is stable (a path that rose, paused, rose again and fell in the last quarter, followed by fewer up windows), and it is the same "just went up" pattern in another costume. The shape of the last hour on its own carries less than the indicators built from it.
 
+**19. A wider event search, and one model built from the good bits.** Two follow-ups to the rule work. The search was widened to 1,506 candidates: threshold sweeps (RSI at four levels each side, range position at three, spikes at four sizes, and so on), every pair of the frequent events, and every event restricted to one trading session. All were corrected as one family, stability-checked, and re-scored on September. Then the "good bits" were combined the only honest way: for each test month a forest mined on earlier months supplies rules, the hand-named events are added, and an L1-regularised logistic regression on those on/off columns plus the raw features is fit on earlier months, so nothing about the test month is used before it is scored.
+
+<!-- table:events2:start -->
+Wider event search at minute 0: 1506 candidates (threshold sweeps, pairs of frequent events, session-conditioned events), 913 with at least 300 firings, 822 surviving Benjamini-Hochberg at 10%, 779 also stable month by month. Search period 2025-10 to 2026-08; forward column is 2026-09-01 to 2026-09-29, never seen by the search. Of the stable survivors with enough September firings, 598 kept their direction and 95 flipped. Top 40 by deviation.
+
+| if | kind | fires | share | up-rate [95% CI] | vs base | months agreeing | September deviation | held? |
+|---|---|---|---|---|---|---|---|---|
+| 5-min move > +2 sd AND 4h return > +25 bp | pair | 352 | 1.1% | 34.1% [29.3, 38.8] | -15.6 | 4/4 | +2.7 on 38 | flipped |
+| 15-min move > +2 sd AND 4h return > +50 bp | pair | 335 | 1.0% | 34.6% [29.6, 39.5] | -15.1 | 4/4 | fires 23 | too few |
+| range position > 0.85 AND 5-min move > +2 sd | pair | 336 | 1.0% | 34.8% [30.4, 39.6] | -14.9 | 5/5 | -3.1 on 32 | same |
+| RSI60 > 60 AND larger trades than usual (size5 > 1.2) | pair | 500 | 1.6% | 35.4% [30.7, 40.1] | -14.3 | 6/6 | -3.8 on 39 | same |
+| range position > 0.95 AND larger trades than usual (size5 > 1.2) | pair | 512 | 1.6% | 35.7% [31.7, 39.7] | -14.0 | 7/7 | -8.3 on 48 | same |
+| RSI60 > 60 AND 5-min move > +1.5 sd | pair | 320 | 1.0% | 35.9% [31.0, 41.0] | -13.8 | 5/5 | -3.1 on 32 | same |
+| RSI60 > 60 AND taker buy share > 0.2 (15 min) | pair | 567 | 1.8% | 36.3% [32.3, 40.2] | -13.4 | 8/8 | -7.1 on 56 | same |
+| 15-min move > +2 sd AND more trades than usual (nratio5 > 1.5) | pair | 326 | 1.0% | 36.5% [31.4, 41.7] | -13.2 | 4/4 | fires 28 | too few |
+| taker buy share > 0.3 (15 min) AND EMA9 > EMA21 + 10 bp | pair | 327 | 1.0% | 36.7% [31.4, 42.0] | -13.0 | 4/4 | fires 20 | too few |
+| RSI60 > 55 AND 5-min move > +2 sd | pair | 442 | 1.4% | 36.9% [33.0, 40.6] | -12.9 | 6/6 | -4.2 on 35 | same |
+| 15-min move > +1.5 sd AND larger trades than usual (size5 > 1.2) | pair | 689 | 2.1% | 36.9% [33.2, 40.6] | -12.9 | 7/8 | -11.6 on 47 | same |
+| 15-min move > +2 sd AND EMA9 > EMA21 + 10 bp | pair | 391 | 1.2% | 36.8% [32.4, 41.5] | -12.9 | 4/4 | fires 27 | too few |
+| RSI60 > 60 AND 15-min move > +2 sd | pair | 352 | 1.1% | 36.9% [32.0, 41.9] | -12.8 | 6/6 | -6.2 on 32 | same |
+| RSI60 > 60 AND taker buy share > 0.3 (15 min) | pair | 321 | 1.0% | 37.1% [31.7, 42.5] | -12.7 | 5/5 | +1.5 on 35 | flipped |
+| 15-min move > +2 sd AND taker buy share > 0.2 (15 min) | pair | 470 | 1.5% | 37.0% [33.0, 41.1] | -12.7 | 6/7 | +1.1 on 49 | flipped |
+| RSI60 > 60 AND taker buy share > 0.1 (15 min) | pair | 810 | 2.5% | 37.2% [34.1, 40.1] | -12.6 | 8/8 | -7.6 on 78 | same |
+| range position > 0.95 AND 5-min move > +1.5 sd | pair | 350 | 1.1% | 37.1% [32.3, 42.2] | -12.6 | 5/5 | -6.0 on 41 | same |
+| 15-min move > +1.5 sd AND 5-min move > +2 sd | pair | 342 | 1.1% | 37.1% [32.0, 42.0] | -12.6 | 3/3 | +6.7 on 30 | flipped |
+| range position > 0.85 AND 15-min move > +2 sd | pair | 432 | 1.3% | 37.3% [32.8, 41.6] | -12.5 | 6/7 | -1.2 on 41 | same |
+| range position > 0.95 AND EMA9 > EMA21 + 10 bp | pair | 351 | 1.1% | 37.3% [32.4, 42.0] | -12.4 | 4/4 | fires 27 | too few |
+| range position > 0.90 AND 5-min move > +1.5 sd | pair | 515 | 1.6% | 37.5% [33.6, 41.3] | -12.3 | 7/8 | -3.0 on 49 | same |
+| RSI60 > 60 AND 15-min move > +1.5 sd | pair | 589 | 1.8% | 37.5% [33.7, 41.2] | -12.2 | 8/8 | -7.9 on 50 | same |
+| 5-min move > +2 sd AND price > VWAP60 + 15 bp | pair | 434 | 1.4% | 37.6% [33.3, 41.8] | -12.2 | 6/7 | +4.3 on 35 | flipped |
+| range position > 0.95, Europe (8-13 UTC) | session | 322 | 1.0% | 37.6% [32.1, 42.8] | -12.2 | 3/4 | -8.0 on 31 | same |
+| RSI14 > 70 AND RSI60 > 60 | pair | 540 | 1.7% | 37.6% [33.7, 41.6] | -12.1 | 8/8 | -9.9 on 50 | same |
+| RSI14 > 65 AND RSI60 > 60 | pair | 810 | 2.5% | 37.8% [34.5, 40.9] | -12.0 | 8/8 | -11.7 on 68 | same |
+| range position > 0.95 AND more trades than usual (nratio5 > 1.5) | pair | 329 | 1.0% | 37.7% [32.1, 43.0] | -12.0 | 5/5 | +1.3 on 39 | flipped |
+| 5-min move > +1.5 sd AND 4h return > +50 bp | pair | 495 | 1.5% | 37.8% [33.2, 42.2] | -12.0 | 6/7 | +2.1 on 50 | flipped |
+| RSI60 > 60 AND MACD hist > 0 | pair | 764 | 2.4% | 37.8% [34.5, 41.2] | -11.9 | 8/8 | -15.0 on 63 | same |
+| taker buy share > 0.2 (15 min) AND EMA9 > EMA21 + 10 bp | pair | 687 | 2.1% | 37.8% [34.1, 41.4] | -11.9 | 8/8 | -2.7 on 36 | same |
+| 5-min move > +2 sd AND taker buy share > 0.2 (15 min) | pair | 313 | 1.0% | 38.0% [32.7, 43.5] | -11.7 | 4/4 | +3.0 on 34 | flipped |
+| 15-min move > +2 sd AND 4h return > +25 bp | pair | 468 | 1.5% | 38.0% [33.6, 42.4] | -11.7 | 7/8 | +4.6 on 44 | flipped |
+| range position > 0.90 AND 15-min move > +2 sd | pair | 349 | 1.1% | 38.1% [33.3, 42.9] | -11.6 | 5/6 | -4.5 on 33 | same |
+| RSI14 > 70 AND 4h return > +50 bp | pair | 501 | 1.6% | 38.3% [34.0, 42.7] | -11.4 | 8/8 | -5.8 on 43 | same |
+| 15-min move > +1.5 sd AND 4h return > +50 bp | pair | 733 | 2.3% | 38.3% [35.2, 41.7] | -11.4 | 8/8 | -3.8 on 65 | same |
+| 5-min move > +1.5 sd AND taker buy share > 0.3 (15 min) | pair | 385 | 1.2% | 38.4% [33.7, 43.3] | -11.3 | 5/5 | +5.9 on 43 | flipped |
+| 5-min move > +1.5 sd AND 15-min move > +1.5 sd | pair | 589 | 1.8% | 38.5% [34.8, 42.4] | -11.2 | 7/8 | +2.8 on 55 | flipped |
+| 5-min move > +1.5 sd AND 15-min move > +2 sd | pair | 309 | 1.0% | 38.5% [32.9, 44.1] | -11.2 | 2/2 | fires 29 | too few |
+| 15-min move < -1.5 sd AND 4h return < -100 bp | pair | 399 | 1.2% | 60.9% [56.4, 65.4] | +11.2 | 3/4 | fires 21 | too few |
+| 5-min move > +2 sd AND more trades than usual (nratio5 > 1.5) | pair | 306 | 1.0% | 38.6% [33.0, 44.2] | -11.2 | 3/3 | fires 25 | too few |
+<!-- table:events2:end -->
+
+<!-- table:rulefit:start -->
+One model from the rules and events, nested walk-forward: for each test month the rules are mined by a forest on earlier months, the hand-named events are added, and an L1-regularised logistic regression on those 0/1 columns plus the raw features is fit on earlier months, then scored on the test month. Compared with the forest and the simple baseline on the same windows.
+
+| minute | model | n | accuracy [95% CI] | AUC | log loss | vs forest |
+|---|---|---|---|---|---|---|
+| 0 | majority | 23327 | 50.14% [49.60, 50.65] | 0.494 | 0.6932 | -3.26 [-4.11, -2.46] vs forest |
+| 0 | forest | 23327 | 53.40% [52.80, 54.02] | 0.546 | 0.6900 | reference |
+| 0 | rulefit | 23327 | 52.70% [52.06, 53.37] | 0.538 | 0.6933 | -0.70 [-1.27, -0.16] vs forest |
+| 3 | lead-only | 23327 | 66.32% [65.72, 66.94] | 0.713 | 0.6304 | +0.18 [-0.16, +0.55] vs forest |
+| 3 | forest | 23327 | 66.15% [65.53, 66.78] | 0.720 | 0.6156 | reference |
+| 3 | rulefit | 23327 | 66.07% [65.46, 66.70] | 0.718 | 0.6170 | -0.08 [-0.34, +0.18] vs forest |
+
+What the regularisation kept, per test month: candidate rule and event columns, how many received a non-zero weight, and the five largest weights.
+
+| minute | month | candidates | kept | largest weights |
+|---|---|---|---|---|
+| 0 | 2026-01 | 243 | 76 | rule: bb_pctb > 0.623 and hour > 6.5 and size5 <= 0.954 and vwap_dev60 > 11.8 (-0.19); rule: flow15 <= 0.14 and flow3 <= -0.312 and obv_slope60 > -0.288 and rangepos <= 0.266 (+0.18); rule: flow15 > -0.0816 and vratio15 > 1.64 (-0.14); rule: flow15 <= 0.14 and obv_slope60 > -0.0758 and rangepos > 0.266 and ret60 <= -6.04 (-0.14); rule: flow15 <= 0.154 and macd_hist <= -0.974 and rangepos <= 0.704 and win2 > -1.43 (+0.14) |
+| 0 | 2026-02 | 284 | 103 | rule: ema_cross <= 1.09 and -0.178 < flow15 <= 0.154 and vwap_dev60 > 1.42 (+0.22); rule: flow15 <= -0.0781 and rsi60 <= 56.3 and size5 <= 0.991 and vratio15 > 0.859 (+0.18); rule: 32.2 < rsi14 <= 60.6 and rsi60 > 51.9 and wday > 4.5 (-0.18); rule: flow15 > -0.0846 and rangepos <= 0.868 and 2.8 < vol15 <= 3.4 (-0.18); rule: flow15 > 0.157 and ret15 > 3.69 and rsi14 <= 60.2 (+0.18) |
+| 0 | 2026-03 | 322 | 105 | rule: ema_cross <= -2.17 and flow5 > -0.162 and hour <= 12.5 and ret15 <= -13.5 (-0.21); rule: flow15 > 0.142 and -0.0724 < flow60 <= 0.107 and rsi14 > 59.6 (-0.20); rule: bb_pctb <= 0.607 and ema_cross > -5.75 and flow15 <= -0.0816 and nratio5 > 0.95 (+0.18); rule: macd_hist <= -2.14 and obv_slope60 <= 0.126 and ret15 <= -8.8 and rsi60 <= 56 (+0.17); rule: bb_pctb > 0.626 and flow60 > 0.189 (-0.17) |
+| 0 | 2026-04 | 347 | 118 | rule: ret240 <= 102 and rsi60 > 56 and size5 > 1.01 (-0.22); rule: bb_pctb > 0.606 and obv_slope60 <= 0.191 and vol60 > 6.13 and win1 <= 34.7 (+0.20); rule: bb_pctb > 0.623 and obv_slope60 <= 0.191 and rangepos <= 0.656 and vratio5 > 0.837 (-0.19); rule: obv_slope60 > 0.0618 and rsi60 > 55 and stoch14 <= 0.934 and win2 <= 26.8 (-0.18); rule: ema_cross > -2 and obv_slope60 <= 0.0965 and 46.3 < rsi14 <= 48 (-0.18) |
+| 0 | 2026-05 | 358 | 131 | rule: rsi14 <= 48.8 and vol240 <= 11.3 and vratio15 <= 1.38 and vratio5 > 0.899 (+0.19); rule: ema_cross <= -2.16 and rsi14 <= 58.2 and vol240 <= 3.51 (+0.18); rule: flow15 <= 0.14 and rangepos <= 0.258 and rsi14 > 44.4 and win2 <= -6.65 (+0.17); rule: adx14 > 22.5 and obv_slope60 > -0.0835 and rangepos <= 0.373 and vratio15 > 0.931 (-0.17); rule: nratio5 > 1.4 and obv_slope60 > 0.0355 and rsi14 <= 53.9 (-0.16) |
+| 0 | 2026-06 | 379 | 156 | rule: adx14 <= 35.4 and ret240 <= 159 and rsi60 > 55.9 and size5 > 1.03 (-0.24); rule: hour <= 6.5 and rangepos > 0.691 and rsi60 <= 55.9 and vwap_dev60 <= 2.24 (-0.21); rule: flow3 <= -0.181 and rsi14 <= 32.7 and vol240 <= 11.3 (+0.21); rule: rangepos <= 0.373 and rsi14 <= 42.8 and vol15 > 3.02 and win1 > -20 (+0.20); rule: adx14 > 19.9 and bb_pctb <= 0.606 and hour > 10.5 and obv_slope60 <= -0.074 (+0.18) |
+| 0 | 2026-07 | 381 | 153 | rule: bb_pctb > 0.731 and flow15 > 0.153 and ret15 > 39.8 and rsi60 > 50.2 (-0.29); rule: bb_pctb <= 0.731 and flow3 > 0.329 and macd_hist > -0.549 and rsi60 > 51.5 (+0.25); rule: flow3 > -0.0235 and nratio5 <= 0.605 and rangepos > 0.288 and rsi60 > 55.9 (-0.23); rule: ema_cross > 2.21 and flow60 > 0.0752 and rsi14 > 58.9 and size5 > 1.15 (-0.22); rule: flow15 > -0.18 and rangepos <= 0.695 and vwap_dev60 <= -6.58 and wday <= 0.5 (+0.20) |
+| 0 | 2026-08 | 395 | 159 | rule: bb_pctb <= 0.722 and flow3 > 0.329 and macd_hist > -0.549 and rsi60 > 51.2 (+0.27); rule: flow1 > 0.545 and flow15 > 0.0718 and rsi14 <= 58.2 and size5 > 0.984 (-0.25); rule: bb_pctb > 0.731 and flow15 > 0.153 and ret15 > 39.8 and rsi60 > 50.2 (-0.25); rule: bb_pctb > 0.722 and ret5 > 2.84 and rsi60 > 59.8 (-0.23); rule: flow1 > -0.0523 and rangepos > 0.319 and rsi14 <= 56.8 and win1 <= -18.4 (+0.21) |
+| 3 | 2026-01 | 461 | 67 | rule: flow3 <= 0.0778 and lead <= -5.51 and vol15 <= 7.37 (-0.37); rule: flow15 > -0.0746 and flow3 > -0.232 and lead <= -0.833 and vol240 <= 5.29 (-0.21); rule: flow15 > -0.0726 and lead <= -4.22 and stoch14 > 0.0455 (-0.19); rule: atr14 <= 8.44 and lead > 7.22 (+0.18); rule: flow5 > 0.101 and lead > 4.27 and vratio5 <= 1.07 (+0.18) |
+| 3 | 2026-02 | 513 | 93 | rule: atr14 <= 7.77 and lead <= -5.57 and ret240 > -33.4 (-0.37); rule: -4.94 < lead <= -1.35 and vol240 <= 3.42 and vwap_dev60 > -8.74 (-0.22); rule: flow3 <= -0.166 and lead <= -5.53 and rangepos > 0.315 (-0.18); rule: lead <= -4.94 and ret5 > -12.6 and vol240 <= 6.48 (-0.18); rule: lead <= -10.9 and vol60 <= 7.02 (-0.18) |
+| 3 | 2026-03 | 541 | 104 | rule: atr14 <= 7.74 and lead <= -10.3 (-0.34); rule: atr14 <= 5.85 and lead <= -6.69 (-0.23); rule: bb_pctb > 0.0296 and lead <= -4.8 and rsi60 > 47.2 (-0.22); rule: atr14 <= 12.4 and lead > 8.94 (+0.21); rule: flow5 > 0.0914 and lead > 4.27 and vratio5 <= 1.11 (+0.20) |
+| 3 | 2026-04 | 557 | 100 | rule: lead > 13 and vol60 <= 8.69 (+0.29); rule: nratio5 <= 0.865 and ret5 <= -15.2 (-0.22); rule: lead <= -11.1 and vol60 <= 6.97 (-0.20); rule: bb_pctb <= 0.0136 and lead <= -1.28 and rsi14 <= 33 (-0.19); rule: atr14 <= 2.29 and 0.692 < lead <= 5.84 (+0.19) |
+| 3 | 2026-05 | 562 | 124 | rule: flow3 <= -0.211 and lead <= -5.65 and ret60 > -47 (-0.26); rule: flow5 > 0.114 and lead > 5.84 and stoch14 > 0.737 (+0.23); rule: ema_cross <= 5.71 and lead <= 0.543 and rsi60 > 54.4 and stoch14 > 0.236 (-0.22); rule: lead <= -7.82 and ret240 > -39.8 and stoch14 <= 0.155 (-0.22); rule: bb_pctb > 0.842 and ret5 > 9.41 and win1 <= 7.03 (+0.20) |
+| 3 | 2026-06 | 574 | 119 | rule: lead > 13.2 and vol15 <= 6.47 (+0.36); rule: atr14 <= 8.45 and lead <= -6.87 and ret5 <= -0.654 (-0.25); rule: flow15 > 0.0353 and hour <= 5.5 and lead > -0.158 and ret5 <= 8.01 (-0.25); rule: flow3 > 0.225 and lead > 5.82 and stoch14 > 0.722 (+0.24); rule: flow3 <= -0.223 and lead <= -4.79 and ret60 > -47.4 (-0.19) |
+| 3 | 2026-07 | 592 | 130 | rule: atr14 <= 8.53 and lead > 15 (+0.30); rule: flow3 <= -0.211 and lead <= -5.65 and ret60 > -47 (-0.24); rule: lead <= -4.94 and ret60 > -92.6 and win2 > -32.1 (-0.24); rule: flow3 > 0.215 and lead > 4.54 and ret5 > -1.11 and vol60 <= 4.03 (+0.22); rule: lead <= -11.4 and stoch14 <= 0.316 and vol60 <= 6.46 (-0.22) |
+| 3 | 2026-08 | 609 | 140 | rule: atr14 <= 6.54 and lead > 13.2 (+0.42); rule: 5.93 < lead <= 23.4 and vol15 <= 6.56 (+0.21); rule: flow3 > 0.218 and lead > 4.64 and ret5 > -0.996 (+0.20); rule: lead <= -11.6 and ret60 > -47.2 (-0.19); rule: bb_pctb > 0.787 and lead > 13 and win1 <= 5.18 (+0.18) |
+<!-- table:rulefit:end -->
+
+The wider search finds sharper conditions, at a cost. Of 913 candidates with enough firings, 822 survive the correction and 779 are stable, which is itself the tell: these are not 779 findings but one reversal effect seen through hundreds of overlapping conditions. The sharpest pairs sit at 34% to 38% up (hour-RSI above 60 with taker buying dominant; RSI14 above 65 with hour-RSI above 60; price at its range top with a spike or with large trades), but each fires on 1% to 2.5% of windows, so September gives them only 30 to 80 windows each. Across the stable survivors with enough September firings, 598 kept their direction and 95 flipped, which is about what a real but small effect produces; the single-condition events of study 16 remain the better bet because they fire often enough to be checked.
+
+Combining the good bits does not beat the forest: 52.7% against 53.4% at the open, and the difference is on the wrong side of zero (-0.70, interval -1.27 to -0.16). Three minutes in, it matches the forest and the lead-only baseline. The regularisation keeps 76 to 159 of several hundred candidate columns each month and the largest weights are the same reversal rules every month, so the model is sensible; it is simply a restricted version of the forest it was mined from, and a restriction cannot add information. The value of the rule work is that the signal now has a readable form and a mechanism, not a better number.
+
 ## What remains open
 
 - The forward log is the arbiter. If the open-of-window accuracy stays near 50% for another two months, the backtest signal was regime-specific and the README will say so. The drift study makes that outcome more puzzling, not less: nothing in the eleven months suggested the signal decays.

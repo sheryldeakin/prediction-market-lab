@@ -39,3 +39,5 @@ What was decided, what went wrong, and what each mistake changed. Newest at the 
 **The quiet gate learned which jobs need the GPU.** The pattern study is CPU-only but was refused for an hour because another program held the GPU at 90%. `run_queue.py --cpu-only` skips the GPU checks; the memory and idle-CPU checks still apply.
 
 **Mined rules are the event library, sharpened.** Reading a forest leaf by leaf produced 248 stable rules, the strongest at 35% and 61.5% up on 3% of windows each, against 38% and 57% for the best single events. They combine two or three signs of the same reversal. Path-shape clustering added nothing beyond the indicators.
+
+**"Put the good bits in one model" was tested the honest way and lost.** The rule-ensemble model, with rules mined and weights fit on earlier months only, scored 52.7% at the open against the forest's 53.4%. A model built from a forest's leaves cannot know more than the forest. The wider event search (1,506 candidates) produced 779 "stable" survivors, which was read as a symptom: one effect, hundreds of overlapping descriptions. Both are in the report so that the next person does not repeat them.
