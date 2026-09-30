@@ -46,17 +46,30 @@ from models.btc_15m.stats import block_bootstrap_ci, paired_difference_ci, permu
 warnings.filterwarnings("ignore")
 OUT = Path("results/btc_15m")
 ALL = PRICE_FEATURES + FLOW_FEATURES
+N_JOBS = 4                      # forest threads; keeps the machine usable
+
+
+def _xgb_device():
+    try:
+        import torch
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    except ImportError:
+        return "cpu"
+
+
+XGB_DEVICE = _xgb_device()
 
 
 def make_model(kind: str):
     if kind == "logistic":
         return make_pipeline(StandardScaler(), LogisticRegression(C=0.1, max_iter=1000))
     if kind == "forest":
-        return RandomForestClassifier(n_estimators=300, min_samples_leaf=50, max_features=0.5, n_jobs=-1, random_state=0)
+        return RandomForestClassifier(n_estimators=300, min_samples_leaf=50, max_features=0.5, n_jobs=N_JOBS, random_state=0)
     if kind == "hgb":
         return HistGradientBoostingClassifier(max_depth=3, learning_rate=0.03, max_iter=400, l2_regularization=5, random_state=0)
     return XGBClassifier(n_estimators=400, max_depth=3, learning_rate=0.03, subsample=0.8,
-                         colsample_bytree=0.8, min_child_weight=50, reg_lambda=5, verbosity=0)
+                         colsample_bytree=0.8, min_child_weight=50, reg_lambda=5, verbosity=0,
+                         tree_method="hist", device=XGB_DEVICE)
 
 
 def runs_for(k: int):

@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 
 from models.btc_15m.features import FLOW_FEATURES, HISTORY, PRICE_FEATURES, Series, dataset
+from models.btc_15m.indicators import INDICATOR_FEATURES
 
 
 def synthetic(n=HISTORY + 200, seed=0):
@@ -48,7 +49,7 @@ def test_uses_latest_closed_candle(k):
 def test_feature_names_complete():
     s = Series(synthetic())
     f = s.features(next(iter(s.window_starts())), 3)
-    assert set(f) == set(PRICE_FEATURES + FLOW_FEATURES)
+    assert set(f) == set(PRICE_FEATURES + FLOW_FEATURES + INDICATOR_FEATURES)
 
 
 def test_lead_is_zero_at_open():
@@ -75,3 +76,21 @@ def test_windows_skip_gaps():
     d = dataset(Series(base), 0)
     gap_t = base.t[HISTORY + 100]
     assert not ((d.t <= gap_t) & (d.t + 900 > gap_t)).any()
+
+
+def test_indicators_are_causal():
+    """Indicator values at index i must not change when later candles change."""
+    from models.btc_15m.indicators import compute
+    base = synthetic()
+    a = compute(base.open.values, base.high.values, base.low.values, base.close.values, base.volume.values)
+    t = base.copy()
+    t.loc[HISTORY + 50:, ["open", "high", "low", "close", "volume"]] *= 2.0
+    b = compute(t.open.values, t.high.values, t.low.values, t.close.values, t.volume.values)
+    for k in a:
+        assert np.allclose(a[k][:HISTORY + 50], b[k][:HISTORY + 50]), k
+
+
+def test_indicator_ranges():
+    s = Series(synthetic(n=HISTORY + 900))
+    d = dataset(s, 3)
+    assert d.rsi14.between(0, 100).all() and d.stoch14.between(0, 1).all() and d.adx14.between(0, 100).all()

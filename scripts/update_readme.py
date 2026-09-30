@@ -1,8 +1,8 @@
 """Splice generated tables into README.md between markers, so every number in the
 README is one a script wrote.
 
-    results/btc_15m/walk_forward.md   -> <!-- results:start --> ... <!-- results:end -->
-    results/btc_15m/predictions.csv   -> <!-- forward:start --> ... <!-- forward:end -->
+    <!-- table:NAME:start --> ... <!-- table:NAME:end -->   <- results/btc_15m/NAME.md
+    <!-- forward:start --> ... <!-- forward:end -->         <- results/btc_15m/predictions.csv
 
     python scripts/update_readme.py
 """
@@ -12,11 +12,17 @@ from pathlib import Path
 import pandas as pd
 
 readme = Path("README.md")
-text = readme.read_text()
+original = readme.read_text()
+text = original
 
-table = Path("results/btc_15m/walk_forward.md").read_text().strip()
-text = re.sub(r"<!-- results:start -->.*?<!-- results:end -->",
-              f"<!-- results:start -->\n{table}\n<!-- results:end -->", text, flags=re.S)
+for m in re.finditer(r"<!-- table:([a-z_0-9]+):start -->", text):
+    name = m.group(1)
+    src = Path(f"results/btc_15m/{name}.md")
+    if not src.exists():
+        continue
+    table = src.read_text().strip()
+    text = re.sub(rf"<!-- table:{name}:start -->.*?<!-- table:{name}:end -->",
+                  f"<!-- table:{name}:start -->\n{table}\n<!-- table:{name}:end -->", text, flags=re.S)
 
 log = Path("results/btc_15m/predictions.csv")
 if log.exists():
@@ -29,6 +35,5 @@ if log.exists():
     text = re.sub(r"<!-- forward:start -->.*?<!-- forward:end -->",
                   "<!-- forward:start -->\n" + "\n".join(lines) + "\n<!-- forward:end -->", text, flags=re.S)
 
-changed = text != readme.read_text()
 readme.write_text(text)
-print("README updated" if changed else "README already current")
+print("README updated" if text != original else "README already current")

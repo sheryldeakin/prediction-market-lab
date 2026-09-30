@@ -5,3 +5,4 @@ xgboost
 pytest
 matplotlib
 joblib
+pyarrow

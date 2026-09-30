@@ -12,6 +12,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from models.btc_15m.indicators import INDICATOR_FEATURES, compute as compute_indicators
+
 HISTORY = 1500          # minutes of history a window needs (24h volume baseline + margin)
 WINDOW = 15
 
@@ -33,6 +35,8 @@ class Series:
         self.r1 = np.diff(np.log(self.c), prepend=np.log(self.c[0])) * 1e4
         cs = lambda x: np.concatenate([[0.0], np.cumsum(x)])
         self.cv, self.csv, self.cn = cs(self.v), cs(signed), cs(self.n)
+        self.ind = compute_indicators(self.o, self.h, self.l, self.c, self.v)
+        self.ticks = None                      # optional TickFlow, set by the caller
 
     def window_starts(self):
         first = ((self.t[0] // 900) + 1) * 900
@@ -41,6 +45,9 @@ class Series:
 
     def label(self, i: int) -> int:
         return int(self.c[i + WINDOW - 1] >= self.o[i])
+
+    def move_bp(self, i: int) -> float:
+        return (self.c[i + WINDOW - 1] / self.o[i] - 1) * 1e4
 
     def features(self, i: int, k: int) -> dict | None:
         """Features known at minute k of the window opening at candle i (k = 0..14)."""
@@ -72,6 +79,10 @@ class Series:
         f["vratio15"] = (cv[j] - cv[j - 15]) / 15 / base_v
         f["nratio5"] = (cn[j] - cn[j - 5]) / 5 / base_n
         f["size5"] = ((cv[j] - cv[j - 5]) / max(cn[j] - cn[j - 5], 1.0)) / (base_v / base_n)
+        for name in INDICATOR_FEATURES:
+            f[name] = float(self.ind[name][j - 1])
+        if self.ticks is not None:
+            f.update(self.ticks.features(int(self.t[i]), k))
         return f
 
 
@@ -84,5 +95,6 @@ def dataset(series: Series, k: int) -> pd.DataFrame:
             f["t"] = int(series.t[i])
             f["y"] = series.label(i)
             f["y_gap1"] = int(series.c[i + WINDOW - 1] >= series.c[i])   # measured from 1 minute in
+            f["move_bp"] = series.move_bp(i)
             rows.append(f)
     return pd.DataFrame(rows)
