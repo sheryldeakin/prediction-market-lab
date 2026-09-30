@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import itertools
+import os
 import warnings
 from pathlib import Path
 
@@ -37,6 +38,9 @@ warnings.filterwarnings("ignore")
 OUT = Path("results/btc_15m")
 DEV = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 torch.set_num_threads(2)
+if DEV.type == "cuda" and os.environ.get("LAB_GPU_FRACTION"):
+    torch.cuda.set_per_process_memory_fraction(float(os.environ["LAB_GPU_FRACTION"]))   # quiet profile: a quarter of the card
+BATCH = 128 if os.environ.get("LAB_GPU_TARGET") else 512                                # smaller batches keep utilisation down
 GRID = list(itertools.product((16, 32, 64), (3e-4, 1e-3)))
 
 
@@ -117,8 +121,8 @@ def fit(arch, h, lr, X, E, y, L, seed=0, epochs=12):
     for _ in range(epochs):
         model.train()
         perm = torch.randperm(cut, device=DEV)
-        for b in range(0, cut, 512):
-            idx = perm[b:b + 512]
+        for b in range(0, cut, BATCH):
+            idx = perm[b:b + BATCH]
             opt.zero_grad()
             lossf(model(Xt[idx], Et[idx]), yt[idx]).backward()
             opt.step()

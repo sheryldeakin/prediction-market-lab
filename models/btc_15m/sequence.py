@@ -29,6 +29,9 @@ warnings.filterwarnings("ignore")
 OUT = Path("results/btc_15m")
 L = 120
 DEV = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+import os
+if DEV.type == "cuda" and os.environ.get("LAB_GPU_FRACTION"):
+    torch.cuda.set_per_process_memory_fraction(float(os.environ["LAB_GPU_FRACTION"]))
 
 
 class GRUNet(nn.Module):
