@@ -1,0 +1,390 @@
+{
+  "name": "Glacier",
+  "version": 1,
+  "meta": {
+    "source": "Derived 2026-09-30 for the prediction-market-lab tracking page. Accent: indigo; ink is a hard dark shade of the accent hue; neutrals are blue-tinted. Chart palette validated for colour-vision separation on both surfaces."
+  },
+  "color": {
+    "themes": [
+      {
+        "id": "light",
+        "name": "Light"
+      },
+      {
+        "id": "dark",
+        "name": "Dark"
+      }
+    ],
+    "tokens": [
+      {
+        "name": "canvas",
+        "value": {
+          "light": "#f7f8fb",
+          "dark": "#0f1117"
+        },
+        "usage": "Page background. A faint vertical wash from surface to canvas is allowed; never a flat pure white page."
+      },
+      {
+        "name": "surface",
+        "value": {
+          "light": "#ffffff",
+          "dark": "#161a24"
+        },
+        "usage": "Cards, chart frames, table bodies, the app bar."
+      },
+      {
+        "name": "sunken",
+        "value": {
+          "light": "#eef1f7",
+          "dark": "#1c2130"
+        },
+        "usage": "Inputs, wells, code blocks, the table header row. One step down from surface, never a beige."
+      },
+      {
+        "name": "border",
+        "value": {
+          "light": "#d9dde8",
+          "dark": "#2a3143"
+        },
+        "usage": "Hairline borders on cards and inputs. Dividers use separator as a breathing-edge gradient instead."
+      },
+      {
+        "name": "border-strong",
+        "value": {
+          "light": "#bfc6d8",
+          "dark": "#3b4459"
+        },
+        "usage": "Hover and focus borders, table rules that must read at a glance."
+      },
+      {
+        "name": "ink",
+        "value": {
+          "light": "#1f2d5c",
+          "dark": "#e7ebf6"
+        },
+        "usage": "Headings and primary text. A hard dark shade of the accent hue, never neutral black. 13:1 on surface."
+      },
+      {
+        "name": "text-secondary",
+        "value": {
+          "light": "#3d4870",
+          "dark": "#b8c0d4"
+        },
+        "usage": "Body text of lower rank: table cells, chart footnotes, the comparison line on a stat tile."
+      },
+      {
+        "name": "text-muted",
+        "value": {
+          "light": "#5c6685",
+          "dark": "#8f98b0"
+        },
+        "usage": "Captions, axis labels, timestamps, empty-state copy. Passes 4.5:1 on surface and on sunken."
+      },
+      {
+        "name": "accent",
+        "value": {
+          "light": "#3e63dd",
+          "dark": "#5b7cf0"
+        },
+        "usage": "The one colour: links, the primary button, focus ring, the active model in the switcher, series 1. Used once per view or not at all."
+      },
+      {
+        "name": "accent-hover",
+        "value": {
+          "light": "#3253c2",
+          "dark": "#7a95f4"
+        },
+        "usage": "Hover state of anything painted accent. One step along the ramp, never a new hue."
+      },
+      {
+        "name": "accent-tint",
+        "value": {
+          "light": "#eaf0ff",
+          "dark": "#1b2440"
+        },
+        "usage": "Selected rows, the active chip, hover wash on list items. Text on it is ink."
+      },
+      {
+        "name": "separator",
+        "value": {
+          "light": "rgba(31,45,92,0.28)",
+          "dark": "rgba(231,235,246,0.22)"
+        },
+        "usage": "Breathing-edge dividers: linear-gradient(90deg, transparent, separator 20%, separator 80%, transparent). Never an edge-to-edge line."
+      },
+      {
+        "name": "shadow-ink",
+        "value": {
+          "light": "rgba(31,45,92,0.08)",
+          "dark": "rgba(0,0,0,0.45)"
+        },
+        "usage": "The colour inside every box-shadow, tinted toward ink. Alpha stays at or under 0.12 in light."
+      },
+      {
+        "name": "reference",
+        "value": {
+          "light": "#7d859c",
+          "dark": "#8a92a8"
+        },
+        "usage": "Reference lines on charts: the 50% baseline, the backtest level. A grey that recedes behind every series."
+      },
+      {
+        "name": "series-1",
+        "value": {
+          "light": "#3e63dd",
+          "dark": "#5b7cf0"
+        },
+        "usage": "Categorical series 1. Fixed order: 1 blue, 2 orange, 3 aqua, 4 yellow, 5 magenta, 6 green. Assigned by entity and never re-painted when a filter removes a series."
+      },
+      {
+        "name": "series-2",
+        "value": {
+          "light": "#eb6834",
+          "dark": "#d95926"
+        },
+        "usage": "Categorical series 2 (orange)."
+      },
+      {
+        "name": "series-3",
+        "value": {
+          "light": "#1baf7a",
+          "dark": "#199e70"
+        },
+        "usage": "Categorical series 3 (aqua). Below 3:1 on the light surface: always direct-labelled, never colour alone."
+      },
+      {
+        "name": "series-4",
+        "value": {
+          "light": "#eda100",
+          "dark": "#c98500"
+        },
+        "usage": "Categorical series 4 (yellow). Below 3:1 on the light surface: always direct-labelled."
+      },
+      {
+        "name": "series-5",
+        "value": {
+          "light": "#e87ba4",
+          "dark": "#d55181"
+        },
+        "usage": "Categorical series 5 (magenta). Below 3:1 on the light surface: always direct-labelled."
+      },
+      {
+        "name": "series-6",
+        "value": {
+          "light": "#008300",
+          "dark": "#3fae3f"
+        },
+        "usage": "Categorical series 6 (green). The last slot; a seventh series folds into Other or becomes a small multiple."
+      },
+      {
+        "name": "interval-fill",
+        "value": {
+          "light": "rgba(62,99,221,0.12)",
+          "dark": "rgba(91,124,240,0.18)"
+        },
+        "usage": "The 95% interval band around a cumulative accuracy line. Series colour at low alpha, no border."
+      },
+      {
+        "name": "status-good",
+        "value": {
+          "light": "#1a7f4b",
+          "dark": "#4cc38a"
+        },
+        "usage": "A model above its baseline with the interval clear of it. Always with the word beside it, never colour alone."
+      },
+      {
+        "name": "status-warning",
+        "value": {
+          "light": "#9f630d",
+          "dark": "#e0a53a"
+        },
+        "usage": "A model whose interval includes the baseline. Always with the word."
+      },
+      {
+        "name": "status-critical",
+        "value": {
+          "light": "#c0392b",
+          "dark": "#ef6b5a"
+        },
+        "usage": "A model below its baseline, or a stale log. Always with the word."
+      }
+    ]
+  },
+  "type": {
+    "fonts": [],
+    "families": {
+      "sans": "Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
+      "mono": "\"JetBrains Mono\", ui-monospace, SFMono-Regular, Consolas, monospace"
+    },
+    "groups": [
+      {
+        "name": "Text",
+        "family": "sans",
+        "styles": [
+          {
+            "name": "display",
+            "fontSize": "32px",
+            "lineHeight": "36px",
+            "fontWeight": 600,
+            "letterSpacing": "-0.01em",
+            "sample": "BTC 15-minute direction",
+            "usage": "Page title, one per page."
+          },
+          {
+            "name": "title",
+            "fontSize": "20px",
+            "lineHeight": "26px",
+            "fontWeight": 600,
+            "sample": "Forward log",
+            "usage": "Section and chart titles, left-aligned inside the frame."
+          },
+          {
+            "name": "subtitle",
+            "fontSize": "15px",
+            "lineHeight": "22px",
+            "fontWeight": 400,
+            "sample": "Cumulative and rolling accuracy since the training cutoff",
+            "usage": "The line under a title, in text-secondary."
+          },
+          {
+            "name": "body",
+            "fontSize": "15px",
+            "lineHeight": "24px",
+            "fontWeight": 400,
+            "sample": "A window is fifteen minutes aligned to the quarter hour.",
+            "usage": "Prose, 45 to 75 characters a line."
+          },
+          {
+            "name": "ui",
+            "fontSize": "13px",
+            "lineHeight": "18px",
+            "fontWeight": 500,
+            "sample": "Models  Light  Dark",
+            "usage": "Controls, chips, the switcher, legend labels. Sentence case, never uppercase."
+          },
+          {
+            "name": "caption",
+            "fontSize": "12px",
+            "lineHeight": "16px",
+            "fontWeight": 400,
+            "sample": "n = 2,783 windows, 2026-09-01 to 2026-09-29",
+            "usage": "Footnotes under charts, axis titles, timestamps, in text-muted."
+          }
+        ]
+      },
+      {
+        "name": "Numbers",
+        "family": "mono",
+        "styles": [
+          {
+            "name": "numeral-lg",
+            "fontSize": "28px",
+            "lineHeight": "32px",
+            "fontWeight": 600,
+            "sample": "50.41%",
+            "usage": "The value on a stat tile. Tabular numerals so tiles align."
+          },
+          {
+            "name": "numeral",
+            "fontSize": "14px",
+            "lineHeight": "20px",
+            "fontWeight": 500,
+            "sample": "52.36 [51.77, 52.97]",
+            "usage": "Table cells, hover readouts, intervals. Right-aligned in tables."
+          },
+          {
+            "name": "axis",
+            "fontSize": "11px",
+            "lineHeight": "14px",
+            "fontWeight": 400,
+            "sample": "45  50  55  60",
+            "usage": "Axis tick labels, in text-muted."
+          }
+        ]
+      }
+    ]
+  },
+  "spacing": {
+    "tokens": [
+      {
+        "name": "space-1",
+        "value": "4px",
+        "usage": "The grid unit; gaps inside a chip."
+      },
+      {
+        "name": "space-2",
+        "value": "8px",
+        "usage": "Inside a control; between a value and its label."
+      },
+      {
+        "name": "space-3",
+        "value": "12px",
+        "usage": "Between controls in a row; legend item gap."
+      },
+      {
+        "name": "space-4",
+        "value": "16px",
+        "usage": "Page gutter on phones; between tiles."
+      },
+      {
+        "name": "space-6",
+        "value": "24px",
+        "usage": "Card and chart-frame padding; between cards."
+      },
+      {
+        "name": "space-8",
+        "value": "32px",
+        "usage": "Between page sections."
+      },
+      {
+        "name": "space-12",
+        "value": "48px",
+        "usage": "Above the first section and below the last."
+      }
+    ]
+  },
+  "radius": {
+    "tokens": [
+      {
+        "name": "radius-sm",
+        "value": "6px",
+        "usage": "Chips, inputs, table header corners."
+      },
+      {
+        "name": "radius-md",
+        "value": "10px",
+        "usage": "Buttons, stat tiles."
+      },
+      {
+        "name": "radius-lg",
+        "value": "14px",
+        "usage": "Chart frames and cards. Children use md (concentric: parent radius minus padding)."
+      },
+      {
+        "name": "radius-pill",
+        "value": "999px",
+        "usage": "The model switcher chips and the theme toggle."
+      }
+    ]
+  },
+  "shadow": {
+    "tokens": [
+      {
+        "name": "shadow-resting",
+        "value": {
+          "light": "0 1px 2px rgba(31,45,92,0.06), 0 1px 3px rgba(31,45,92,0.10)",
+          "dark": "0 1px 2px rgba(0,0,0,0.35), 0 1px 3px rgba(0,0,0,0.45)"
+        },
+        "usage": "Cards and chart frames at rest. One overhead light source; sharp close layer plus soft ambient."
+      },
+      {
+        "name": "shadow-raised",
+        "value": {
+          "light": "0 2px 4px rgba(31,45,92,0.06), 0 6px 14px rgba(31,45,92,0.10)",
+          "dark": "0 2px 4px rgba(0,0,0,0.4), 0 8px 20px rgba(0,0,0,0.5)"
+        },
+        "usage": "Menus, popovers, the hover tooltip on a chart. Never on content cards."
+      }
+    ]
+  }
+}
