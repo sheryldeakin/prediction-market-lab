@@ -356,6 +356,29 @@ Meta-labelling: a second model predicts whether the primary direction call is ri
 
 At the open, the barrier labels behave like the plain label (52.7% to 53.0%). Three minutes in, predicting which barrier the remaining path touches first from the entry price is a coin flip (50.8% to 51.1%): the 66% accuracy of the plain label at minute 3 is entirely the lead already in hand, and the direction of the rest of the window is not predictable. The meta model ranks right calls above wrong ones with an AUC of 0.51 at the open and 0.61 at minute 3. Acting only when it is confident raises the primary's accuracy at the open from 52.8% to 55.3% on the 11% of windows it selects, at the cost of skipping the rest; this is the sizing rule the cost table lacked, and it carries the same forward-log caveat.
 
+**11. Ensembles and stacking.** The four base models' out-of-fold probabilities averaged, and a logistic stacker fit on earlier months' out-of-fold probabilities only (so it never sees a base prediction that was fit on the month it scores).
+
+<!-- table:ensemble:start -->
+Ensembles: the mean of four base models' out-of-fold probabilities, and a logistic stacker fit on earlier months' out-of-fold probabilities only. Scored on the months where every variant exists (the stacker needs one month of base predictions to start). Last column: accuracy minus the best single base model on the same windows, day-block 95% interval.
+
+| minute | model | n | accuracy [95% CI] | AUC | log loss | vs best single |
+|---|---|---|---|---|---|---|
+| 0 | logistic-all | 20351 | 52.88% [52.18, 53.59] | 0.544 | 0.6905 | -0.37 [-1.02, +0.25] vs forest |
+| 0 | forest | 20351 | 53.26% [52.62, 53.91] | 0.543 | 0.6906 | best single |
+| 0 | hgb-all | 20351 | 52.91% [52.25, 53.57] | 0.540 | 0.6904 | -0.34 [-0.89, +0.18] vs forest |
+| 0 | xgb-all | 20351 | 52.83% [52.22, 53.46] | 0.541 | 0.6914 | -0.43 [-0.93, +0.08] vs forest |
+| 0 | average | 20351 | 53.26% [52.61, 53.93] | 0.545 | 0.6899 | +0.00 [-0.45, +0.45] vs forest |
+| 0 | stacking | 20351 | 53.16% [52.53, 53.81] | 0.543 | 0.6902 | -0.09 [-0.51, +0.29] vs forest |
+| 3 | logistic-all | 20351 | 65.74% [65.11, 66.38] | 0.715 | 0.6208 | -0.65 [-1.05, -0.23] vs xgb-all |
+| 3 | forest | 20351 | 66.19% [65.54, 66.89] | 0.720 | 0.6155 | -0.20 [-0.46, +0.10] vs xgb-all |
+| 3 | hgb-all | 20351 | 66.23% [65.61, 66.87] | 0.720 | 0.6157 | -0.16 [-0.41, +0.09] vs xgb-all |
+| 3 | xgb-all | 20351 | 66.38% [65.74, 67.06] | 0.720 | 0.6158 | best single |
+| 3 | average | 20351 | 66.32% [65.67, 67.00] | 0.722 | 0.6143 | -0.06 [-0.29, +0.17] vs xgb-all |
+| 3 | stacking | 20351 | 66.14% [65.49, 66.82] | 0.721 | 0.6146 | -0.24 [-0.52, +0.06] vs xgb-all |
+<!-- table:ensemble:end -->
+
+Neither helps. The average matches the best single model at the open (+0.00) and the stacker is slightly behind at both entry points, with every interval including zero. The four base models make the same calls on the same windows; there is nothing to combine.
+
 ## What remains open
 
 - The forward log is the arbiter. If the open-of-window accuracy stays near 50% for another two months, the backtest signal was regime-specific and the README will say so. The drift study makes that outcome more puzzling, not less: nothing in the eleven months suggested the signal decays.
