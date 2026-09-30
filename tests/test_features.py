@@ -94,3 +94,20 @@ def test_indicator_ranges():
     s = Series(synthetic(n=HISTORY + 900))
     d = dataset(s, 3, cache=False)
     assert d.rsi14.between(0, 100).all() and d.stoch14.between(0, 1).all() and d.adx14.between(0, 100).all()
+
+
+def test_cache_key_differs_for_different_prices_on_the_same_timestamps(tmp_path, monkeypatch):
+    """Two coins over the same months once shared one cache file and ETH, SOL and DOGE
+    silently reported BTC's numbers. The key must depend on the prices, not only the span."""
+    import models.btc_15m.features as F
+    monkeypatch.setattr(F, "CACHE_DIR", tmp_path)
+    a = synthetic(n=HISTORY + 900, seed=0)
+    b = synthetic(n=HISTORY + 900, seed=1)
+    assert (a.t == b.t).all()
+    sa, sb = Series(a), Series(b)
+    assert sa.fingerprint() != sb.fingerprint()
+    da = dataset(sa, 0)
+    db = dataset(sb, 0)
+    assert len(list(tmp_path.glob("*.parquet"))) == 2
+    assert not np.allclose(da.ret60.values, db.ret60.values)
+    assert dataset(sa, 0).equals(da)          # second read comes from the cache and matches

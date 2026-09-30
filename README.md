@@ -240,9 +240,127 @@ Expected value per traded window, cents per $1 contract, buying the favoured sid
 
 In the backtest, trading every window at the open is worth +0.7 cents, and the most confident 12% of windows +5.8 cents. The forward log above is the reason to distrust these numbers until more months are in: September scored 50.4%, which at these costs is a loss. After the open the rows describe a contract that a real market would not price at 0.5, so they are upper bounds, not trades.
 
+#### Going deeper
+
+Four more studies, chosen because they are the questions a careful reader asks next. Each uses the same walk-forward harness, day-clustered intervals and README splice.
+
+**7. Four coins, and what one coin says about another.** The features are scale-free (basis points, ratios, shares), so the same pipeline runs on ETH, SOL and DOGE, and their earlier months can be pooled to train one model that is tested on each coin. A second question is cross-asset lead-lag: does ETH's or SOL's last few minutes say anything about BTC's next window?
+
+<!-- table:multi_asset:start -->
+Multi-asset results (xgb, price + flow features), walk-forward by month, 2025-10 to 2026-08. Last column: accuracy minus the coin's own-history model on the same windows, day-block 95% interval.
+
+| minute | setup | n | accuracy [95% CI] | AUC | log loss | vs own |
+|---|---|---|---|---|---|---|
+| 0 | BTC own | 23327 | 52.36% [51.77, 52.97] | 0.537 | 0.6918 | baseline |
+| 0 | ETH own | 23327 | 53.47% [52.85, 54.08] | 0.545 | 0.6912 | baseline |
+| 0 | SOL own | 23327 | 52.54% [51.94, 53.17] | 0.532 | 0.6931 | baseline |
+| 0 | DOGE own | 23327 | 53.02% [52.34, 53.65] | 0.541 | 0.6921 | baseline |
+| 0 | BTC pooled (4 coins) | 23327 | 52.72% [52.08, 53.34] | 0.540 | 0.6911 | +0.36 [-0.23, +0.90] |
+| 0 | ETH pooled (4 coins) | 23327 | 53.85% [53.25, 54.49] | 0.549 | 0.6896 | +0.38 [-0.18, +0.96] |
+| 0 | SOL pooled (4 coins) | 23327 | 52.71% [52.10, 53.36] | 0.535 | 0.6920 | +0.17 [-0.39, +0.71] |
+| 0 | DOGE pooled (4 coins) | 23327 | 53.08% [52.42, 53.72] | 0.541 | 0.6910 | +0.06 [-0.48, +0.58] |
+| 0 | BTC own (cross-joined rows) | 23327 | 52.36% [51.77, 52.97] | 0.537 | 0.6918 | baseline |
+| 0 | BTC + ETH and SOL features | 23327 | 52.09% [51.47, 52.74] | 0.534 | 0.6924 | -0.27 [-0.72, +0.20] |
+| 3 | BTC own | 23327 | 66.22% [65.61, 66.85] | 0.719 | 0.6169 | baseline |
+| 3 | ETH own | 23327 | 66.84% [66.24, 67.44] | 0.728 | 0.6097 | baseline |
+| 3 | SOL own | 23327 | 66.36% [65.75, 66.98] | 0.726 | 0.6103 | baseline |
+| 3 | DOGE own | 23327 | 67.15% [66.57, 67.71] | 0.731 | 0.6071 | baseline |
+| 3 | BTC pooled (4 coins) | 23327 | 66.34% [65.72, 66.93] | 0.720 | 0.6156 | +0.11 [-0.17, +0.39] |
+| 3 | ETH pooled (4 coins) | 23327 | 67.05% [66.49, 67.64] | 0.730 | 0.6081 | +0.21 [-0.06, +0.47] |
+| 3 | SOL pooled (4 coins) | 23327 | 66.51% [65.90, 67.13] | 0.729 | 0.6080 | +0.15 [-0.13, +0.42] |
+| 3 | DOGE pooled (4 coins) | 23327 | 67.21% [66.64, 67.73] | 0.735 | 0.6043 | +0.06 [-0.23, +0.33] |
+| 3 | BTC own (cross-joined rows) | 23327 | 66.22% [65.61, 66.85] | 0.719 | 0.6169 | baseline |
+| 3 | BTC + ETH and SOL features | 23327 | 66.22% [65.64, 66.83] | 0.718 | 0.6174 | -0.01 [-0.24, +0.22] |
+<!-- table:multi_asset:end -->
+
+All four coins show the same small signal at the open (52.4% to 53.5%) and the same lead-driven accuracy three minutes in. Pooling four coins' history adds +0.1 to +0.4 points, with every interval including zero: four times the data does not find more than the same simple effect. ETH's and SOL's last minutes add nothing to BTC (-0.27 at the open, 0.00 at minute 3). This table is also where a caching bug was caught: a first run showed four identical rows because the feature cache was keyed on the time span alone, which the coins share; the key now includes the price content and a test covers it.
+
+**8. Hyperparameter search, honest and dishonest.** For each test month, Optuna picks XGBoost parameters two ways: validated on the month before the test month (honest), and validated on the test month itself, which is what happens when a notebook tunes and reports on the same split. The gap between the two rows is the optimism to subtract from any tuned result that does not name its validation split.
+
+<!-- table:tuning:start -->
+XGBoost with default parameters vs Optuna search (30 trials per month) validated honestly (on the month before the test month) and validated on the test month itself. Walk-forward, price + flow + indicator features. Last column: accuracy minus default on the same windows, day-block 95% interval.
+
+| minute | variant | n | accuracy [95% CI] | AUC | log loss | vs default |
+|---|---|---|---|---|---|---|
+| 0 | default | 23327 | 52.96% [52.36, 53.58] | 0.542 | 0.6913 | baseline |
+| 0 | tuned-honest | 23327 | 53.41% [52.82, 54.03] | 0.547 | 0.6898 | +0.45 [+0.00, +0.87] |
+| 0 | tuned-on-test | 23327 | 53.45% [52.85, 54.09] | 0.550 | 0.6890 | +0.49 [+0.03, +0.94] |
+| 3 | default | 23327 | 66.34% [65.71, 66.96] | 0.720 | 0.6162 | baseline |
+| 3 | tuned-honest | 23327 | 66.21% [65.59, 66.84] | 0.720 | 0.6158 | -0.13 [-0.35, +0.09] |
+| 3 | tuned-on-test | 23327 | 66.29% [65.67, 66.89] | 0.722 | 0.6148 | -0.05 [-0.27, +0.17] |
+<!-- table:tuning:end -->
+
+Honest tuning adds +0.45 points at the open (interval touching zero) and nothing at minute 3. The leaky variant is only +0.04 above honest here, which is itself informative: with 30 trials over a small space and a weak signal there is little room to overfit the test month. The gap grows with the number of trials and the flexibility of the space, which is the usual setting of a tuned notebook.
+
+**9. How much history, and how often to retrain.** Training on only the last few months beats training on everything when the relationship drifts. The second table keeps one model without retraining and reports accuracy by months since it was fit.
+
+<!-- table:drift:start -->
+Training window: for each test month, train on the last W months only or on every earlier month. XGBoost, price + flow + indicators, walk-forward. Last column: accuracy minus expanding on the same windows, day-block 95% interval.
+
+| minute | training window | n | accuracy [95% CI] | log loss | vs expanding |
+|---|---|---|---|---|---|
+| 0 | last 2 months | 23327 | 52.98% [52.35, 53.63] | 0.6945 | +0.02 [-0.63, +0.65] |
+| 0 | last 3 months | 23327 | 52.99% [52.40, 53.62] | 0.6932 | +0.03 [-0.56, +0.61] |
+| 0 | last 4 months | 23327 | 52.97% [52.38, 53.59] | 0.6920 | +0.01 [-0.49, +0.50] |
+| 0 | last 6 months | 23327 | 52.91% [52.36, 53.52] | 0.6915 | -0.05 [-0.40, +0.30] |
+| 0 | expanding | 23327 | 52.96% [52.36, 53.58] | 0.6913 | baseline |
+| 3 | last 2 months | 23327 | 66.18% [65.57, 66.83] | 0.6208 | -0.16 [-0.45, +0.16] |
+| 3 | last 3 months | 23327 | 66.11% [65.50, 66.79] | 0.6189 | -0.23 [-0.50, +0.06] |
+| 3 | last 4 months | 23327 | 66.35% [65.74, 67.00] | 0.6172 | +0.01 [-0.24, +0.29] |
+| 3 | last 6 months | 23327 | 66.37% [65.75, 67.00] | 0.6165 | +0.03 [-0.12, +0.18] |
+| 3 | expanding | 23327 | 66.34% [65.71, 66.96] | 0.6162 | baseline |
+
+Retrain frequency: a model trained at the start of a month and kept without retraining. Accuracy by months since the last retrain, pooled over all start months (later ages have fewer start months).
+
+| minute | months since retrain | start months | n | accuracy [95% CI] |
+|---|---|---|---|---|
+| 0 | 0 | 8 | 23327 | 52.96% [52.36, 53.58] |
+| 0 | 1 | 7 | 20351 | 53.07% [52.42, 53.79] |
+| 0 | 2 | 6 | 17663 | 52.71% [52.02, 53.38] |
+| 0 | 3 | 5 | 14687 | 52.94% [52.16, 53.71] |
+| 3 | 0 | 8 | 23327 | 66.34% [65.71, 66.96] |
+| 3 | 1 | 7 | 20351 | 66.23% [65.59, 66.87] |
+| 3 | 2 | 6 | 17663 | 66.29% [65.59, 66.93] |
+| 3 | 3 | 5 | 14687 | 66.83% [66.09, 67.56] |
+<!-- table:drift:end -->
+
+Training on the last two to six months does no better or worse than training on everything, and a model kept for three months without retraining is as accurate as a fresh one. Whatever the open-of-window signal is, it is not drifting within this year, which makes the September forward result (50.4%) harder to explain as staleness.
+
+**10. Triple-barrier labels and meta-labelling.** Instead of "close above open", a window is labelled by which barrier the price touches first inside its remaining minutes: an upper barrier, a lower one, or the time limit. At entry minute k the barriers are measured from the entry price over the remaining minutes only; measuring them from the open lets a barrier touched in minutes the model has already seen decide the label, which produced a false 74% at minute 3 before a test caught it. Meta-labelling trains a second model to predict whether the first model's direction call will be right, using only first-model predictions that were made out of sample, and uses it to decide when to act.
+
+<!-- table:meta:start -->
+Triple-barrier labels: which comes first in the 15 minutes, the upper barrier, the lower barrier, or the time limit (then the sign of the final move). XGBoost, price + flow + indicators, walk-forward.
+
+| minute | label | how windows resolved | share up | accuracy [95% CI] | AUC |
+|---|---|---|---|---|---|
+| 0 | close >= open (plain) |  | 49.7% | 52.96% [52.36, 53.58] | 0.542 |
+| 0 | fixed 10 bp barriers | upper 37%, lower 38%, time 25% | 49.3% | 52.98% [52.31, 53.60] | 0.540 |
+| 0 | 1.0 x volatility barriers | upper 22%, lower 22%, time 56% | 49.5% | 52.72% [52.11, 53.35] | 0.538 |
+| 0 | 2.0 x volatility barriers | upper 5%, lower 5%, time 90% | 49.7% | 52.87% [52.30, 53.49] | 0.542 |
+| 3 | close >= open (plain) |  | 49.7% | 66.34% [65.71, 66.96] | 0.720 |
+| 3 | fixed 10 bp barriers | upper 34%, lower 34%, time 33% | 50.0% | 50.84% [50.27, 51.39] | 0.512 |
+| 3 | 1.0 x volatility barriers | upper 21%, lower 21%, time 58% | 50.1% | 51.10% [50.47, 51.73] | 0.517 |
+| 3 | 2.0 x volatility barriers | upper 5%, lower 5%, time 91% | 50.1% | 51.01% [50.38, 51.62] | 0.517 |
+
+Meta-labelling: a second model predicts whether the primary direction call is right, trained only on out-of-sample primary predictions from earlier months. EV in cents per $1 contract at a 1c spread and 1.75c fee, priced at 0.5 (only meaningful at minute 0). The AUC is the secondary model's ability to rank right calls above wrong ones.
+
+| minute | rule | windows | share acted on | accuracy of primary [95% CI] | EV cents [95% CI] | meta AUC |
+|---|---|---|---|---|---|---|
+| 0 | act always | 20351 | 100% | 52.83% [52.22, 53.46] | +0.58 [-0.03, +1.21] | 0.513 |
+| 0 | act when meta >= 0.5 | 14919 | 73% | 53.21% [52.50, 53.92] | +0.96 [+0.25, +1.67] |  |
+| 0 | act when meta >= 0.55 | 6997 | 34% | 54.01% [52.92, 55.16] | +1.76 [+0.67, +2.91] |  |
+| 0 | act when meta >= 0.6 | 2340 | 11% | 55.34% [53.35, 57.52] | +3.09 [+1.10, +5.27] |  |
+| 3 | act always | 20351 | 100% | 66.38% [65.74, 67.06] | +14.13 [+13.49, +14.81] | 0.614 |
+| 3 | act when meta >= 0.5 | 19159 | 94% | 66.98% [66.31, 67.67] | +14.73 [+14.06, +15.42] |  |
+| 3 | act when meta >= 0.55 | 16420 | 81% | 68.98% [68.27, 69.69] | +16.73 [+16.02, +17.44] |  |
+| 3 | act when meta >= 0.6 | 13002 | 64% | 71.64% [70.88, 72.40] | +19.39 [+18.63, +20.15] |  |
+<!-- table:meta:end -->
+
+At the open, the barrier labels behave like the plain label (52.7% to 53.0%). Three minutes in, predicting which barrier the remaining path touches first from the entry price is a coin flip (50.8% to 51.1%): the 66% accuracy of the plain label at minute 3 is entirely the lead already in hand, and the direction of the rest of the window is not predictable. The meta model ranks right calls above wrong ones with an AUC of 0.51 at the open and 0.61 at minute 3. Acting only when it is confident raises the primary's accuracy at the open from 52.8% to 55.3% on the 11% of windows it selects, at the cost of skipping the rest; this is the sizing rule the cost table lacked, and it carries the same forward-log caveat.
+
 #### What remains open
 
-- The forward log is the arbiter. If the open-of-window accuracy stays near 50% for another two months, the backtest signal was regime-specific and the README will say so.
+- The forward log is the arbiter. If the open-of-window accuracy stays near 50% for another two months, the backtest signal was regime-specific and the README will say so. The drift study makes that outcome more puzzling, not less: nothing in the eleven months suggested the signal decays.
 - Tick-level flow was tested at 5 to 300 seconds before entry. The published quarter-hour result concerns horizons of hours, which this model does not target.
 - Nothing here uses information from outside the exchange: funding rates, open interest, other venues, or the calendar of scheduled news. Those are the next inputs worth an ablation.
 
@@ -258,11 +376,18 @@ python -m models.btc_15m.evaluate --start 2025-10 --end 2026-08
 python -m models.btc_15m.experiments --start 2025-10 --end 2026-08    # ablation, magnitude, cost, regime, cpcv
 python -m models.btc_15m.ticks --start 2025-10 --end 2026-08          # optional: ~4 GB download, reduced to per-second files
 python -m models.btc_15m.sequence --start 2025-10 --end 2026-08       # GRU; uses CUDA if available
+python -m models.btc_15m.multi_asset                                 # ETH, SOL, DOGE download on first run
+python -m models.btc_15m.tuning --trials 30
+python -m models.btc_15m.drift
+python -m models.btc_15m.meta
 python -m models.btc_15m.charts
 python -m models.btc_15m.log --train-end 2026-08                 # extends the forward log
 python scripts/update_readme.py
 python -m pytest tests
+python scripts/run_queue.py "python -m models.btc_15m.drift" "python -m models.btc_15m.meta"   # runs jobs when the machine is free
 ```
+
+Heavy models run on the GPU when one is present (XGBoost, the GRU). Host-side threads are capped at two per process so several studies can run without saturating the machine, and features are cached under `data/feature_cache/` after the first build.
 
 ## Rules this repo follows
 

@@ -9,6 +9,7 @@ Everything is a pure function of numpy arrays so it can be tested and reused liv
 """
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 import numpy as np
@@ -39,6 +40,15 @@ class Series:
         self.cv, self.csv, self.cn = cs(self.v), cs(signed), cs(self.n)
         self.ind = compute_indicators(self.o, self.h, self.l, self.c, self.v)
         self.ticks = None                      # optional TickFlow, set by the caller
+
+    def fingerprint(self) -> str:
+        """Identifies the series content, not only its time span: two coins over the same
+        months must never share a cache file (they did once; see tests/test_features.py)."""
+        h = hashlib.sha1()
+        h.update(np.ascontiguousarray(self.t[::997]).tobytes())
+        h.update(np.ascontiguousarray(self.c[::997]).tobytes())
+        h.update(np.ascontiguousarray(self.v[::997]).tobytes())
+        return f"{int(self.t[0])}-{int(self.t[-1])}-{len(self.t)}-{h.hexdigest()[:12]}"
 
     def window_starts(self):
         first = ((self.t[0] // 900) + 1) * 900
@@ -99,7 +109,7 @@ def dataset(series: Series, k: int, cache: bool = True) -> pd.DataFrame:
     whether tick features are attached, so repeated runs skip the pure-Python build."""
     key = None
     if cache:
-        tag = f"{int(series.t[0])}-{int(series.t[-1])}-{len(series.t)}-k{k}-v{FEATURE_VERSION}-{'ticks' if series.ticks is not None else 'noticks'}"
+        tag = f"{series.fingerprint()}-k{k}-v{FEATURE_VERSION}-{'ticks' if series.ticks is not None else 'noticks'}"
         key = CACHE_DIR / f"{tag}.parquet"
         if key.exists():
             return pd.read_parquet(key)

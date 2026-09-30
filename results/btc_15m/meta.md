@@ -7,9 +7,9 @@ Triple-barrier labels: which comes first in the 15 minutes, the upper barrier, t
 | 0 | 1.0 x volatility barriers | upper 22%, lower 22%, time 56% | 49.5% | 52.72% [52.11, 53.35] | 0.538 |
 | 0 | 2.0 x volatility barriers | upper 5%, lower 5%, time 90% | 49.7% | 52.87% [52.30, 53.49] | 0.542 |
 | 3 | close >= open (plain) |  | 49.7% | 66.34% [65.71, 66.96] | 0.720 |
-| 3 | fixed 10 bp barriers | upper 37%, lower 38%, time 25% | 49.3% | 74.33% [73.56, 75.05] | 0.835 |
-| 3 | 1.0 x volatility barriers | upper 22%, lower 22%, time 56% | 49.5% | 67.95% [67.36, 68.55] | 0.748 |
-| 3 | 2.0 x volatility barriers | upper 5%, lower 5%, time 90% | 49.7% | 66.47% [65.86, 67.08] | 0.721 |
+| 3 | fixed 10 bp barriers | upper 34%, lower 34%, time 33% | 50.0% | 50.84% [50.27, 51.39] | 0.512 |
+| 3 | 1.0 x volatility barriers | upper 21%, lower 21%, time 58% | 50.1% | 51.10% [50.47, 51.73] | 0.517 |
+| 3 | 2.0 x volatility barriers | upper 5%, lower 5%, time 91% | 50.1% | 51.01% [50.38, 51.62] | 0.517 |
 
 Meta-labelling: a second model predicts whether the primary direction call is right, trained only on out-of-sample primary predictions from earlier months. EV in cents per $1 contract at a 1c spread and 1.75c fee, priced at 0.5 (only meaningful at minute 0). The AUC is the secondary model's ability to rank right calls above wrong ones.
 
