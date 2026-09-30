@@ -37,6 +37,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss, roc_auc_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
+from threadpoolctl import threadpool_limits
 from xgboost import XGBClassifier
 
 from models.btc_15m.data import load
@@ -46,7 +47,8 @@ from models.btc_15m.stats import block_bootstrap_ci, paired_difference_ci, permu
 warnings.filterwarnings("ignore")
 OUT = Path("results/btc_15m")
 ALL = PRICE_FEATURES + FLOW_FEATURES
-N_JOBS = 4                      # forest threads; keeps the machine usable
+N_JOBS = 2                      # CPU threads for the forest, XGBoost's host-side work and OpenMP pools
+threadpool_limits(N_JOBS)       # caps BLAS/OpenMP (histogram gradient boosting, numpy) in this process
 
 
 def _xgb_device():
@@ -69,7 +71,7 @@ def make_model(kind: str):
         return HistGradientBoostingClassifier(max_depth=3, learning_rate=0.03, max_iter=400, l2_regularization=5, random_state=0)
     return XGBClassifier(n_estimators=400, max_depth=3, learning_rate=0.03, subsample=0.8,
                          colsample_bytree=0.8, min_child_weight=50, reg_lambda=5, verbosity=0,
-                         tree_method="hist", device=XGB_DEVICE)
+                         tree_method="hist", device=XGB_DEVICE, n_jobs=N_JOBS)
 
 
 def runs_for(k: int):

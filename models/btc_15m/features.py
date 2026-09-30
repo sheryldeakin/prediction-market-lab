@@ -9,6 +9,8 @@ Everything is a pure function of numpy arrays so it can be tested and reused liv
 """
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
@@ -86,8 +88,21 @@ class Series:
         return f
 
 
-def dataset(series: Series, k: int) -> pd.DataFrame:
-    """All windows with features at minute k, the label, and the open time."""
+CACHE_DIR = Path("data/feature_cache")
+FEATURE_VERSION = 2          # bump when a feature definition changes; invalidates the cache
+
+
+def dataset(series: Series, k: int, cache: bool = True) -> pd.DataFrame:
+    """All windows with features at minute k, the label, and the open time.
+
+    Cached to data/feature_cache keyed on the series span, minute, feature version and
+    whether tick features are attached, so repeated runs skip the pure-Python build."""
+    key = None
+    if cache:
+        tag = f"{int(series.t[0])}-{int(series.t[-1])}-{len(series.t)}-k{k}-v{FEATURE_VERSION}-{'ticks' if series.ticks is not None else 'noticks'}"
+        key = CACHE_DIR / f"{tag}.parquet"
+        if key.exists():
+            return pd.read_parquet(key)
     rows = []
     for i in series.window_starts():
         f = series.features(i, k)
@@ -97,4 +112,8 @@ def dataset(series: Series, k: int) -> pd.DataFrame:
             f["y_gap1"] = int(series.c[i + WINDOW - 1] >= series.c[i])   # measured from 1 minute in
             f["move_bp"] = series.move_bp(i)
             rows.append(f)
-    return pd.DataFrame(rows)
+    D = pd.DataFrame(rows)
+    if key is not None:
+        CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        D.to_parquet(key, index=False)
+    return D

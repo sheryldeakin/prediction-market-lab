@@ -58,7 +58,7 @@ def test_lead_is_zero_at_open():
 
 
 def test_flow_share_bounds():
-    d = dataset(Series(synthetic(n=HISTORY + 900)), 3)
+    d = dataset(Series(synthetic(n=HISTORY + 900)), 3, cache=False)
     for w in (1, 3, 5, 15, 60):
         assert d[f"flow{w}"].between(-1, 1).all()
 
@@ -73,7 +73,7 @@ def test_label_definition():
 def test_windows_skip_gaps():
     base = synthetic(n=HISTORY + 900)
     base.loc[HISTORY + 100, "ok"] = False
-    d = dataset(Series(base), 0)
+    d = dataset(Series(base), 0, cache=False)
     gap_t = base.t[HISTORY + 100]
     assert not ((d.t <= gap_t) & (d.t + 900 > gap_t)).any()
 
@@ -92,5 +92,5 @@ def test_indicators_are_causal():
 
 def test_indicator_ranges():
     s = Series(synthetic(n=HISTORY + 900))
-    d = dataset(s, 3)
+    d = dataset(s, 3, cache=False)
     assert d.rsi14.between(0, 100).all() and d.stoch14.between(0, 1).all() and d.adx14.between(0, 100).all()
