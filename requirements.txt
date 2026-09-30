@@ -9,3 +9,4 @@ pyarrow
 optuna
 psutil
 threadpoolctl
+pymongo
