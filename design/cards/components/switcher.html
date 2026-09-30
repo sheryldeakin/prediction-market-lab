@@ -1,0 +1,27 @@
+<!-- @dsCard group="Components" name="Model switcher and chrome" subtitle="Category chips, active state in accent tint, theme toggle, breathing-edge rule, links" width="760" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f7f8fb;color:#1f2d5c;font-family:Inter, system-ui, -apple-system, "Segoe UI", sans-serif;font-size:14px;line-height:1.5;padding:24px;}
+.mono{font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;font-variant-numeric:tabular-nums;}
+.bar{display:flex;align-items:center;gap:12px;background:#ffffff;border:1px solid #d9dde8;border-radius:14px;padding:12px 16px}
+.chip{font-size:13px;line-height:18px;font-weight:500;padding:6px 14px;border-radius:999px;border:1px solid #d9dde8;color:#1f2d5c;background:#ffffff}
+.on{background:#eaf0ff;border-color:#3e63dd;color:#1f2d5c}
+.cat{font-size:12px;color:#5c6685;margin-right:4px}
+.tog{margin-left:auto;display:flex;border:1px solid #d9dde8;border-radius:999px;overflow:hidden}
+.tog span{font-size:12px;padding:5px 12px}
+.tog .on{border-radius:0;border:none;background:#1f2d5c;color:#ffffff}
+.rule{height:1px;margin:16px 0;background:linear-gradient(90deg,transparent,rgba(31,45,92,0.28) 20%,rgba(31,45,92,0.28) 80%,transparent)}
+a{color:#3e63dd;font-weight:500;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="bar"><span class="cat">crypto</span><span class="chip on">BTC 15-minute</span><span class="chip">ETH 15-minute</span><span class="cat">sports</span><span class="chip">NFL spreads</span><div class="tog"><span class="on">Light</span><span>Dark</span></div></div>
+<div class="rule"></div>
+<p style="margin:0;font-size:15px;line-height:24px">The models are frozen after a cutoff month; everything after it is scored as it happens. <a href="#">Raw record</a> and <a href="#">full report</a>.</p>
+<p style="font-size:12px;color:#5c6685;margin:12px 0 0">The accent appears once per view: the active chip, or a link. Dividers fade at both ends. Primary buttons, when there is one, are ink, not accent.</p>
+</body>
+</html>

@@ -1,0 +1,26 @@
+<!-- @dsCard group="Components" name="Data table" subtitle="Sunken header, inset hairlines, mono numbers right-aligned, empty row" width="760" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f7f8fb;color:#1f2d5c;font-family:Inter, system-ui, -apple-system, "Segoe UI", sans-serif;font-size:14px;line-height:1.5;padding:24px;}
+.mono{font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;font-variant-numeric:tabular-nums;}
+.card{background:#ffffff;border:1px solid #d9dde8;border-radius:14px;box-shadow:0 1px 2px rgba(31,45,92,0.06), 0 1px 3px rgba(31,45,92,0.10);overflow:hidden}
+table{border-collapse:collapse;width:100%;font-size:14px;line-height:20px}
+th{background:#eef1f7;text-align:left;font-size:13px;font-weight:500;padding:10px 16px;color:#3d4870}
+td{padding:10px 16px;border-top:1px solid #d9dde8}
+td.n,th.n{text-align:right;font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;font-variant-numeric:tabular-nums;font-weight:500}
+td.muted{color:#5c6685}
+</style>
+</head>
+<body>
+<div class="card"><table>
+<tr><th>month</th><th class="n">windows</th><th class="n">accuracy [95% CI]</th><th class="n">backtest</th><th>status</th></tr>
+<tr><td>2026-09</td><td class="n">2,783</td><td class="n">50.41 [49.55, 51.27]</td><td class="n">53.0</td><td style="color:#9f630d;font-weight:500">interval includes baseline</td></tr>
+<tr><td>2026-08</td><td class="n">2,973</td><td class="n">52.90 [52.01, 53.79]</td><td class="n">52.9</td><td style="color:#1a7f4b;font-weight:500">above baseline</td></tr>
+<tr><td>2026-10</td><td class="n muted">0</td><td class="n muted">no data yet</td><td class="n">53.0</td><td class="muted">waiting</td></tr>
+</table></div>
+</body>
+</html>

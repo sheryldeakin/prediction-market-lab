@@ -1,0 +1,46 @@
+<!-- @dsCard group="Components" name="Chart frame" subtitle="Title, subtitle, legend, plot with reference lines and interval band, footnote with n" width="760" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f7f8fb;color:#1f2d5c;font-family:Inter, system-ui, -apple-system, "Segoe UI", sans-serif;font-size:14px;line-height:1.5;padding:24px;}
+.mono{font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;font-variant-numeric:tabular-nums;}
+.frame{background:#ffffff;border:1px solid #d9dde8;border-radius:14px;box-shadow:0 1px 2px rgba(31,45,92,0.06), 0 1px 3px rgba(31,45,92,0.10);padding:24px}
+.t{font-size:20px;line-height:26px;font-weight:600}
+.st{font-size:15px;line-height:22px;color:#3d4870;margin-top:2px}
+.legend{display:flex;gap:12px;margin:12px 0 8px;font-size:13px;line-height:18px;font-weight:500}
+.legend span::before{content:"";display:inline-block;width:12px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle;background:#3e63dd}
+.legend span:nth-child(2)::before{background:#eb6834}
+.legend span:nth-child(3)::before{background:transparent;height:0;border-top:2px dashed #7d859c}
+svg{width:100%;height:190px;display:block}
+.grid{stroke:#d9dde8;stroke-width:1}
+.axis{font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;font-size:11px;fill:#5c6685}
+.l1{stroke:#3e63dd;stroke-width:2;fill:none;stroke-linejoin:round}
+.l2{stroke:#eb6834;stroke-width:2;fill:none;stroke-linejoin:round}
+.band{fill:rgba(62,99,221,0.12)}
+.ref{stroke:#7d859c;stroke-width:1.5;stroke-dasharray:4 4}
+.lab{font-size:12px;font-weight:500;fill:#1f2d5c}
+.foot{font-size:12px;line-height:16px;color:#5c6685;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="frame">
+<div class="t">Forward log</div>
+<div class="st">Cumulative accuracy at the open since the training cutoff, with its 95% interval</div>
+<div class="legend"><span>cumulative</span><span>rolling 7 days</span><span>backtest and 50%</span></div>
+<svg viewBox="0 0 640 170" preserveAspectRatio="none">
+<g class="grid"><line x1="40" y1="20" x2="600" y2="20"/><line x1="40" y1="65" x2="600" y2="65"/><line x1="40" y1="110" x2="600" y2="110"/><line x1="40" y1="155" x2="600" y2="155"/></g>
+<g class="axis"><text x="8" y="24">60</text><text x="8" y="69">55</text><text x="8" y="114">50</text><text x="8" y="159">45</text></g>
+<line class="ref" x1="40" y1="83" x2="600" y2="83"/><text class="axis" x="546" y="79">backtest 53.0</text>
+<line class="ref" x1="40" y1="110" x2="600" y2="110"/>
+<path class="band" d="M60 40 L120 60 L200 96 L300 100 L400 102 L500 104 L600 104 L600 128 L500 126 L400 122 L300 118 L200 116 L120 100 L60 80 Z"/>
+<path class="l1" d="M60 60 L120 80 L200 106 L300 109 L400 112 L500 115 L600 116"/>
+<path class="l2" d="M120 120 L200 90 L260 70 L320 100 L380 118 L440 108 L500 122 L560 112 L600 108"/>
+<text class="lab" x="604" y="120">50.4%</text>
+</svg>
+<div class="foot">n = 2,783 windows, 2026-09-01 to 2026-09-29. Interval: day-block bootstrap, 95%.</div>
+</div>
+</body>
+</html>

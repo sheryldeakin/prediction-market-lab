@@ -1,0 +1,28 @@
+<!-- @dsCard group="Colors" name="Chart palette" subtitle="Six series in fixed order, reference grey, interval band, status" width="760" -->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f7f8fb;color:#1f2d5c;font-family:Inter, system-ui, -apple-system, "Segoe UI", sans-serif;font-size:14px;line-height:1.5;padding:24px;}
+.mono{font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Consolas, monospace;font-variant-numeric:tabular-nums;}
+.row{display:flex;gap:12px;margin-bottom:16px}
+.sw{flex:1;display:flex;flex-direction:column;gap:4px}
+.bar{height:36px;border-radius:6px}
+.name{font-size:12px;font-weight:600}.hex{font-size:11px}
+.pane{border-radius:14px;padding:16px;margin-bottom:12px}
+h2{font-size:13px;font-weight:600;margin:0 0 10px}
+.st{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:500;margin-right:8px}
+</style>
+</head>
+<body>
+<div class="pane" style="background:#ffffff;border:1px solid #d9dde8"><h2>Series, fixed order, light</h2><div class="row"><div class="sw"><div class="bar" style="background:#3e63dd"></div><span class="name">series-1</span><span class="hex mono">#3e63dd</span></div><div class="sw"><div class="bar" style="background:#eb6834"></div><span class="name">series-2</span><span class="hex mono">#eb6834</span></div><div class="sw"><div class="bar" style="background:#1baf7a"></div><span class="name">series-3</span><span class="hex mono">#1baf7a</span></div><div class="sw"><div class="bar" style="background:#eda100"></div><span class="name">series-4</span><span class="hex mono">#eda100</span></div><div class="sw"><div class="bar" style="background:#e87ba4"></div><span class="name">series-5</span><span class="hex mono">#e87ba4</span></div><div class="sw"><div class="bar" style="background:#008300"></div><span class="name">series-6</span><span class="hex mono">#008300</span></div></div>
+<div class="row"><div class="sw"><div class="bar" style="background:#7d859c"></div><span class="name">reference</span><span class="hex mono">#7d859c</span></div><div class="sw"><div class="bar" style="background:rgba(62,99,221,0.12)"></div><span class="name">interval-fill</span><span class="hex mono">rgba(62,99,221,0.12)</span></div></div>
+<div><span class="st" style="background:#eaf0ff;color:#1a7f4b">above baseline</span><span class="st" style="background:#eaf0ff;color:#9f630d">interval includes baseline</span><span class="st" style="background:#eaf0ff;color:#c0392b">below baseline</span></div></div>
+<div class="pane" style="background:#161a24;color:#e7ebf6;border:1px solid #2a3143"><h2>Series, dark</h2><div class="row"><div class="sw"><div class="bar" style="background:#5b7cf0"></div><span class="name">series-1</span><span class="hex mono">#5b7cf0</span></div><div class="sw"><div class="bar" style="background:#d95926"></div><span class="name">series-2</span><span class="hex mono">#d95926</span></div><div class="sw"><div class="bar" style="background:#199e70"></div><span class="name">series-3</span><span class="hex mono">#199e70</span></div><div class="sw"><div class="bar" style="background:#c98500"></div><span class="name">series-4</span><span class="hex mono">#c98500</span></div><div class="sw"><div class="bar" style="background:#d55181"></div><span class="name">series-5</span><span class="hex mono">#d55181</span></div><div class="sw"><div class="bar" style="background:#3fae3f"></div><span class="name">series-6</span><span class="hex mono">#3fae3f</span></div></div>
+<div class="row"><div class="sw"><div class="bar" style="background:#8a92a8"></div><span class="name">reference</span><span class="hex mono">#8a92a8</span></div><div class="sw"><div class="bar" style="background:rgba(91,124,240,0.18)"></div><span class="name">interval-fill</span><span class="hex mono">rgba(91,124,240,0.18)</span></div></div>
+<div><span class="st" style="background:#1b2440;color:#4cc38a">above baseline</span><span class="st" style="background:#1b2440;color:#e0a53a">interval includes baseline</span><span class="st" style="background:#1b2440;color:#ef6b5a">below baseline</span></div></div>
+<p style="font-size:12px;color:#5c6685;margin:0">Six hues, assigned by entity in this order and never re-painted when a filter removes a series; a seventh folds into Other. Validated for colour-vision separation on both surfaces. Series 3, 4 and 5 are below 3:1 on the light surface, so every series is direct-labelled and every chart has a table view. Status colours always carry their word.</p>
+</body>
+</html>
