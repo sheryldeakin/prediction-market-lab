@@ -379,6 +379,117 @@ Ensembles: the mean of four base models' out-of-fold probabilities, and a logist
 
 Neither helps. The average matches the best single model at the open (+0.00) and the stacker is slightly behind at both entry points, with every interval including zero. The four base models make the same calls on the same windows; there is nothing to combine.
 
+**12. Calibration.** Are the probabilities honest numbers? Platt and isotonic recalibration fit on earlier months' out-of-fold probabilities, the Brier score split into reliability (calibration error) and resolution (information), and the expected calibration error month by month.
+
+<!-- table:calibration:start -->
+Calibration of the XGBoost probabilities (price + flow + indicators), walk-forward. Platt and isotonic recalibration are fit on earlier months' out-of-fold probabilities only. Brier = reliability - resolution + uncertainty; lower reliability is better calibration, higher resolution is more information. ECE is the expected calibration error over ten bins.
+
+| minute | probabilities | n | Brier | reliability | resolution | ECE |
+|---|---|---|---|---|---|---|
+| 0 | raw | 20351 | 0.2491 | 0.00042 | 0.00103 | 1.55% |
+| 0 | platt | 20351 | 0.2488 | 0.00001 | 0.00072 | 0.16% |
+| 0 | isotonic | 20351 | 0.2491 | 0.00024 | 0.00073 | 0.56% |
+| 3 | raw | 20351 | 0.2135 | 0.00015 | 0.03568 | 0.92% |
+| 3 | platt | 20351 | 0.2136 | 0.00019 | 0.03566 | 1.20% |
+| 3 | isotonic | 20351 | 0.2139 | 0.00022 | 0.03557 | 1.21% |
+
+Reliability by month (raw probabilities): ECE, mean predicted, observed rate of up.
+
+| minute | month | n | ECE | mean predicted | observed |
+|---|---|---|---|---|---|
+| 0 | 2026-01 | 2976 | 1.64% | 50.0% | 49.3% |
+| 0 | 2026-02 | 2688 | 2.55% | 49.5% | 50.4% |
+| 0 | 2026-03 | 2976 | 2.17% | 50.3% | 49.9% |
+| 0 | 2026-04 | 2880 | 1.29% | 49.7% | 51.0% |
+| 0 | 2026-05 | 2976 | 1.98% | 50.0% | 49.3% |
+| 0 | 2026-06 | 2880 | 2.90% | 50.0% | 47.6% |
+| 0 | 2026-07 | 2976 | 0.54% | 49.7% | 49.7% |
+| 0 | 2026-08 | 2975 | 1.84% | 49.9% | 50.3% |
+| 3 | 2026-01 | 2976 | 1.97% | 49.9% | 49.3% |
+| 3 | 2026-02 | 2688 | 3.30% | 50.0% | 50.4% |
+| 3 | 2026-03 | 2976 | 2.63% | 50.6% | 49.9% |
+| 3 | 2026-04 | 2880 | 1.58% | 50.0% | 51.0% |
+| 3 | 2026-05 | 2976 | 2.57% | 50.3% | 49.3% |
+| 3 | 2026-06 | 2880 | 3.62% | 49.5% | 47.6% |
+| 3 | 2026-07 | 2976 | 2.46% | 49.0% | 49.7% |
+| 3 | 2026-08 | 2975 | 2.82% | 49.9% | 50.3% |
+<!-- table:calibration:end -->
+
+The raw probabilities are already close to calibrated (ECE 1.6% at the open, 0.9% at minute 3; a 0.55 means about 55%). Platt scaling removes most of the remaining error at the open but also flattens the probabilities (lower resolution), so the Brier score barely moves. Month by month, the mean predicted probability tracks the observed rate within about two points; June 2026, when only 47.6% of windows closed up, is the largest miss.
+
+**13. Abstention with conformal prediction.** Instead of a fixed confidence cutoff, split conformal prediction uses the previous month to set a threshold that guarantees a coverage rate, and issues a set: {up}, {down}, or both. A two-class set is an abstention.
+
+<!-- table:conformal:start -->
+Split conformal prediction sets: the previous month calibrates the threshold, the current month is scored. Coverage is how often the set contains the truth (should be at least the target). A single-class set is a call; a two-class set is an abstention.
+
+| minute | target coverage | n | coverage | share with a single-class set | accuracy when a call is made |
+|---|---|---|---|---|---|
+| 0 | 90% | 20351 | 90.9% | 21.1% | 56.60% |
+| 0 | 80% | 20351 | 81.0% | 42.4% | 55.11% |
+| 0 | 70% | 20351 | 70.8% | 63.5% | 53.98% |
+| 0 | 60% | 20351 | 60.2% | 85.0% | 53.18% |
+| 3 | 90% | 20351 | 90.1% | 41.3% | 76.15% |
+| 3 | 80% | 20351 | 80.6% | 68.2% | 71.61% |
+| 3 | 70% | 20351 | 70.6% | 91.3% | 67.82% |
+| 3 | 60% | 20351 | 60.1% | 87.9% | 68.35% |
+<!-- table:conformal:end -->
+
+The coverage guarantee holds at every target (90.9% delivered for 90% promised, and so on down). At the open, asking for 90% coverage makes a call on 21% of windows, and those calls are right 56.6% of the time; this is the same trade as the meta-labelling rule (55.3% on 11%) reached by a different route, with a guarantee attached. Three minutes in, 90% coverage yields calls on 41% of windows at 76% accuracy.
+
+**14. Adversarial validation.** For each test month, a classifier tries to tell that month's windows from all earlier months. AUC 0.5 would mean nothing moved.
+
+<!-- table:adversarial:start -->
+Adversarial validation: a classifier trained to tell a test month's windows from all earlier months, scored on a held-out half. AUC 0.5 means the month is indistinguishable; higher means the feature distribution moved, and the top features say where.
+
+| minute | month | AUC | top features |
+|---|---|---|---|
+| 0 | 2026-01 | 0.772 | vol240, atr14, vol60 |
+| 0 | 2026-02 | 0.843 | vol240, atr14, nratio5 |
+| 0 | 2026-03 | 0.768 | wday, atr14, vol240 |
+| 0 | 2026-04 | 0.746 | vol240, flow15, nratio5 |
+| 0 | 2026-05 | 0.844 | atr14, vol240, nratio5 |
+| 0 | 2026-06 | 0.679 | vol240, wday, vol60 |
+| 0 | 2026-07 | 0.759 | atr14, nratio5, vol240 |
+| 0 | 2026-08 | 0.792 | vol240, atr14, wday |
+| 3 | 2026-01 | 0.768 | vol240, atr14, wday |
+| 3 | 2026-02 | 0.841 | vol240, atr14, nratio5 |
+| 3 | 2026-03 | 0.770 | atr14, wday, vol240 |
+| 3 | 2026-04 | 0.740 | vol240, atr14, nratio5 |
+| 3 | 2026-05 | 0.843 | atr14, vol240, nratio5 |
+| 3 | 2026-06 | 0.676 | vol60, atr14, vol240 |
+| 3 | 2026-07 | 0.756 | atr14, vol240, nratio5 |
+| 3 | 2026-08 | 0.791 | vol240, atr14, wday |
+<!-- table:adversarial:end -->
+
+Every month is distinguishable (AUC 0.68 to 0.84), and the features that give it away are always the volatility measures (`vol240`, `atr14`) and the trade-rate ratio. So the inputs drift month to month, in their volatility level, while the direction signal does not (study 9): the model's decision depends on the shape of the recent path, not its scale. This is the argument for the volatility-normalised features already in the set, and a caution for any feature that is not scale-free.
+
+**15. Feature importance over time.** Permutation importance (accuracy lost when a feature is shuffled) and mean absolute SHAP contribution, on each held-out month.
+
+<!-- table:importance:start -->
+Feature importance on each held-out month. Permutation importance is the accuracy drop (points) when the feature is shuffled; SHAP is the mean absolute contribution from the booster. Top five of each.
+
+| minute | month | permutation importance (points) | mean |SHAP| |
+|---|---|---|---|
+| 0 | 2026-01 | rsi60 +1.11, flow15 +0.94, macd_hist +0.87, flow1 +0.71, flow5 +0.57 | flow15 0.080, vratio15 0.056, atr14 0.049, obv_slope60 0.041, bb_pctb 0.038 |
+| 0 | 2026-02 | macd_hist +0.89, rsi14 +0.63, win2 +0.56, win1 +0.48, rsi60 +0.48 | flow15 0.072, rsi60 0.052, obv_slope60 0.044, vratio15 0.037, rangepos 0.036 |
+| 0 | 2026-03 | rsi60 +1.08, obv_slope60 +0.91, flow1 +0.67, vol240 +0.44, hour +0.44 | flow15 0.053, rsi60 0.052, obv_slope60 0.048, bb_pctb 0.048, vratio15 0.034 |
+| 0 | 2026-04 | rsi60 +1.39, ret5 +1.01, rangepos +1.01, bb_pctb +0.83, rsi14 +0.76 | rsi60 0.063, flow15 0.042, rangepos 0.041, obv_slope60 0.041, bb_pctb 0.028 |
+| 0 | 2026-05 | flow1 +0.57, vratio15 +0.44, rsi60 +0.34, flow3 +0.17, lead +0.00 | rsi60 0.063, rangepos 0.053, flow15 0.052, obv_slope60 0.046, bb_pctb 0.033 |
+| 0 | 2026-06 | rangepos +1.01, ret240 +0.69, atr14 +0.63, ret5 +0.45, ret15 +0.45 | rangepos 0.065, rsi60 0.056, flow15 0.041, obv_slope60 0.038, ret5 0.037 |
+| 0 | 2026-07 | obv_slope60 +1.48, atr14 +1.24, rsi60 +0.94, nratio5 +0.87, adx14 +0.81 | rangepos 0.055, rsi60 0.048, obv_slope60 0.044, bb_pctb 0.040, flow15 0.039 |
+| 0 | 2026-08 | win3 +0.67, win4 +0.34, obv_slope60 +0.27, vratio5 +0.24, size5 +0.24 | rangepos 0.057, rsi60 0.054, obv_slope60 0.052, bb_pctb 0.041, flow15 0.037 |
+| 3 | 2026-01 | lead +14.05, vol240 +0.60, vol15 +0.47, ret5 +0.44, flow1 +0.44 | lead 0.571, win1 0.085, flow15 0.068, stoch14 0.065, rangepos 0.054 |
+| 3 | 2026-02 | lead +12.61, vol15 +0.63, win1 +0.60, flow3 +0.30, flow60 +0.30 | lead 0.736, win1 0.102, stoch14 0.062, flow15 0.053, obv_slope60 0.049 |
+| 3 | 2026-03 | lead +11.32, win1 +0.40, ret5 +0.34, vratio15 +0.30, adx14 +0.30 | lead 0.632, win1 0.099, flow3 0.071, stoch14 0.056, obv_slope60 0.048 |
+| 3 | 2026-04 | lead +14.44, win1 +0.56, stoch14 +0.45, obv_slope60 +0.35, vratio5 +0.21 | lead 0.556, win1 0.071, ret5 0.056, flow3 0.051, stoch14 0.050 |
+| 3 | 2026-05 | lead +14.52, win1 +0.24, ret5 +0.07, vol15 +0.07, wday +0.03 | lead 0.530, win1 0.068, stoch14 0.058, flow3 0.053, ret5 0.052 |
+| 3 | 2026-06 | lead +15.83, flow15 +0.49, ret5 +0.45, ret240 +0.35, rsi60 +0.31 | lead 0.663, win1 0.069, ret5 0.060, rangepos 0.053, flow3 0.052 |
+| 3 | 2026-07 | lead +13.41, win1 +0.27, bb_pctb +0.20, rangepos +0.10, win2 +0.07 | lead 0.530, win1 0.067, flow3 0.056, ret5 0.054, stoch14 0.046 |
+| 3 | 2026-08 | lead +12.24, win1 +0.67, rangepos +0.57, flow3 +0.44, vol60 +0.27 | lead 0.510, win1 0.066, flow3 0.065, ret5 0.049, stoch14 0.046 |
+<!-- table:importance:end -->
+
+Three minutes in, the lead is worth 11 to 16 points every month and nothing else is worth more than one, which is the numerical form of "the current lead explains almost all of it". At the open there is no stable leader: the top permutation feature changes every month and no single feature is worth more than 1.5 points. The SHAP ranking is steadier (`flow15`, `rsi60`, `rangepos`, `obv_slope60` recur), which says the model spreads a small signal over several correlated inputs rather than finding one that matters.
+
 ## What remains open
 
 - The forward log is the arbiter. If the open-of-window accuracy stays near 50% for another two months, the backtest signal was regime-specific and the README will say so. The drift study makes that outcome more puzzling, not less: nothing in the eleven months suggested the signal decays.
