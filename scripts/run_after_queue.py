@@ -17,7 +17,8 @@ from run_queue import own_jobs  # noqa: E402
 log, args = Path(sys.argv[1]), sys.argv[sys.argv.index("--") + 1:]
 idle = 0
 while idle < 2:
-    tail = log.read_text(errors="ignore").strip().splitlines()[-1] if log.exists() else ""
+    lines = log.read_text(errors="ignore").strip().splitlines() if log.exists() else []
+    tail = lines[-1] if lines else ""
     finished = tail[:8].replace(":", "").isdigit() and " done " in tail and not own_jobs()
     idle = idle + 1 if finished else 0
     time.sleep(60)
