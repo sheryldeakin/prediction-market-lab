@@ -11,3 +11,4 @@ psutil
 threadpoolctl
 pymongo
 scipy
+hmmlearn
