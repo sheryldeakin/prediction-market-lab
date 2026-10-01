@@ -20,7 +20,7 @@ features plus the primary's probability, predicts whether that call will be righ
 secondary model is trained only on primary predictions that were themselves made out of
 sample (walk-forward), so it never sees a primary prediction that was fit on the same
 month. Its use is sizing: act only when the secondary model says the call is likely
-right, and compare accuracy and expected value on that subset against acting always.
+right, and compare accuracy on that subset against acting always.
 
     python -m models.btc_15m.meta --start 2025-10 --end 2026-08 --minutes 0,3
 """
@@ -44,6 +44,7 @@ warnings.filterwarnings("ignore")
 OUT = Path("results/btc_15m")
 COLS = PRICE_FEATURES + FLOW_FEATURES + INDICATOR_FEATURES
 SPREAD, FEE = 0.01, 0.0175
+from models.btc_15m.experiments import COST  # noqa: E402
 
 
 def triple_barrier(closes: np.ndarray, open_price: float, upper_bp: float, lower_bp: float,
@@ -163,8 +164,8 @@ def main():
         f.write("| minute | label | how windows resolved | share up | accuracy [95% CI] | AUC |\n|---|---|---|---|---|---|\n")
         for r in brows:
             f.write("| " + " | ".join(str(x) for x in r) + " |\n")
-        f.write(f"\nMeta-labelling: a second model predicts whether the primary direction call is right, trained only on out-of-sample primary predictions from earlier months. EV in cents per $1 contract at a {SPREAD*100:.0f}c spread and {FEE*100:.2f}c fee, priced at 0.5 (only meaningful at minute 0). The AUC is the secondary model's ability to rank right calls above wrong ones.\n\n")
-        f.write("| minute | rule | windows | share acted on | accuracy of primary [95% CI] | EV cents [95% CI] | meta AUC |\n|---|---|---|---|---|---|---|\n")
+        f.write(f"\nMeta-labelling: a second model predicts whether the primary direction call is right, trained only on out-of-sample primary predictions from earlier months. " + COST.format(sp=f"{SPREAD*100:.0f}", fee=f"{FEE*100:.2f}", be=(0.5 + SPREAD / 2 + FEE) * 100) + f" Only the minute-0 rows are even hypothetically meaningful. The AUC is the secondary model's ability to rank right calls above wrong ones.\n\n")
+        f.write("| minute | rule | windows | share acted on | accuracy of primary [95% CI] | accuracy minus break-even, points [95% CI] | meta AUC |\n|---|---|---|---|---|---|---|\n")
         for r in mrows:
             f.write("| " + " | ".join(str(x) for x in r) + " |\n")
     print("wrote meta.md")

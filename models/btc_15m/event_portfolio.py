@@ -12,7 +12,7 @@ month by month over the backtest, and builds three rules:
 Each is scored on the backtest months (the same windows the events were found on,
 so this part is in-sample) and then on the forward period (September 2026 onward,
 loaded from Binance daily files, never seen by the event search), which is the honest
-test. Reported: share of windows acted on, accuracy, and expected value at a 1c
+test. Reported: share of windows acted on, accuracy, and accuracy minus break-even under a hypothetical 1c
 spread and 1.75c fee on a $1 contract priced at 0.5.
 
     python -m models.btc_15m.event_portfolio --start 2025-10 --end 2026-08 --forward-through 2026-09-29
@@ -35,6 +35,7 @@ from models.btc_15m.stats import block_bootstrap_ci
 warnings.filterwarnings("ignore")
 OUT = Path("results/btc_15m")
 SPREAD, FEE = 0.01, 0.0175
+from models.btc_15m.experiments import COST  # noqa: E402
 
 
 def stable_events(D: pd.DataFrame, k: int, min_fires=300, agree=0.75):
@@ -136,8 +137,8 @@ def main():
                 rows.append([k, label, period] + score(act, up, X.y.values, X.t.values))
                 print(rows[-1], flush=True)
     with open(OUT / "event_portfolio.md", "w") as f:
-        f.write(f"Acting only when a stable event fires. Stable events are found on {a.start} to {a.end} (so the backtest rows are in-sample); the forward rows are {first} to {last}, never seen by the event search. EV in cents per $1 contract at a 1c spread and 1.75c fee, priced at 0.5.\n\n")
-        f.write("| minute | rule | period | windows acted on | share | accuracy [95% CI] | EV cents [95% CI] |\n|---|---|---|---|---|---|---|\n")
+        f.write(f"Acting only when a stable event fires. Stable events are found on {a.start} to {a.end} (so the backtest rows are in-sample); the forward rows are {first} to {last}, never seen by the event search. " + COST.format(sp="1", fee="1.75", be=(0.5 + SPREAD / 2 + FEE) * 100) + " Last column: accuracy minus break-even, in points.\n\n")
+        f.write("| minute | rule | period | windows acted on | share | accuracy [95% CI] | accuracy minus break-even, points [95% CI] |\n|---|---|---|---|---|---|---|\n")
         for r in rows:
             f.write("| " + " | ".join(str(x) for x in r) + " |\n")
         f.write(f"\nEach stable event on its own: the deviation of the up-rate from the base rate in the backtest, and the same in the forward period.\n\n| minute | event | direction | backtest deviation (points) | forward fires | forward deviation (points) | held? |\n|---|---|---|---|---|---|---|\n")

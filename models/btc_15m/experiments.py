@@ -6,7 +6,7 @@ results/btc_15m/ and the README splices them in.
     magnitude    a second label: does the price move more than a threshold (10 bp) from
                  the entry price over the minutes that remain? baseline is logistic on
                  recent volatility alone
-    cost         expected value per window at a stated spread and fee, trading only
+    cost         break-even accuracy under a hypothetical cost model, trading only
                  when the model's probability is far enough from 0.5
     regime       accuracy at the open by session, volatility tercile and trend tercile
     cpcv         combinatorial purged cross-validation, embargo as long as the longest
@@ -37,7 +37,8 @@ from models.btc_15m.ticks import TICK_FEATURES, TickFlow, load_seconds, tick_pat
 
 warnings.filterwarnings("ignore")
 OUT = Path("results/btc_15m")
-SPREAD, FEE = 0.01, 0.0175          # dollars per contract on a $1 binary, stated in the README
+SPREAD, FEE = 0.01, 0.0175          # hypothetical cost model on a $1 binary: a sensitivity assumption, stated in the report
+COST = "Under a hypothetical cost model (buy the favoured side at 0.5 plus half a {sp}c spread, pay a {fee}c fee, receive 1 if right) the break-even accuracy is {be:.2f}%. These are sensitivity figures, not a backtest of trades: no venue settles on a Binance last print, and the price model is an assumption."
 EMBARGO_S = HISTORY * 60            # longest feature lookback (the 24-hour volume baseline plus margin)
 
 
@@ -107,7 +108,8 @@ def magnitude(s: Series, minutes, tau_bp: float = 10.0):
 
 def cost(s: Series, minutes):
     """Buy the side the model favours at 0.5 + spread/2 (at the open the market is a coin
-    flip) and pay the fee; payoff 1 if right. EV in cents per traded window."""
+    flip) and pay the fee; payoff 1 if right. Accuracy minus the break-even accuracy, in
+    points, per traded window. A sensitivity calculation, not a backtest of trades."""
     rows = []
     for k in minutes:
         D = dataset(s, k)
@@ -124,8 +126,9 @@ def cost(s: Series, minutes):
             rows.append([k, f">= {0.5+th:.2f} or <= {0.5-th:.2f}", int(m.sum()), f"{100*m.mean():.0f}%", f"{hit.mean()*100:.2f}%",
                          f"{e*100:+.2f} [{lo*100:+.2f}, {hi*100:+.2f}]"])
             print("cost", rows[-1], flush=True)
-    md_table(OUT / "cost.md", f"Expected value per traded window, cents per $1 contract, buying the favoured side at 0.5 + half a {SPREAD*100:.0f}c spread and paying a {FEE*100:.2f}c fee. Forest, price + flow features, walk-forward. Note: after the open a real market would not be priced at 0.5, so only the minute-0 rows describe a real trade.",
-             ["minute", "trade when probability", "windows", "share traded", "accuracy", "EV cents [95% CI]"], rows)
+    be = (0.5 + SPREAD / 2 + FEE) * 100
+    md_table(OUT / "cost.md", f"Break-even accuracy under hypothetical costs. Forest, price + flow features, walk-forward, acting only when the probability is far enough from 0.5. {COST.format(sp=f'{SPREAD*100:.0f}', fee=f'{FEE*100:.2f}', be=be)} After the open a market would not be priced at 0.5, so only the minute-0 rows are even hypothetically meaningful. Last column: accuracy minus break-even, in points, day-block 95% interval.",
+             ["minute", "act when probability", "windows", "share acted on", "accuracy", "accuracy minus break-even, points [95% CI]"], rows)
 
 
 def regime(s: Series):
