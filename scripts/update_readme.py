@@ -32,11 +32,18 @@ for readme in [Path("README.md"), *sorted(Path("docs").glob("*.md"))]:
     if log.exists():
         L = current_rows(read_log(log))
         mid = L.model_id.iloc[0] if "model_id" in L else "pre-manifest"
-        lines = [f"Trained through {L.trained_through.iloc[0]} (models {mid}), scored on {L.time_utc.min()[:10]} to {L.time_utc.max()[:10]}.", "",
-                 "| minute | model | windows | accuracy |", "|---|---|---|---|"]
-        for k, g in L.groupby("minute"):
-            acc = ((g.prob_up > 0.5) == (g.outcome_up == 1)).mean()
-            lines.append(f"| {k} | {g.model.iloc[0]} | {len(g):,} | {acc*100:.2f}% |")
+        FORWARD_FROM = "2026-10-01"          # the log was first committed after September 2026 had passed, so September is a holdout
+        hold, fwd = L[L.time_utc < FORWARD_FROM], L[L.time_utc >= FORWARD_FROM]
+        lines = [f"Models trained through {L.trained_through.iloc[0]} (model id {mid}). September 2026 is an out-of-time holdout: the log was first written after the month had passed. The forward log proper begins {FORWARD_FROM}.", ""]
+        for title, part in (("Holdout (September 2026)", hold), ("Forward log (from October 2026)", fwd)):
+            if part.empty:
+                lines += [f"{title}: no windows yet.", ""]
+                continue
+            lines += [f"{title}: {part.time_utc.min()[:10]} to {part.time_utc.max()[:10]}.", "", "| minute | model | windows | accuracy |", "|---|---|---|---|"]
+            for k, g in part.groupby("minute"):
+                acc = ((g.prob_up > 0.5) == (g.outcome_up == 1)).mean()
+                lines.append(f"| {k} | {g.model.iloc[0]} | {len(g):,} | {acc*100:.2f}% |")
+            lines.append("")
         text = re.sub(r"<!-- forward:start -->.*?<!-- forward:end -->",
                       "<!-- forward:start -->\n" + "\n".join(lines) + "\n<!-- forward:end -->", text, flags=re.S)
 
