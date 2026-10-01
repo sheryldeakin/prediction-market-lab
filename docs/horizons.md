@@ -191,6 +191,60 @@ By span, averaged over test years:
 - **Direction is stable; size is not.** Cells selected on earlier years kept their sign in the test year almost without exception (the count is under the span table), so the sign of these effects is reliable. Their size in the test year is smaller than in the selection years, which is the fading above and the usual shrinkage of a selected estimate.
 - **More history selects fewer, slightly better cells.** Selecting on all earlier years picks about 230 cells against 360 for the previous year alone, and the selected direction is right 53.1% of the time in the test year against 52.8%. The differences between spans are small; what the span mostly changes is how many cells survive, not how good they are. The accuracy figures here are firing-weighted across all selected cells, so the frequent weak cells (range position beyond 0.85, firing on 13% of minutes) dominate them; the strong cells above are rarer and stronger than these averages.
 
+## The same cells under averaged prices
+
+The labels above compare two prints. "Price at its 4-hour low" is partly "the last trade was at the bid", and the next print is then more likely above it; averaged prices remove most of that. Every cell was scored again with the VWAP of the decision minute against the VWAP of the horizon's last minute (at horizon 1, the minute's first and second halves), from the tick data for all nine years.
+
+<!-- table:horizons_vwap:start -->
+The conditional cells under two labels, 2018 to 2026-08, every minute as a decision time: the last print (close of the horizon's last minute against the open of the decision minute) and 60-second VWAPs (the decision minute's VWAP against the last minute's VWAP). Deviation from the unconditional up-rate in points, firing-weighted over the years; 'retained' is the VWAP deviation as a share of the last-print one; the last column is the number of years in which the VWAP deviation had the pooled last-print sign. The 30 cells with the largest last-print deviation.
+
+| pattern | horizon (min) | deviation, last print | deviation, VWAP | retained | years same sign under VWAP |
+|---|---|---|---|---|---|
+| sweep: range position > 0.95 | 30 | -9.0 | -9.6 | 106% | 9.0/9.0 |
+| price at 4h high (rangepos >= 0.98) | 30 | -8.8 | -9.5 | 108% | 9.0/9.0 |
+| sweep: range position < 0.05 | 30 | +8.6 | +9.1 | 107% | 9.0/9.0 |
+| price at 4h low (rangepos <= 0.02) | 30 | +8.4 | +9.0 | 107% | 9.0/9.0 |
+| sweep: range position > 0.90 | 30 | -8.3 | -8.7 | 105% | 9.0/9.0 |
+| sweep: range position < 0.1 | 30 | +8.2 | +8.6 | 105% | 9.0/9.0 |
+| price at 4h low (rangepos <= 0.02) | 15 | +8.1 | +8.9 | 110% | 9.0/9.0 |
+| sweep: range position > 0.95 | 15 | -8.0 | -8.5 | 106% | 9.0/9.0 |
+| price at 4h low (rangepos <= 0.02) | 10 | +7.9 | +8.7 | 109% | 9.0/9.0 |
+| price at 4h high (rangepos >= 0.98) | 15 | -7.8 | -8.3 | 107% | 9.0/9.0 |
+| sweep: range position > 0.85 | 30 | -7.7 | -8.0 | 103% | 9.0/9.0 |
+| sweep: range position < 0.05 | 15 | +7.7 | +8.4 | 110% | 9.0/9.0 |
+| sweep: RSI60 < 45 | 30 | +7.6 | +7.9 | 104% | 9.0/9.0 |
+| sweep: RSI60 > 55 | 30 | -7.6 | -7.8 | 103% | 9.0/9.0 |
+| sweep: range position < 0.15 | 30 | +7.6 | +7.9 | 105% | 9.0/9.0 |
+| sweep: 15-min move < -3 sd | 3 | +7.5 | +7.8 | 104% | 9.0/9.0 |
+| sweep: 5-min move < -3 sd | 3 | +7.5 | +7.9 | 105% | 9.0/9.0 |
+| sweep: RSI14 < 25 | 10 | +7.5 | +7.8 | 104% | 9.0/9.0 |
+| RSI14 below 30 | 10 | +7.5 | +7.9 | 105% | 9.0/9.0 |
+| sweep: RSI14 < 30 | 10 | +7.5 | +7.9 | 105% | 9.0/9.0 |
+| sweep: RSI14 < 25 | 5 | +7.5 | +7.8 | 104% | 9.0/9.0 |
+| RSI14 below 30 | 5 | +7.4 | +7.8 | 105% | 9.0/9.0 |
+| sweep: RSI14 < 30 | 5 | +7.4 | +7.8 | 105% | 9.0/9.0 |
+| sweep: range position < 0.1 | 15 | +7.4 | +7.9 | 108% | 9.0/9.0 |
+| price at 4h high (rangepos >= 0.98) | 10 | -7.3 | -8.1 | 110% | 9.0/9.0 |
+| sweep: RSI14 < 25 | 3 | +7.3 | +7.0 | 96% | 9.0/9.0 |
+| sweep: range position < 0.05 | 10 | +7.3 | +8.2 | 112% | 9.0/9.0 |
+| sweep: RSI60 < 40 | 30 | +7.3 | +7.6 | 104% | 9.0/9.0 |
+| sweep: range position > 0.90 | 15 | -7.3 | -7.6 | 105% | 9.0/9.0 |
+| sweep: RSI14 < 20 | 3 | +7.2 | +6.7 | 94% | 9.0/9.0 |
+
+By horizon, over all cells: the median share of the last-print deviation retained under the VWAP label, and the share of cells whose sign is unchanged.
+
+| horizon (min) | cells | median retained | sign unchanged |
+|---|---|---|---|
+| 1 | 107 | 0% | 0% |
+| 3 | 107 | 103% | 99% |
+| 5 | 107 | 105% | 100% |
+| 10 | 107 | 108% | 100% |
+| 15 | 107 | 106% | 99% |
+| 30 | 107 | 106% | 100% |
+<!-- table:horizons_vwap:end -->
+
+The cells are not a last-print effect. Under the VWAP label the deviations at 3 to 30 minutes are slightly larger than under the last print (the median cell retains 103 to 108% of its deviation) and the sign is unchanged in 99 to 100% of cells. The reversals from extremes are moves in the price itself, as the 15-minute reversal was in the main report's study 21.
+
 ## Regimes
 
 Two questions: when were the bull and bear markets, and does any of the above depend on them? Dating uses the threshold rule of Lunde and Timmermann (a bull ends when the price falls 15% from its peak, a bear when it rises 20% from its trough), which places the turn at the peak or trough and so uses the future; it describes history and cannot drive a live rule. For a label known at the time, a three-state hidden Markov model on daily return and realised volatility is fit on all earlier years and run forward only, and the previous day's state labels every minute of the next day.
@@ -359,5 +413,4 @@ The 24 strongest conditional cells (from horizons.md) within each HMM state, 201
 
 ## What is not yet done
 
-- The label is the Binance last print. For the shortest horizons a "new 4-hour low" is partly a last trade at the bid, and the next print is more likely above it. The 15-minute reversal survived a VWAP label (btc_15m.md, study 21); the same check is owed to these cells, from the tick data, once its history is downloaded.
 - Direction with magnitude from any minute: the probability of touching +X before -X within h minutes given a pattern.
