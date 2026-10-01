@@ -1,5 +1,7 @@
-"""Wait for one queue to finish, then start another. Used once on 2026-10-01 to chain the
-regeneration queue into the new-studies queue without a terminal attached.
+"""Wait for one queue to finish, then start another, without a terminal attached.
+
+The first queue is finished when the last line of its log is a "done" line and none of
+this repo's experiment processes is running (checked twice, a minute apart).
 
     python scripts/run_after_queue.py <log of the running queue> -- <run_queue.py arguments>
 """
@@ -9,11 +11,15 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from run_queue import own_jobs  # noqa: E402
+
 log, args = Path(sys.argv[1]), sys.argv[sys.argv.index("--") + 1:]
-while True:
+idle = 0
+while idle < 2:
     tail = log.read_text(errors="ignore").strip().splitlines()[-1] if log.exists() else ""
-    if tail.startswith(tuple("0123456789")) and " done " in tail and "charts" in tail:
-        break
+    finished = tail[:8].replace(":", "").isdigit() and " done " in tail and not own_jobs()
+    idle = idle + 1 if finished else 0
     time.sleep(60)
 py = str(ROOT / ".venv" / "Scripts" / "python.exe")
 subprocess.run([py, str(ROOT / "scripts" / "run_queue.py"), *args], cwd=ROOT)
