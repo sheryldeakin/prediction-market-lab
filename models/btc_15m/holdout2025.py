@@ -28,7 +28,8 @@ import pandas as pd
 from models.btc_15m.data import load
 from models.btc_15m.evaluate import ALL, add_baseline_columns, make_model
 from models.btc_15m.events2 import all_candidates, base_events
-from models.btc_15m.features import Series, dataset
+from models.btc_15m.features import FLOW_FEATURES, PRICE_FEATURES, Series, dataset
+from models.btc_15m.indicators import INDICATOR_FEATURES
 from models.btc_15m.log import LOCKED, train_or_load
 from models.btc_15m.stats import block_bootstrap_ci, day_sign_test, month_block_bootstrap_ci, paired_difference_ci
 
@@ -64,6 +65,10 @@ def main():
         y, t = H.y.values, H.t.values
         preds = {name: models[k].predict_proba(H[cols])[:, 1]}
         if k == 0:
+            # the model the ablation says carries an increment over the one-bit rule: added for the
+            # second run (2026-10-01), declared in the process log, fit once on the training months
+            rich = PRICE_FEATURES + FLOW_FEATURES + INDICATOR_FEATURES
+            preds["forest (price + flow + indicators)"] = make_model("forest").fit(Dtr[rich], Dtr.y).predict_proba(H[rich])[:, 1]
             r = bit_rates(Dtr)
             preds["prev-window"] = np.where(H.prev_up.values == 1, r[1], r[0])
             base = "prev-window"
@@ -101,7 +106,7 @@ def main():
 
     ran_at = dt.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     with open(OUT / "holdout_2025.md", "w") as f:
-        f.write(f"Second holdout: {a.start} to {a.end}, months no study had loaded, scored once on {ran_at} at commit {commit[:10]}{' (with uncommitted model changes)' if dirty else ''}. Frozen models {manifest['model_id']} trained on {a.train_start} to {a.train_end}; baselines fitted on the same months. Accuracy with day-block then month-block 95% intervals; the last column is minus the baseline on the same windows (day-block interval, share of days better, sign-flip p).\n\n")
+        f.write(f"Second holdout: {a.start} to {a.end}, months no study had loaded, scored on {ran_at} at commit {commit[:10]}{' (with uncommitted model changes)' if dirty else ''}. Frozen models {manifest['model_id']} trained on {a.train_start} to {a.train_end}; baselines fitted on the same months; the indicator forest is fit once on the same months (see the process log for why it was added in a second run). Accuracy with day-block then month-block 95% intervals; the last column is minus the baseline on the same windows (day-block interval, share of days better, sign-flip p).\n\n")
         f.write("| minute | model | windows | accuracy [day CI] [month CI] | minus baseline |\n|---|---|---|---|---|\n")
         for r in rows:
             f.write("| " + " | ".join(str(x) for x in r) + " |\n")
