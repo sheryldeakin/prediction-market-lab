@@ -7,3 +7,4 @@ CLAUDE.md
 .env
 logs/
 queue/night.txt
+results/btc_15m/oof_k*.parquet

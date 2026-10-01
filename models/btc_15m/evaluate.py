@@ -174,6 +174,8 @@ def main():
                                 "accuracy": float(((pred[mm] > 0.5) == y[mm]).mean())})
             print(f"k={k:2d} {name:13s} n={len(y):6d} acc={r['accuracy']*100:6.2f}% auc={r['auc']:.3f} logloss={r['log_loss']:.4f}")
         base = baseline_name(k)
+        oof = pd.DataFrame({"t": t, "y": y, **{name: preds[name] for name in preds}})
+        oof.to_parquet(OUT / f"oof_k{k}.parquet", index=False)                 # per-window predictions, for later analyses
         for name in preds:
             hits = ((preds[name] > 0.5) == y).astype(float)
             m_, lo, hi = block_bootstrap_ci(hits, t)
