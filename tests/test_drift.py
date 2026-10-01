@@ -32,11 +32,20 @@ def test_window_study_shapes_and_no_test_leak():
         assert ((pred > 0.5) == y).mean() > 0.9                                  # separable label is learned
 
 
-def test_decay_study_ages_and_counts():
+def test_decay_study_scores_every_age_on_the_same_rows():
+    """Ages were pooled over different target months, so staleness was confounded with
+    which months each age was scored on (council review, 2026-09-30)."""
+    from models.btc_15m.evaluate import make_model
     D = synthetic()
-    dec = decay_study(D, ["a", "b"], kind="logistic", horizon=3)
-    assert sorted(dec) == [0, 1, 2]
-    # start months: Apr, May, Jun -> age 0 has 3 start months, age 1 has 2, age 2 has 1
-    assert dec[0].start.nunique() == 3 and dec[1].start.nunique() == 2 and dec[2].start.nunique() == 1
-    # a model trained before April must never be scored on a month before April
-    assert pd.to_datetime(dec[0].t, unit="s").min() >= pd.Timestamp("2026-04-01")
+    D["y"] = np.where(pd.to_datetime(D.t, unit="s") < pd.Timestamp("2026-05-01"), D.a > 0, D.b > 0).astype(int)
+    dec = decay_study(D, ["a", "b"], kind="logistic", horizon=2)
+    # with 3 training months minimum, the age-1 model needs May as target at the earliest
+    assert sorted(dec.target.unique()) == ["2026-05", "2026-06"]
+    assert {"hit_0", "hit_1"} <= set(dec.columns) and dec[["hit_0", "hit_1"]].notna().all().all()
+    # the age-1 score on June comes from a model trained on months before May
+    month = pd.to_datetime(D.t, unit="s").dt.to_period("M")
+    tr, te = (month < pd.Period("2026-05", "M")).values, (month == pd.Period("2026-06", "M")).values
+    p = make_model("logistic").fit(D.loc[tr, ["a", "b"]], D.y[tr]).predict_proba(D.loc[te, ["a", "b"]])[:, 1]
+    june = dec[dec.target == "2026-06"]
+    assert np.array_equal(june.hit_1.values, ((p > 0.5) == D.y.values[te]).astype(float))
+    assert june.hit_0.mean() > june.hit_1.mean()             # the fresh model has seen May, where the rule changed

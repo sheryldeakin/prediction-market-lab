@@ -3,13 +3,14 @@ results/btc_15m/ and the README splices them in.
 
     ablation     feature sets: price, +flow, +indicators, +tick flow (if the per-second
                  tick files exist), walk-forward by month, forest and xgb
-    magnitude    a second label: does the window move more than a threshold (10 bp)?
-                 baseline is logistic on recent volatility alone
+    magnitude    a second label: does the price move more than a threshold (10 bp) from
+                 the entry price over the minutes that remain? baseline is logistic on
+                 recent volatility alone
     cost         expected value per window at a stated spread and fee, trading only
                  when the model's probability is far enough from 0.5
     regime       accuracy at the open by session, volatility tercile and trend tercile
-    cpcv         combinatorial purged cross-validation with a 4-hour embargo, as a
-                 second estimate next to walk-forward
+    cpcv         combinatorial purged cross-validation, embargo as long as the longest
+                 feature lookback, as a second estimate next to walk-forward
 
     python -m models.btc_15m.experiments --start 2025-10 --end 2026-08 [--which ablation,cost,...]
 """
@@ -29,7 +30,7 @@ from sklearn.preprocessing import StandardScaler
 
 from models.btc_15m.data import load
 from models.btc_15m.evaluate import make_model, walk_forward
-from models.btc_15m.features import FLOW_FEATURES, PRICE_FEATURES, Series, dataset
+from models.btc_15m.features import FLOW_FEATURES, HISTORY, PRICE_FEATURES, WINDOW, Series, dataset
 from models.btc_15m.indicators import INDICATOR_FEATURES
 from models.btc_15m.stats import block_bootstrap_ci, paired_difference_ci
 from models.btc_15m.ticks import TICK_FEATURES, TickFlow, load_seconds, tick_path
@@ -37,6 +38,7 @@ from models.btc_15m.ticks import TICK_FEATURES, TickFlow, load_seconds, tick_pat
 warnings.filterwarnings("ignore")
 OUT = Path("results/btc_15m")
 SPREAD, FEE = 0.01, 0.0175          # dollars per contract on a $1 binary, stated in the README
+EMBARGO_S = HISTORY * 60            # longest feature lookback (the 24-hour volume baseline plus margin)
 
 
 def md_table(path: Path, header: str, cols: list[str], rows: list[list]):
@@ -70,11 +72,21 @@ def ablation(s: Series, minutes, has_ticks: bool):
              ["minute", "features", "model", "n", "accuracy", "AUC", "log loss", "vs price-only forest"], rows)
 
 
+def magnitude_label(s: Series, D: pd.DataFrame, k: int, tau_bp: float) -> np.ndarray:
+    """1 when the window's close is at least tau_bp from the entry price (the open at k = 0,
+    else the last close before minute k). Measuring from the open let the move already
+    seen by minute k (the lead, a feature) decide the label."""
+    ix = {int(t): i for i, t in enumerate(s.t)}
+    i = np.array([ix[int(t)] for t in D.t.values])
+    entry = s.o[i] if k == 0 else s.c[i + k - 1]
+    return (np.abs(s.c[i + WINDOW - 1] / entry - 1) * 1e4 >= tau_bp).astype(int)
+
+
 def magnitude(s: Series, minutes, tau_bp: float = 10.0):
     rows = []
     for k in minutes:
         D = dataset(s, k)
-        D["y"] = (D.move_bp.abs() >= tau_bp).astype(int)          # reuse the label column for walk_forward
+        D["y"] = magnitude_label(s, D, k, tau_bp)                 # reuse the label column for walk_forward
         base_rate = D.y.mean()
         for name, cols, kind in (("vol60 only", ["vol60"], "logistic"), ("all features", PRICE_FEATURES + FLOW_FEATURES + INDICATOR_FEATURES, "xgb")):
             pred, y, _, t = walk_forward(D, cols, kind)
@@ -82,7 +94,7 @@ def magnitude(s: Series, minutes, tau_bp: float = 10.0):
             rows.append([k, name, len(y), f"{base_rate*100:.1f}%", f"{m*100:.2f}% [{lo*100:.2f}, {hi*100:.2f}]",
                          f"{roc_auc_score(y, pred):.3f}", f"{log_loss(y, np.clip(pred, 1e-6, 1-1e-6)):.4f}"])
             print("magnitude", rows[-1], flush=True)
-    md_table(OUT / "magnitude.md", f"Magnitude label: the window moves at least {tau_bp:.0f} basis points from its open, in either direction.",
+    md_table(OUT / "magnitude.md", f"Magnitude label: the window's close is at least {tau_bp:.0f} basis points from the entry price (the open at minute 0, the price at entry after it), in either direction.",
              ["minute", "model", "n", "share of windows that move", "accuracy [95% CI]", "AUC", "log loss"], rows)
 
 
@@ -129,10 +141,22 @@ def regime(s: Series):
         print("regime", r, flush=True)
 
 
-def cpcv(s: Series, k: int = 0, n_groups: int = 6, n_test: int = 2, embargo_s: int = 4 * 3600):
+def purged_train_mask(t: np.ndarray, groups: np.ndarray, test_groups, embargo_s: int) -> np.ndarray:
+    """Training rows for one CPCV path: not in a test block and not within embargo_s of
+    one on either side (a window's features reach back embargo_s; its label reaches 900 s
+    forward)."""
+    tr = ~np.isin(groups, test_groups)
+    for g in test_groups:
+        a, b = t[groups == g].min() - embargo_s, t[groups == g].max() + 900 + embargo_s
+        tr &= ~((t >= a) & (t <= b))
+    return tr
+
+
+def cpcv(s: Series, k: int = 0, n_groups: int = 6, n_test: int = 2, embargo_s: int = EMBARGO_S):
     """Combinatorial purged CV: every choice of n_test groups out of n_groups contiguous
     time blocks is a test set; training rows within `embargo_s` of any test row are
-    dropped. Reports the spread of accuracies across the C(6,2) = 15 paths."""
+    dropped (the default is the longest feature lookback; 4 hours was shorter than the
+    24-hour volume baseline). Reports the spread of accuracies across the paths."""
     D = dataset(s, k)
     cols = PRICE_FEATURES + FLOW_FEATURES
     t = D.t.values
@@ -140,18 +164,15 @@ def cpcv(s: Series, k: int = 0, n_groups: int = 6, n_test: int = 2, embargo_s: i
     rows, accs = [], []
     for test_groups in itertools.combinations(range(n_groups), n_test):
         te = np.isin(groups, test_groups)
-        tr = ~te
-        for g in test_groups:                                   # purge + embargo around each test block
-            a, b = t[groups == g].min() - embargo_s, t[groups == g].max() + 900 + embargo_s
-            tr &= ~((t >= a) & (t <= b))
+        tr = purged_train_mask(t, groups, test_groups, embargo_s)
         pred = make_model("forest").fit(D.loc[tr, cols], D.y[tr]).predict_proba(D.loc[te, cols])[:, 1]
         acc = ((pred > 0.5) == D.y[te]).mean()
         accs.append(acc)
         rows.append([str(test_groups), int(tr.sum()), int(te.sum()), f"{acc*100:.2f}%"])
         print("cpcv", rows[-1], flush=True)
     accs = np.array(accs)
-    rows.append(["all 15 paths", "", "", f"mean {accs.mean()*100:.2f}%, min {accs.min()*100:.2f}%, max {accs.max()*100:.2f}%"])
-    md_table(OUT / "cpcv.md", f"Combinatorial purged cross-validation at minute {k}: {n_groups} contiguous blocks, every pair as the test set, training rows within 4 hours of a test block dropped. Forest, price + flow. Unlike walk-forward, some paths train on data from after the test block.",
+    rows.append([f"all {len(accs)} paths", "", "", f"mean {accs.mean()*100:.2f}%, min {accs.min()*100:.2f}%, max {accs.max()*100:.2f}%"])
+    md_table(OUT / "cpcv.md", f"Combinatorial purged cross-validation at minute {k}: {n_groups} contiguous blocks, every pair as the test set, training rows within {embargo_s // 3600} hours of a test block dropped (the longest feature lookback). Forest, price + flow. Unlike walk-forward, some paths train on data from after the test block.",
              ["test blocks", "train rows", "test rows", "accuracy"], rows)
 
 

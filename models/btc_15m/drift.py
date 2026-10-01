@@ -5,9 +5,11 @@ Two studies, walk-forward by month, XGBoost on price + flow + indicator features
   window     for each test month, train on the last W months only (W = 2, 3, 4, 6)
              versus every earlier month (expanding). If recent months beat all
              months, the relationship is drifting.
-  decay      train once at the start of month m and keep the model for m, m+1, m+2,
-             m+3 without retraining. Accuracy by months since the last retrain, pooled
-             over every start month, says how fast a model goes stale.
+  decay      for each target month, score the model retrained just before it and the
+             models last retrained 1, 2 and 3 months earlier, all on the target month's
+             windows. Paired differences against the fresh model say how fast a model
+             goes stale. (An earlier version pooled each age over different target
+             months, so an age effect was confounded with which months it was scored on.)
 
     python -m models.btc_15m.drift --start 2025-10 --end 2026-08 --minutes 0,3
 """
@@ -15,7 +17,6 @@ from __future__ import annotations
 
 import argparse
 import warnings
-from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -56,22 +57,27 @@ def window_study(D: pd.DataFrame, cols, kind="xgb", windows=(2, 3, 4, 6, None)):
     return out
 
 
-def decay_study(D: pd.DataFrame, cols, kind="xgb", horizon=4):
-    """Returns per-window hits keyed by months since retrain, pooled over start months."""
+def decay_study(D: pd.DataFrame, cols, kind="xgb", horizon=4) -> pd.DataFrame:
+    """One row per window of every target month that all ages can score: columns t,
+    target, and hit_0 .. hit_{horizon-1}, where hit_a comes from a model trained on the
+    months before target - a (so a = 0 is the fresh model). Every age is scored on the
+    same rows. Each model needs MIN_TRAIN months of training data."""
     month = pd.to_datetime(D.t, unit="s").dt.to_period("M")
     months = sorted(month.unique())
     y = D.y.values
-    hits = defaultdict(list)
-    for i, m in enumerate(months[MIN_TRAIN:], start=MIN_TRAIN):
-        tr = (month < m).values
-        model = make_model(kind).fit(D.loc[tr, cols], y[tr])
+    models = {}
+    for j in range(MIN_TRAIN, len(months)):
+        tr = (month < months[j]).values
+        models[j] = make_model(kind).fit(D.loc[tr, cols], y[tr])
+    frames = []
+    for i in range(MIN_TRAIN + horizon - 1, len(months)):
+        te = (month == months[i]).values
+        out = pd.DataFrame({"t": D.t.values[te], "target": str(months[i])})
         for age in range(horizon):
-            if i + age >= len(months):
-                break
-            te = (month == months[i + age]).values
-            p = model.predict_proba(D.loc[te, cols])[:, 1]
-            hits[age].append(pd.DataFrame({"t": D.t.values[te], "hit": ((p > 0.5) == y[te]).astype(float), "start": str(m)}))
-    return {age: pd.concat(v, ignore_index=True) for age, v in hits.items()}
+            p = models[i - age].predict_proba(D.loc[te, cols])[:, 1]
+            out[f"hit_{age}"] = ((p > 0.5) == y[te]).astype(float)
+        frames.append(out)
+    return pd.concat(frames, ignore_index=True)
 
 
 def main():
@@ -97,17 +103,23 @@ def main():
             wrows.append([k, name, len(y), f"{m*100:.2f}% [{lo*100:.2f}, {hi*100:.2f}]", f"{log_loss(y, np.clip(pred, 1e-6, 1-1e-6)):.4f}", vs])
             print(wrows[-1], flush=True)
         dec = decay_study(D, COLS)
-        for age, df in sorted(dec.items()):
-            m, lo, hi = block_bootstrap_ci(df.hit.values, df.t.values)
-            drows.append([k, age, df.start.nunique(), len(df), f"{m*100:.2f}% [{lo*100:.2f}, {hi*100:.2f}]"])
+        for age in range(4):
+            h = dec[f"hit_{age}"].values
+            m, lo, hi = block_bootstrap_ci(h, dec.t.values)
+            if age == 0:
+                vs = "reference"
+            else:
+                d, dlo, dhi = paired_difference_ci(h, dec.hit_0.values, dec.t.values)
+                vs = f"{d*100:+.2f} [{dlo*100:+.2f}, {dhi*100:+.2f}]"
+            drows.append([k, age, dec.target.nunique(), len(dec), f"{m*100:.2f}% [{lo*100:.2f}, {hi*100:.2f}]", vs])
             print(drows[-1], flush=True)
     with open(OUT / "drift.md", "w") as f:
         f.write("Training window: for each test month, train on the last W months only or on every earlier month. XGBoost, price + flow + indicators, walk-forward. Last column: accuracy minus expanding on the same windows, day-block 95% interval.\n\n")
         f.write("| minute | training window | n | accuracy [95% CI] | log loss | vs expanding |\n|---|---|---|---|---|---|\n")
         for r in wrows:
             f.write("| " + " | ".join(str(x) for x in r) + " |\n")
-        f.write("\nRetrain frequency: a model trained at the start of a month and kept without retraining. Accuracy by months since the last retrain, pooled over all start months (later ages have fewer start months).\n\n")
-        f.write("| minute | months since retrain | start months | n | accuracy [95% CI] |\n|---|---|---|---|---|\n")
+        f.write(f"\nRetrain frequency: on each target month ({dec.target.iloc[0]} to {dec.target.iloc[-1]}), the model retrained just before it and the models last retrained one, two and three months earlier, all scored on the same windows. Last column: accuracy minus the fresh model, day-block 95% interval.\n\n")
+        f.write("| minute | months since retrain | target months | n | accuracy [95% CI] | vs fresh model |\n|---|---|---|---|---|---|\n")
         for r in drows:
             f.write("| " + " | ".join(str(x) for x in r) + " |\n")
     print("wrote drift.md")
