@@ -40,6 +40,7 @@ class Series:
         self.cv, self.csv, self.cn = cs(self.v), cs(signed), cs(self.n)
         self.ind = compute_indicators(self.o, self.h, self.l, self.c, self.v)
         self.ticks = None                      # optional TickFlow, set by the caller
+        self.extra = {}                        # optional per-minute arrays (e.g. derivatives), value at i known at minute i's close
 
     def fingerprint(self) -> str:
         """Identifies the series content, not only its time span: two coins over the same
@@ -95,6 +96,8 @@ class Series:
             f[name] = float(self.ind[name][j - 1])
         if self.ticks is not None:
             f.update(self.ticks.features(int(self.t[i]), k))
+        for name, arr in self.extra.items():
+            f[name] = float(arr[j - 1])
         return f
 
 
@@ -109,7 +112,7 @@ def dataset(series: Series, k: int, cache: bool = True) -> pd.DataFrame:
     whether tick features are attached, so repeated runs skip the pure-Python build."""
     key = None
     if cache:
-        tag = f"{series.fingerprint()}-k{k}-v{FEATURE_VERSION}-{'ticks' if series.ticks is not None else 'noticks'}"
+        tag = f"{series.fingerprint()}-k{k}-v{FEATURE_VERSION}-{'ticks' if series.ticks is not None else 'noticks'}-{'+'.join(sorted(series.extra)) or 'noextra'}"
         key = CACHE_DIR / f"{tag}.parquet"
         if key.exists():
             return pd.read_parquet(key)

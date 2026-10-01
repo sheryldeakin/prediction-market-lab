@@ -27,6 +27,7 @@ Writes results/btc_15m/*.md and *.csv. Every number in the README comes from her
 from __future__ import annotations
 
 import argparse
+import os
 import warnings
 from pathlib import Path
 
@@ -52,6 +53,8 @@ threadpool_limits(N_JOBS)       # caps BLAS/OpenMP (histogram gradient boosting,
 
 
 def _xgb_device():
+    if os.environ.get("LAB_XGB_DEVICE"):          # "cpu" to keep off a GPU another program holds
+        return os.environ["LAB_XGB_DEVICE"]
     try:
         import torch
         return "cuda" if torch.cuda.is_available() else "cpu"
