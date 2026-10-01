@@ -89,7 +89,8 @@ def _lagged(x: np.ndarray, k: int) -> np.ndarray:
 
 
 def _bp(a, b):
-    return (a / b - 1) * 1e4
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return (a / b - 1) * 1e4
 
 
 def minute_events(s: Series) -> dict[str, tuple[str, np.ndarray]]:
