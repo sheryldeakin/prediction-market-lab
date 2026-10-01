@@ -35,6 +35,7 @@ from models.btc_15m.data import load
 from models.btc_15m.evaluate import XGB_DEVICE, N_JOBS, make_model
 from models.btc_15m.features import FLOW_FEATURES, PRICE_FEATURES, Series, dataset
 from models.btc_15m.indicators import INDICATOR_FEATURES
+from models.btc_15m.stats import calibration_slope_ci
 
 warnings.filterwarnings("ignore")
 OUT = Path("results/btc_15m")
@@ -169,7 +170,8 @@ def main():
         common = ~np.isnan(variants["isotonic"])
         for name, v in variants.items():
             d = brier_decomposition(v[common], y[common])
-            cal_rows.append([k, name, int(common.sum()), f"{d['brier']:.4f}", f"{d['reliability']:.5f}", f"{d['resolution']:.5f}", f"{d['uncertainty']:.5f}", f"{d['residual']:+.5f}", f"{ece(v[common], y[common])*100:.2f}%"])
+            cal_rows.append([k, name, int(common.sum()), f"{d['brier']:.4f}", f"{d['reliability']:.5f}", f"{d['resolution']:.5f}", f"{d['uncertainty']:.5f}", f"{d['residual']:+.5f}", f"{ece(v[common], y[common])*100:.2f}%",
+                             "{:.2f} [{:.2f}, {:.2f}]".format(*calibration_slope_ci(v[common], y[common], t[common]))])
             print(cal_rows[-1], flush=True)
         for m in months[3:]:
             te = (month == m).values
@@ -217,8 +219,8 @@ def main():
             imp_rows.append([k, str(m), ", ".join(f"{n} {v*100:+.2f}" for n, v in top_pi), ", ".join(f"{n} {v:.3f}" for n, v in top_shap)])
             print(imp_rows[-1], flush=True)
 
-    md(OUT / "calibration.md", "Calibration of the XGBoost probabilities (price + flow + indicators), walk-forward. Platt and isotonic recalibration are fit on earlier months' out-of-fold probabilities only. Binned decomposition over ten quantile bins of the predicted probability: Brier is approximately reliability - resolution + uncertainty, and the residual column is the part the binning does not account for. Lower reliability is better calibration, higher resolution is more information. ECE is the expected calibration error over the same quantile bins.",
-       ["minute", "probabilities", "n", "Brier", "reliability", "resolution", "uncertainty", "residual", "ECE"], cal_rows)
+    md(OUT / "calibration.md", "Calibration of the XGBoost probabilities (price + flow + indicators), walk-forward. Platt and isotonic recalibration are fit on earlier months' out-of-fold probabilities only. Binned decomposition over ten quantile bins of the predicted probability: Brier is approximately reliability - resolution + uncertainty, and the residual column is the part the binning does not account for. Lower reliability is better calibration, higher resolution is more information. ECE is the expected calibration error over the same quantile bins. The calibration slope is the coefficient of a logistic regression of the outcome on the logit of the probability, with a day-block interval: 1 is calibrated, below 1 means the probabilities are too extreme, above 1 too timid.",
+       ["minute", "probabilities", "n", "Brier", "reliability", "resolution", "uncertainty", "residual", "ECE", "calibration slope [95% CI]"], cal_rows)
     with open(OUT / "calibration.md", "a") as f:
         f.write("\nReliability by month (raw probabilities): ECE, mean predicted, observed rate of up.\n\n| minute | month | n | ECE | mean predicted | observed |\n|---|---|---|---|---|---|\n")
         for r in cal_month_rows:
