@@ -29,7 +29,7 @@ import pandas as pd
 
 from models.btc_15m.data import load, load_days
 from models.btc_15m.features import Series, dataset
-from models.btc_15m.rules import REF_MONTHS, bh, day_pvalue, events, is_stable, month_agreement, reference_rows, reference_sign, vol_cutoffs
+from models.btc_15m.rules import REF_MONTHS, bh, event_pvalue, events, is_stable, month_agreement, reference_rows, reference_sign, vol_cutoffs
 from models.btc_15m.stats import block_bootstrap_ci
 
 warnings.filterwarnings("ignore")
@@ -52,7 +52,7 @@ def stable_events(D: pd.DataFrame, k: int, min_fires=300, agree=0.75):
             continue
         names.append(name); masks.append(mask)
         devs.append(y[mask].mean() - base)
-        pvals.append(day_pvalue(y[mask].astype(float), t[mask], base))
+        pvals.append(event_pvalue(mask, y, t))
     keep = bh(np.array(pvals)) if names else np.array([], bool)
     out = {}
     ref = reference_rows(D)

@@ -17,11 +17,17 @@ and the model is trained on all earlier months only. Predictors compared:
     xgb-price      XGBoost on price features
     xgb-all        XGBoost on price + order-flow features
 
-Checks, all resampling or permuting whole days (models/btc_15m/stats.py):
-    ci             95% block-bootstrap interval on each accuracy
-    vs baseline    interval on accuracy minus the one-feature baseline for that minute
-                   (prev-window at k = 0, lead-z after; see baseline_name)
-    permutation    p-value for accuracy above chance, labels permuted within days
+Checks (models/btc_15m/stats.py), all keeping the serial dependence between windows:
+    ci             95% intervals on each accuracy, resampling whole days and, separately,
+                   whole months (with about eight test months the month interval is wide)
+    vs baseline    accuracy minus the one-feature baseline for that minute (prev-window at
+                   k = 0, lead-z after; see baseline_name), with day and month intervals
+    day sign test  per-day accuracy minus the baseline's; share of days the model wins and
+                   a sign-flip p for the mean daily difference
+    circular shift p for accuracy above what the labels' own structure gives: the label
+                   sequence is rotated within each month by a random offset
+    (The within-day label permutation used before 2026-10-01 ignored dependence between
+    neighbouring windows and was retired.)
     boundary       k = 0 scored on a label measured from one minute after the open,
                    because back-to-back windows share one boundary price
     calibration    predicted-probability deciles vs the observed rate (xgb-all, k = 0)
@@ -49,7 +55,7 @@ from xgboost import XGBClassifier
 
 from models.btc_15m.data import load
 from models.btc_15m.features import FLOW_FEATURES, PRICE_FEATURES, WINDOW, Series, dataset
-from models.btc_15m.stats import block_bootstrap_ci, paired_difference_ci, permutation_pvalue
+from models.btc_15m.stats import block_bootstrap_ci, circular_shift_pvalue, day_sign_test, month_block_bootstrap_ci, paired_difference_ci
 
 warnings.filterwarnings("ignore")
 OUT = Path("results/btc_15m")
@@ -137,8 +143,8 @@ def score(pred, y):
 
 
 def format_p(p: float, n_perm: int) -> str:
-    """A permutation p at its floor, 1 / (n_perm + 1), means no permutation reached the
-    observed accuracy; the true p is somewhere below the floor, so say that."""
+    """A resampling p at its floor, 1 / (n_perm + 1), means no draw reached the observed
+    statistic; the true p is somewhere below the floor, so say that."""
     floor = 1 / (n_perm + 1)
     return f"< {floor:.4f}" if p <= floor + 1e-12 else f"{p:.4f}"
 
@@ -148,7 +154,7 @@ def main():
     ap.add_argument("--start", default="2025-10")
     ap.add_argument("--end", default="2026-08")
     ap.add_argument("--minutes", default="0,1,3,5,8")
-    ap.add_argument("--n-perm", type=int, default=2000)
+    ap.add_argument("--n-perm", type=int, default=2000, help="draws for the sign-flip and circular-shift tests")
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     s = Series(load(a.start, a.end))
@@ -171,12 +177,16 @@ def main():
         for name in preds:
             hits = ((preds[name] > 0.5) == y).astype(float)
             m_, lo, hi = block_bootstrap_ci(hits, t)
-            row = {"minute": k, "model": name, "accuracy": m_, "ci_low": lo, "ci_high": hi}
+            _, mlo, mhi = month_block_bootstrap_ci(hits, t)
+            row = {"minute": k, "model": name, "accuracy": m_, "ci_low": lo, "ci_high": hi, "ci_month_low": mlo, "ci_month_high": mhi}
             if name != base:
                 bh = ((preds[base] > 0.5) == y).astype(float)
                 d, dlo, dhi = paired_difference_ci(hits, bh, t)
-                row.update({"vs": base, "diff": d, "diff_low": dlo, "diff_high": dhi})
-            row["perm_p"] = permutation_pvalue(preds[name], y, t, n_perm=a.n_perm)[1]     # every model, so each p sits beside its own model
+                _, dmlo, dmhi = month_block_bootstrap_ci(hits - bh, t)
+                sg = day_sign_test(hits, bh, t, n_draws=a.n_perm)
+                row.update({"vs": base, "diff": d, "diff_low": dlo, "diff_high": dhi, "diff_month_low": dmlo, "diff_month_high": dmhi,
+                            "days_better": sg["share_days_a_better"], "sign_p": sg["p"]})
+            row["shift_p"] = circular_shift_pvalue(preds[name], y, t, n_draws=a.n_perm)[1]       # every model, so each p sits beside its own model
             checks.append(row)
         if k == 0:
             pred, y2, _, _ = walk_forward(D, ALL, "xgb", label="y_gap1")
@@ -200,13 +210,17 @@ def main():
         for r in rows:
             f.write(f"| {r['minute']} | {r['model']} | {r['n_test']:,} | {r['accuracy']*100:.2f}% | {r['auc']:.3f} | {r['log_loss']:.4f} |\n")
     with open(OUT / "checks.md", "w") as f:
-        f.write(f"Day-block bootstrap (95%) and within-day permutation test ({a.n_perm:,} permutations; a p shown as below a value is at the test's floor, meaning no permutation reached the observed accuracy). "
-                "Each p belongs to the model on its row. \"vs\" is accuracy minus the baseline named, on the same windows.\n\n")
-        f.write("| minute | model | accuracy [95% CI] | vs baseline | permutation p |\n|---|---|---|---|---|\n")
+        f.write("Accuracy with 95% intervals from resampling whole days and whole months; \"vs baseline\" is accuracy minus the one-feature baseline on the same windows (the previous window's direction at the open, the lead z-score after), with the same two intervals. "
+                f"Day sign test: share of days on which the model beats the baseline, and a one-sided p for the mean daily difference under random sign flips. Circular shift: one-sided p for accuracy above what the labels' own structure gives, rotating the labels within each month. {a.n_perm:,} draws each; a p shown as below a value is at the test's floor. Each p belongs to the model on its row.\n\n")
+        f.write("| minute | model | accuracy [day CI] [month CI] | vs baseline [day CI] [month CI] | days beating baseline | sign-test p | circular-shift p |\n|---|---|---|---|---|---|---|\n")
         for _, r in C.iterrows():
-            vs = f"{r['diff']*100:+.2f} [{r['diff_low']*100:+.2f}, {r['diff_high']*100:+.2f}] vs {r['vs']}" if isinstance(r.get("vs"), str) else "baseline"
-            p = format_p(r["perm_p"], a.n_perm) if pd.notna(r.get("perm_p")) else ""
-            f.write(f"| {int(r['minute'])} | {r['model']} | {r['accuracy']*100:.2f} [{r['ci_low']*100:.2f}, {r['ci_high']*100:.2f}] | {vs} | {p} |\n")
+            acc = f"{r['accuracy']*100:.2f} [{r['ci_low']*100:.2f}, {r['ci_high']*100:.2f}] [{r['ci_month_low']*100:.2f}, {r['ci_month_high']*100:.2f}]"
+            if isinstance(r.get("vs"), str):
+                vs = f"{r['diff']*100:+.2f} [{r['diff_low']*100:+.2f}, {r['diff_high']*100:+.2f}] [{r['diff_month_low']*100:+.2f}, {r['diff_month_high']*100:+.2f}] vs {r['vs']}"
+                days, sp = f"{r['days_better']*100:.0f}%", format_p(r["sign_p"], a.n_perm)
+            else:
+                vs, days, sp = "baseline", "", ""
+            f.write(f"| {int(r['minute'])} | {r['model']} | {acc} | {vs} | {days} | {sp} | {format_p(r['shift_p'], a.n_perm)} |\n")
     print(f"wrote {OUT}/walk_forward.md and checks.md")
 
 

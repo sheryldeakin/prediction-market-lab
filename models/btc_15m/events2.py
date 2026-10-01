@@ -9,8 +9,8 @@ Candidates (built from the feature frame at the entry minute):
   pairs     every pair of the base events (both must hold)
   sessions  every base event restricted to Asia, Europe or US hours
 
-Every candidate is scored on the search period (2025-10 to 2026-08) with a day-clustered
-p-value, corrected across all candidates (Benjamini-Hochberg, 10%), checked for
+Every candidate is scored on the search period (2025-10 to 2026-08) with a p for firing against
+non-firing windows (day-clustered), corrected across all candidates (Benjamini-Hochberg, 10%), checked for
 month-by-month stability, and then scored on September 2026, which the search never
 saw. Reported: the stable survivors ranked by deviation, with their September result.
 
@@ -29,7 +29,7 @@ import pandas as pd
 
 from models.btc_15m.data import load, load_days
 from models.btc_15m.features import Series, dataset
-from models.btc_15m.rules import REF_MONTHS, bh, day_pvalue, is_stable, month_agreement, reference_rows, reference_sign
+from models.btc_15m.rules import REF_MONTHS, bh, event_pvalue, is_stable, month_agreement, reference_rows, reference_sign
 from models.btc_15m.stats import block_bootstrap_ci
 
 warnings.filterwarnings("ignore")
@@ -130,7 +130,7 @@ def main():
             continue
         names.append(name); masks.append(m)
         devs.append(y[m].mean() - base_rate)
-        pvals.append(day_pvalue(y[m].astype(float), t[m], base_rate))
+        pvals.append(event_pvalue(m, y, t))
     keep = bh(np.array(pvals))
     print(f"{len(names)} tested, {keep.sum()} survive FDR", flush=True)
     rows = []

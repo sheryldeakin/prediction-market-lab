@@ -33,7 +33,7 @@ from sklearn.tree import DecisionTreeClassifier, export_text
 from models.btc_15m.data import load
 from models.btc_15m.features import FLOW_FEATURES, PRICE_FEATURES, Series, dataset
 from models.btc_15m.indicators import INDICATOR_FEATURES
-from models.btc_15m.stats import block_bootstrap_ci
+from models.btc_15m.stats import block_bootstrap_ci, cluster_diff_pvalue
 
 warnings.filterwarnings("ignore")
 OUT = Path("results/btc_15m")
@@ -151,8 +151,17 @@ def bh(pvals: np.ndarray, q: float = 0.10) -> np.ndarray:
     return out
 
 
+def event_pvalue(mask: np.ndarray, y: np.ndarray, t: np.ndarray) -> float:
+    """Two-sided p for the up-rate when the event fires against the up-rate when it does
+    not, day-clustered (stats.cluster_diff_pvalue). Replaced day_pvalue on 2026-10-01:
+    that tested the firing windows against a base rate treated as known, and the base
+    rate includes the firing windows themselves."""
+    return cluster_diff_pvalue(mask, y, t)[2]
+
+
 def day_pvalue(hits: np.ndarray, t: np.ndarray, base: float) -> float:
-    """Two-sided p for mean(hits) != base with day-clustered standard error."""
+    """Two-sided p for mean(hits) != base with day-clustered standard error. Superseded by
+    event_pvalue for events; kept for its tests."""
     days = t // 86400
     uniq, inv = np.unique(days, return_inverse=True)
     sums = np.bincount(inv, weights=hits - base)
@@ -203,7 +212,7 @@ def main():
             if mask.sum() < 300:
                 continue
             m_, lo, hi = block_bootstrap_ci(y[mask].astype(float), t[mask])
-            p = day_pvalue(y[mask].astype(float), t[mask], base)
+            p = event_pvalue(mask, y, t)
             names.append(name)
             stats.append((mask, m_, lo, hi, p))
         pvals = np.array([st[4] for st in stats])
@@ -226,7 +235,7 @@ def main():
             tree_rows.append([k, mth, f"{acc*100:.2f}%", r.replace("\n", "<br>").replace("|", "&#124;")])
         print(f"minute {k}: root features across months: {dict(roots)}", flush=True)
     with open(OUT / "rules.md", "w") as f:
-        f.write("Event library: up-rate of the window when the condition holds at the entry minute, against the unconditional rate. Day-block 95% intervals; p-values use a day-clustered standard error; 'survives FDR' marks events that pass Benjamini-Hochberg at a 10% false discovery rate across all events tested at that minute. Events that fire fewer than 300 times are omitted.\n\n")
+        f.write("Event library: up-rate of the window when the condition holds at the entry minute, against the unconditional rate. Day-block 95% intervals; p compares windows where the event fires with windows where it does not, with day-clustered errors; 'survives FDR' marks events that pass Benjamini-Hochberg at a 10% false discovery rate across all events tested at that minute. Events that fire fewer than 300 times are omitted.\n\n")
         f.write("| minute | if | fires | share | up-rate [95% CI] | vs base (points) | p | survives FDR |\n|---|---|---|---|---|---|---|---|\n")
         for r in ev_rows:
             f.write("| " + " | ".join(str(x) for x in r) + " |\n")

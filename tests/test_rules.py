@@ -103,3 +103,16 @@ def test_day_pvalue_is_zero_not_one_for_an_identical_deviation_every_day():
     t = 900 * np.arange(960)                     # ten days
     assert day_pvalue(np.zeros(960), t, 0.4) == 0.0
     assert day_pvalue(np.full(960, 0.4), t, 0.4) == 1.0
+
+
+def test_event_pvalue_compares_firing_with_non_firing_windows():
+    """The old test compared an event's up-rate with a base rate that includes the event's
+    own windows and treated that base rate as known (council review, 2026-09-30)."""
+    from models.btc_15m.rules import event_pvalue
+    from models.btc_15m.stats import cluster_diff_pvalue
+    rng = np.random.default_rng(5)
+    t = 900 * np.arange(9600)
+    mask = rng.random(len(t)) < 0.3
+    y = (rng.random(len(t)) < np.where(mask, 0.56, 0.5)).astype(int)
+    assert event_pvalue(mask, y, t) == cluster_diff_pvalue(mask, y, t)[2]
+    assert event_pvalue(mask, y, t) < 0.01

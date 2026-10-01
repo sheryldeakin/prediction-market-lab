@@ -6,7 +6,7 @@ leaf of every tree is a conjunction of feature thresholds ("rsi14 <= 34.9 and fl
 <= -0.12 and win1 <= 0"). Leaves with at least 300 training windows and a lift of 3
 points or more over the base rate are kept as candidate rules, then scored on the
 second half of the months, which the forest never saw: up-rate when the rule fires,
-day-clustered p-value against that period's base rate, false-discovery correction
+p for firing against non-firing windows (day-clustered), false-discovery correction
 across all candidates, and month-by-month stability. Duplicate rules (the same
 firing set) are merged.
 
@@ -33,7 +33,7 @@ from sklearn.ensemble import RandomForestClassifier
 from models.btc_15m.data import load
 from models.btc_15m.features import FLOW_FEATURES, HISTORY, PRICE_FEATURES, Series, dataset
 from models.btc_15m.indicators import INDICATOR_FEATURES
-from models.btc_15m.rules import bh, day_pvalue, is_stable, month_agreement
+from models.btc_15m.rules import bh, event_pvalue, is_stable, month_agreement
 from models.btc_15m.stats import block_bootstrap_ci
 
 warnings.filterwarnings("ignore")
@@ -136,7 +136,7 @@ def score_masks(named_masks, D: pd.DataFrame, mined_signs, min_fires=100):
         names.append(name); masks.append(m); signs.append(int(np.sign(sg)))
         mu, lo, hi = block_bootstrap_ci(y[m].astype(float), t[m])
         devs.append(mu - base); cis.append((mu, lo, hi))
-        pvals.append(day_pvalue(y[m].astype(float), t[m], base))
+        pvals.append(event_pvalue(m, y, t))
     keep = bh(np.array(pvals)) if names else np.array([], bool)
     rows = []
     for name, m, dev, p, (mu, lo, hi), kp, sg in zip(names, masks, devs, pvals, cis, keep, signs):
@@ -192,7 +192,7 @@ def main():
         print("shape", r[:7], flush=True)
 
     with open(OUT / "patterns.md", "w") as f:
-        f.write(f"Rules mined from a random forest fit on {months[0]} to {months[len(months)//2 - 1]}, scored on {split} to {months[-1]} (never seen by the forest). Up-rate when the rule fires, day-block 95% interval, day-clustered p against the scoring period's base rate, false-discovery correction across all {len(rule_rows)} candidate rules, and month-by-month stability (at least three quarters of months agreeing). Only rules that survive the correction are listed.\n\n")
+        f.write(f"Rules mined from a random forest fit on {months[0]} to {months[len(months)//2 - 1]}, scored on {split} to {months[-1]} (never seen by the forest). Up-rate when the rule fires, day-block 95% interval, p for firing against non-firing windows with day-clustered errors, false-discovery correction across all {len(rule_rows)} candidate rules, and month-by-month stability (at least three quarters of months agreeing). Only rules that survive the correction are listed.\n\n")
         stable = [r for r in rule_rows if r[9] == "stable"]
         top = sorted(stable, key=lambda r: -abs(float(r[4])))[:25]
         f.write(f"Of {len(rule_rows)} candidates, {sum(1 for r in rule_rows if r[6] == 'yes')} survive the correction and {len(stable)} are also stable month by month. The 25 stable rules with the largest deviation are listed; every candidate is in patterns_rules.csv.\n\n")
