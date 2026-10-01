@@ -7,6 +7,7 @@ Models, prediction logs and tracking tools for prediction markets. Each model li
 | model | question | status | report |
 |---|---|---|---|
 | `models/btc_15m` | Does Bitcoin close a 15-minute window above where it opened? | a study of the boundary reversal; frozen models in a forward log from October 2026 | [docs/btc_15m.md](docs/btc_15m.md) |
+| `models/btc_15m/horizons.py` | If a pattern holds now, which way does Bitcoin go over the next 1 to 30 minutes, and did that hold every year since 2018? | conditional tables across nine years; regimes and magnitude next | [docs/horizons.md](docs/horizons.md) |
 
 ### BTC 15-minute direction, in short
 
