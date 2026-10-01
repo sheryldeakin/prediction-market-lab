@@ -64,3 +64,22 @@ def test_rejecting_the_ups_counts_undone_up_minutes():
     E = minute_events(s)
     assert E["rejecting the ups (3+ up-minutes undone by the next minute in the last 15)"][1][i]
     assert not E["rejecting the ups (3+ up-minutes undone by the next minute in the last 15)"][1][i - 8]
+
+
+def test_acceptance_needs_every_recent_close_above_the_old_level():
+    s = flat(); i = HISTORY + 300
+    s.c[i - 5:i] = 100.3; s.o[i - 5:i] = 100.3; s.h[i - 5:i] = 100.3; s.l[i - 5:i] = 100.3
+    E = minute_events(s)
+    assert E["acceptance above the 4h high (last 5 closes all above it)"][1][i]
+    s.c[i - 3] = 99.95
+    assert not minute_events(s)["acceptance above the 4h high (last 5 closes all above it)"][1][i]
+
+
+def test_support_held_is_a_test_from_above_without_a_close_below():
+    s = flat(); i = HISTORY + 300
+    s.l[i - 8] = 100.0 * (1 - 2e-4)                                        # dipped to within 2 bp of the 4h low (100), closes stayed at 100
+    s.c[i - 1] = s.o[i - 1] = s.h[i - 1] = s.l[i - 1] = 100.05                # now 5 bp above
+    E = minute_events(s)
+    assert E["support held (4h low tested within 3 bp, no close below, price now 3+ bp above)"][1][i]
+    s.c[i - 8] = 99.99                                                      # a close below the level: not held
+    assert not minute_events(s)["support held (4h low tested within 3 bp, no close below, price now 3+ bp above)"][1][i]

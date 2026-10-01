@@ -20,6 +20,12 @@ closed before the ones that test them):
               last 5 minutes
               range breakout: the previous hour's range (excluding the last 5 minutes) was
               under 15 bp and the last close is outside it
+              acceptance: the last five closes all above the 4h high as it stood 15 minutes
+              ago (the confirmed breakout); mirror. Support held: the 4h low tested within
+              3 bp from above in the last 15 minutes with no close below and the price now
+              3 bp or more above it; mirror. Resistance flipped to support: the 4h high
+              broken upward in the last hour, retested within 5 bp, last three closes above;
+              mirror.
               repeated rejection: the 4h high touched within 2 bp by two or more separate
               minutes in the last 30 with no close above it; mirror. Rejecting the ups:
               three or more up-minutes in the last 15 each undone by the next minute;
@@ -129,6 +135,26 @@ def minute_events(s: Series) -> dict[str, tuple[str, np.ndarray]]:
     lo240_hour_ago = _roll_min_before(l, 240, lag=61)
     crossed_dn_last_hour = _roll_min_before(c, 60, lag=1) < lo240_hour_ago
     add("retest from below of a 4h low broken in the last hour", "levels", crossed_dn_last_hour & (p <= lo240_hour_ago) & (_bp(lo240_hour_ago, p) <= 5))
+    # acceptance: all of the last five closes above the 4h high as it stood 15 minutes ago (the confirmed breakout)
+    hi240_15, lo240_15 = _roll_max_before(h, 240, lag=16), _roll_min_before(l, 240, lag=16)
+    min_close5, max_close5 = _roll_min_before(c, 5, lag=1), _roll_max_before(c, 5, lag=1)
+    add("acceptance above the 4h high (last 5 closes all above it)", "levels", min_close5 > hi240_15)
+    add("acceptance below the 4h low (last 5 closes all below it)", "levels", max_close5 < lo240_15)
+    # support held: the 4h low tested within 3 bp from above in the last 15 minutes, no close below, now 3+ bp above
+    lo240_b15, hi240_b15 = _roll_min_before(l, 240, lag=16), _roll_max_before(h, 240, lag=16)
+    min_low15, max_high15 = _roll_min_before(l, 15, lag=1), _roll_max_before(h, 15, lag=1)
+    min_close15, max_close15 = _roll_min_before(c, 15, lag=1), _roll_max_before(c, 15, lag=1)
+    add("support held (4h low tested within 3 bp, no close below, price now 3+ bp above)", "levels", (_bp(min_low15, lo240_b15) <= 3) & (min_low15 >= lo240_b15 * (1 - 3e-4)) & (min_close15 >= lo240_b15) & (_bp(p, lo240_b15) >= 3))
+    add("resistance held (4h high tested within 3 bp, no close above, price now 3+ bp below)", "levels", (_bp(hi240_b15, max_high15) <= 3) & (max_high15 <= hi240_b15 * (1 + 3e-4)) & (max_close15 <= hi240_b15) & (_bp(hi240_b15, p) >= 3))
+    # resistance flipped to support: broke the 4h high upward in the last hour, retested within 5 bp from above, last 3 closes above it
+    min_close3, max_close3 = _roll_min_before(c, 3, lag=1), _roll_max_before(c, 3, lag=1)
+    hi_hr, lo_hr = _roll_max_before(h, 240, lag=61), _roll_min_before(l, 240, lag=61)
+    broke_up = _roll_max_before(c, 60, lag=1) > hi_hr
+    broke_dn = _roll_min_before(c, 60, lag=1) < lo_hr
+    retested_up = (_roll_min_before(l, 60, lag=1) <= hi_hr * (1 + 5e-4)) & (_roll_min_before(l, 60, lag=1) >= hi_hr * (1 - 5e-4))
+    retested_dn = (_roll_max_before(h, 60, lag=1) >= lo_hr * (1 - 5e-4)) & (_roll_max_before(h, 60, lag=1) <= lo_hr * (1 + 5e-4))
+    add("resistance flipped to support (4h high broken, retested within 5 bp, last 3 closes above)", "levels", broke_up & retested_up & (min_close3 > hi_hr))
+    add("support flipped to resistance (4h low broken, retested within 5 bp, last 3 closes below)", "levels", broke_dn & retested_dn & (max_close3 < lo_hr))
     # repeated rejection: the 4h high (from candles before the last 30 minutes) touched within 2 bp by
     # at least two separate minutes in the last 30, with no close above it
     hi240_30 = _roll_max_before(h, 240, lag=31)
