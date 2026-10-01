@@ -40,6 +40,8 @@ import pandas as pd
 CACHE = Path("data/binance_futures")
 BASE = "https://data.binance.vision/data/futures/um"
 METRICS_DELAY = 300          # seconds after a metrics stamp before that row is known
+FUNDING_MAX_AGE = 9 * 3600   # funding settles every 8 hours; older than this means the file is missing
+METRICS_MAX_AGE = 3600       # metrics stamp every 5 minutes; older than this means the day file is missing
 DERIV_FEATURES = ["basis_bp", "dbasis5", "dbasis15", "pflow5", "pflow15", "pvol_ratio5", "funding_bp", "doi15", "doi60", "ls_top", "ls_all", "taker_ls"]
 
 
@@ -100,23 +102,40 @@ def metrics(days: list[str], symbol="BTCUSDT") -> pd.DataFrame:
         if p:
             frames.append(pd.read_csv(p))
     df = pd.concat(frames)
-    df["t"] = (pd.to_datetime(df.create_time).astype("int64") // 10**9).astype(np.int64)
+    df["t"] = to_epoch_seconds(df.create_time)
     return df.rename(columns={"sum_open_interest": "oi", "sum_toptrader_long_short_ratio": "ls_top", "count_long_short_ratio": "ls_all",
                               "sum_taker_long_short_vol_ratio": "taker_ls"})[["t", "oi", "ls_top", "ls_all", "taker_ls"]].sort_values("t").reset_index(drop=True)
 
 
-def carry_forward(stamp_t: np.ndarray, values: np.ndarray, at_t: np.ndarray, lag: int = 0) -> np.ndarray:
+def to_epoch_seconds(stamps) -> np.ndarray:
+    """Epoch seconds from date-time strings, independent of the datetime resolution pandas
+    picks (casting a datetime64[s] column to int64 and dividing by 1e9 gives nonsense)."""
+    return pd.to_datetime(stamps).values.astype("datetime64[s]").astype(np.int64)
+
+
+def carry_forward(stamp_t: np.ndarray, values: np.ndarray, at_t: np.ndarray, lag: int = 0, max_age: float | None = None) -> np.ndarray:
     """Value of the last stamp at or before each at_t - lag (a stamp is known once its
-    time has passed). NaN before the first stamp."""
-    idx = np.searchsorted(stamp_t, at_t - lag, side="right") - 1
-    out = np.where(idx >= 0, values[np.clip(idx, 0, len(values) - 1)], np.nan)
+    time has passed). NaN before the first stamp, and NaN when the last stamp is older
+    than max_age (the source has a gap, so carrying the old value forward would freeze it)."""
+    q = at_t - lag
+    idx = np.searchsorted(stamp_t, q, side="right") - 1
+    ii = np.clip(idx, 0, len(values) - 1)
+    out = np.where(idx >= 0, values[ii], np.nan)
+    if max_age is not None:
+        out = np.where((idx >= 0) & (q - stamp_t[ii] > max_age), np.nan, out)
     return out
 
 
-def build(spot_t: np.ndarray, spot_close: np.ndarray, months: list[str], days: list[str], symbol="BTCUSDT") -> dict[str, np.ndarray]:
-    """Per-minute derivative arrays aligned to the spot minute index."""
+def build(spot_t: np.ndarray, spot_close: np.ndarray, months: list[str], days: list[str], symbol="BTCUSDT", missing: str = "zero") -> dict[str, np.ndarray]:
+    """Per-minute derivative arrays aligned to the spot minute index.
+
+    Funding comes only in monthly files, so for daily-file days the month's funding file is
+    loaded when Binance has published it; until then funding is unknown (NaN) beyond the
+    last settlement rather than frozen at it. missing="zero" fills unknown values with 0
+    (the training default), missing="nan" keeps them so callers can measure coverage."""
     P = perp_klines(months, days, symbol)
-    Fd = funding(months, symbol)
+    fmonths = sorted(set(months) | {d[:7] for d in days})
+    Fd = funding(fmonths, symbol)
     M = metrics([str(d) for d in pd.date_range(pd.Period(months[0]).to_timestamp(), pd.Timestamp(days[-1]) if days else (pd.Period(months[-1]) + 1).to_timestamp() - pd.Timedelta(days=1)).date], symbol)
     # perp close and flow onto the spot grid (perp minute t is known at t + 60, same as spot)
     pi = pd.Series(P.close.values, index=P.t.values).reindex(spot_t).ffill().values
@@ -140,20 +159,23 @@ def build(spot_t: np.ndarray, spot_close: np.ndarray, months: list[str], days: l
     out = {"basis_bp": basis, "dbasis5": lagged(basis, 5), "dbasis15": lagged(basis, 15), "pflow5": flow(5), "pflow15": flow(15),
            "pvol_ratio5": (cv[i + 1] - cv[np.clip(i - 4, 0, n)]) / 5 / (vol24 + 1e-9)}
     close_t = spot_t + 60                                             # the minute's values are known at its close
-    out["funding_bp"] = carry_forward(Fd.t.values, Fd.rate_bp.values, close_t)
+    out["funding_bp"] = carry_forward(Fd.t.values, Fd.rate_bp.values, close_t, max_age=FUNDING_MAX_AGE)
     # A metrics row stamped T describes the five minutes STARTING at T (checked: the taker
     # ratio stamped T correlates with the spot return over [T, T+5) far more than over
     # [T-5, T)), so it is known only at T + 300. Treating it as known at T leaked the first
     # five minutes of every window and produced a false 65% at the open.
     mt = M.t.values + METRICS_DELAY
-    oi = carry_forward(mt, M.oi.values, close_t)
-    oi15 = carry_forward(mt, M.oi.values, close_t, lag=900)
-    oi60 = carry_forward(mt, M.oi.values, close_t, lag=3600)
+    oi = carry_forward(mt, M.oi.values, close_t, max_age=METRICS_MAX_AGE)
+    oi15 = carry_forward(mt, M.oi.values, close_t, lag=900, max_age=METRICS_MAX_AGE)
+    oi60 = carry_forward(mt, M.oi.values, close_t, lag=3600, max_age=METRICS_MAX_AGE)
     out["doi15"] = (oi / oi15 - 1) * 100
     out["doi60"] = (oi / oi60 - 1) * 100
     for c in ("ls_top", "ls_all", "taker_ls"):
-        out[c] = carry_forward(mt, M[c].values, close_t)
-    return {k: np.nan_to_num(np.asarray(v, dtype=float), nan=0.0) for k, v in out.items()}
+        out[c] = carry_forward(mt, M[c].values, close_t, max_age=METRICS_MAX_AGE)
+    out = {k: np.asarray(v, dtype=float) for k, v in out.items()}
+    if missing == "nan":
+        return out
+    return {k: np.nan_to_num(v, nan=0.0) for k, v in out.items()}
 
 
 if __name__ == "__main__":

@@ -42,6 +42,32 @@ def test_features_use_nothing_at_or_after_the_entry_minute():
     assert TickFlow(h).features(t_open, k)["tick_imb5"] != before["tick_imb5"]
 
 
+def test_large_trade_cutoff_uses_only_the_previous_day():
+    """The month-wide 99th percentile let early windows see later trade sizes (council
+    review, 2026-09-30). Changing trades after time T must not change any flag before T."""
+    from models.btc_15m.ticks import large_trade_mask
+    rng = np.random.default_rng(0)
+    sec = np.sort(rng.integers(0, 4 * 86400, 40_000))
+    notional = rng.lognormal(0, 1, len(sec))
+    before, q = large_trade_mask(sec, notional, prev_cutoff=5.0)
+    T = 2 * 86400 + 3600
+    late = sec >= T
+    changed = notional.copy(); changed[late] *= 50.0
+    after, _ = large_trade_mask(sec, changed, prev_cutoff=5.0)
+    assert (before[~late] == after[~late]).all()
+    day1 = (sec // 86400) == 1
+    assert (before[day1] == (notional[day1] >= q.loc[0])).all()          # day 1 uses day 0's cutoff
+    day0 = (sec // 86400) == 0
+    assert (before[day0] == (notional[day0] >= 5.0)).all()               # first day uses the carried cutoff
+
+
+def test_large_trade_cutoff_is_off_after_a_missing_day():
+    from models.btc_15m.ticks import large_trade_mask
+    sec = np.array([10, 20, 2 * 86400 + 5])                 # day 1 missing
+    mask, _ = large_trade_mask(sec, np.array([1.0, 2.0, 100.0]))
+    assert not mask[-1]
+
+
 def test_feature_names_and_bounds():
     f = frame()
     out = TickFlow(f).features(90_000, 0)

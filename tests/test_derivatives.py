@@ -67,3 +67,39 @@ def test_metrics_rows_are_not_visible_until_five_minutes_after_their_stamp(monke
     # minute index 10 closes at spot_t[0] + 660: stamp 600 (index 2) is not yet known, stamp 300 (index 1) is
     assert arrs["taker_ls"][10] == 1.0
     assert arrs["taker_ls"][14] == 2.0          # minute 14 closes at 900 = 600 + 300: now known
+
+
+def test_carry_forward_goes_unknown_when_the_source_has_a_gap():
+    stamps = np.array([0, 28_800])
+    vals = np.array([1.0, 2.0])
+    out = carry_forward(stamps, vals, np.array([28_800 + 3600, 28_800 + 10 * 3600]), max_age=9 * 3600)
+    assert out[0] == 2.0 and np.isnan(out[1])
+
+
+def test_funding_for_daily_file_days_loads_that_months_file_and_never_freezes(monkeypatch):
+    """The forward run loaded only August's funding, so funding sat at August's last value
+    through September (council review, 2026-09-30)."""
+    import models.btc_15m.derivatives as D
+    seen = []
+    t0 = int(pd.Timestamp("2026-09-01").timestamp())
+    n = 3 * 1440
+    spot_t = t0 + 60 * np.arange(n)
+    P = pd.DataFrame({"t": spot_t, "close": 100.0, "volume": 1.0, "taker_buy": 0.5})
+    def fake_funding(months, symbol="BTCUSDT"):
+        seen.extend(months)
+        return pd.DataFrame({"t": [t0 - 3600], "rate_bp": [1.0]})          # only August's last settlement exists
+    monkeypatch.setattr(D, "perp_klines", lambda months, days, symbol="BTCUSDT": P)
+    monkeypatch.setattr(D, "funding", fake_funding)
+    monkeypatch.setattr(D, "metrics", lambda days, symbol="BTCUSDT": pd.DataFrame({"t": spot_t[::5], "oi": 1.0, "ls_top": 1.0, "ls_all": 1.0, "taker_ls": 1.0}))
+    arrs = D.build(spot_t, np.full(n, 100.0), ["2026-08"], ["2026-09-01", "2026-09-02", "2026-09-03"], missing="nan")
+    assert "2026-09" in seen
+    assert arrs["funding_bp"][0] == 1.0                                       # within one settlement period
+    assert np.isnan(arrs["funding_bp"][-1])                                   # two days later: unknown, not frozen
+
+
+def test_epoch_seconds_do_not_depend_on_datetime_resolution():
+    from models.btc_15m.derivatives import to_epoch_seconds
+    s = pd.Series(["2026-08-01 00:05:00", "2026-08-01 00:10:00"])
+    want = [int(pd.Timestamp(x, tz="UTC").timestamp()) for x in s]
+    assert list(to_epoch_seconds(s)) == want
+    assert list(to_epoch_seconds(pd.to_datetime(s).astype("datetime64[s]"))) == want

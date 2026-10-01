@@ -32,7 +32,7 @@ from models.btc_15m.evaluate import make_model, walk_forward
 from models.btc_15m.features import FLOW_FEATURES, PRICE_FEATURES, Series, dataset
 from models.btc_15m.indicators import INDICATOR_FEATURES
 from models.btc_15m.stats import block_bootstrap_ci, paired_difference_ci
-from models.btc_15m.ticks import CACHE as TICK_CACHE, TICK_FEATURES, TickFlow, load_seconds
+from models.btc_15m.ticks import TICK_FEATURES, TickFlow, load_seconds, tick_path
 
 warnings.filterwarnings("ignore")
 OUT = Path("results/btc_15m")
@@ -166,7 +166,7 @@ def main():
     minutes = [int(x) for x in a.minutes.split(",")]
     s = Series(load(a.start, a.end))
     months = [str(p) for p in pd.period_range(a.start, a.end, freq="M")]
-    has_ticks = all((TICK_CACHE / f"BTCUSDT-1s-{m}.parquet").exists() for m in months)
+    has_ticks = all(tick_path(m).exists() for m in months)
     if has_ticks:
         s.ticks = TickFlow(load_seconds(a.start, a.end))
         print("tick flow features available", flush=True)

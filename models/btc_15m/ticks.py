@@ -6,8 +6,15 @@ is_buyer_maker, is_best_match. is_buyer_maker = True means the buyer was the res
 order, so the aggressor sold. Timestamps are microseconds from 2025, milliseconds before.
 
 Each month is reduced to a per-second table (volume, signed volume, trade count, count
-of trades above the month's 99th-percentile size, signed large volume) and cached as
-data/binance_ticks/BTCUSDT-1s-YYYY-MM.parquet. The raw file is deleted after reduction.
+of large trades, signed large volume) and cached as
+data/binance_ticks/BTCUSDT-1s-v2-YYYY-MM.parquet. The raw file is deleted after reduction.
+
+A trade is large when its notional is at or above the 99th percentile of the PREVIOUS
+UTC day's trades, so the cutoff is known before the day starts. (Version 1 used the
+whole month's 99th percentile, which let early windows see later trade sizes.) Each
+month writes its per-day cutoffs beside the table, BTCUSDT-1s-v2-YYYY-MM-cutoffs.csv,
+so the next month's first day can use this month's last day. With no previous day
+available the day has no large trades.
 
     python -m models.btc_15m.ticks --start 2025-10 --end 2026-08
 """
@@ -27,11 +34,43 @@ URL = "https://data.binance.vision/data/spot/monthly/aggTrades/{sym}/{sym}-aggTr
 COLS = ["id", "price", "qty", "first", "last", "ts", "buyer_maker", "best"]
 
 
+VERSION = "v2"
+
+
+def tick_path(month: str, symbol: str = "BTCUSDT") -> Path:
+    return CACHE / f"{symbol}-1s-{VERSION}-{month}.parquet"
+
+
+def cutoff_path(month: str, symbol: str = "BTCUSDT") -> Path:
+    return CACHE / f"{symbol}-1s-{VERSION}-{month}-cutoffs.csv"
+
+
+def large_trade_mask(sec: np.ndarray, notional: np.ndarray, prev_cutoff: float = np.inf) -> tuple[np.ndarray, pd.Series]:
+    """Large-trade flag per trade, using the previous UTC day's 99th-percentile notional.
+    prev_cutoff is the cutoff for the first day present (from the day before it).
+    Returns the mask and this data's own per-day 99th percentiles (indexed by day number)."""
+    day = sec // 86400
+    q = pd.Series(notional).groupby(day).quantile(0.99)
+    days = q.index.values
+    cut_for = pd.Series(np.concatenate([[prev_cutoff], q.values[:-1]]), index=days)
+    # a gap of more than one day means "the previous day" is not in the data
+    gap = np.concatenate([[False], np.diff(days) > 1])
+    cut_for[gap] = np.inf
+    return notional >= cut_for.reindex(day).values, q
+
+
 def reduce_month(month: str, symbol: str = "BTCUSDT") -> Path:
     CACHE.mkdir(parents=True, exist_ok=True)
-    out = CACHE / f"{symbol}-1s-{month}.parquet"
+    out = tick_path(month, symbol)
     if out.exists():
         return out
+    prev_file = cutoff_path(str(pd.Period(month) - 1), symbol)
+    prev_cutoff = np.inf
+    if prev_file.exists():
+        pc = pd.read_csv(prev_file)
+        first_day = pd.Period(month).start_time.value // 10**9 // 86400
+        if len(pc) and int(pc.day.iloc[-1]) == first_day - 1:
+            prev_cutoff = float(pc.cutoff.iloc[-1])
     raw = urllib.request.urlopen(URL.format(sym=symbol, month=month), timeout=600).read()
     z = zipfile.ZipFile(io.BytesIO(raw))
     d = pd.read_csv(z.open(z.namelist()[0]), header=None, names=COLS, usecols=["price", "qty", "ts", "buyer_maker"])
@@ -41,7 +80,8 @@ def reduce_month(month: str, symbol: str = "BTCUSDT") -> Path:
     qty = d.qty.values.astype(float)
     notional = qty * d.price.values
     sign = np.where(d.buyer_maker.values, -1.0, 1.0)          # aggressor bought -> +
-    big = notional >= np.quantile(notional, 0.99)
+    big, q = large_trade_mask(sec, notional, prev_cutoff)
+    pd.DataFrame({"day": q.index.values, "cutoff": q.values}).to_csv(cutoff_path(month, symbol), index=False)
     g = pd.DataFrame({"sec": sec, "vol": notional, "svol": sign * notional, "n": 1.0,
                       "big_n": big.astype(float), "big_svol": np.where(big, sign * notional, 0.0)})
     r = g.groupby("sec").sum().reset_index()

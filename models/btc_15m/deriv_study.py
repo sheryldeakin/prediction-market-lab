@@ -37,9 +37,17 @@ BASE = PRICE_FEATURES + FLOW_FEATURES + INDICATOR_FEATURES
 ALL = BASE + DERIV_FEATURES
 
 
-def attach(s: Series, months, days):
-    s.extra = build(s.t.astype(np.int64), s.c, months, days)
+def attach(s: Series, months, days, missing="zero"):
+    s.extra = build(s.t.astype(np.int64), s.c, months, days, missing=missing)
     return s
+
+
+def forward_columns(F: pd.DataFrame) -> tuple[list[str], list[str]]:
+    """Derivative columns usable in the forward check: a column with any unknown value in
+    the forward period (e.g. funding before Binance publishes the month's file) is left
+    out of both the trained model and the scoring, and named in the report."""
+    dropped = [c for c in DERIV_FEATURES if F[c].isna().any()]
+    return BASE + [c for c in DERIV_FEATURES if c not in dropped], dropped
 
 
 def main():
@@ -54,7 +62,7 @@ def main():
     first = (pd.Period(a.end, freq="M") + 1).to_timestamp().date()
     last = dt.date.fromisoformat(a.forward_through)
     days = [str(first + dt.timedelta(days=i)) for i in range((last - first).days + 1)]
-    fs = attach(Series(load_days([a.end], days)), [a.end], days)
+    fs = attach(Series(load_days([a.end], days)), [a.end], days, missing="nan")
     start_t = int(pd.Timestamp(first).timestamp())
 
     abl_rows, ev_rows, fwd_rows, imp_rows = [], [], [], []
@@ -62,6 +70,8 @@ def main():
         D = dataset(s, k)
         F = dataset(fs, k, cache=False)
         F = F[F.t >= start_t].reset_index(drop=True)
+        fwd_all, dropped = forward_columns(F)
+        F = F.fillna(0.0)
         y, t = D.y.values, D.t.values
         # ---- ablation ----
         for kind in ("forest", "xgb"):
@@ -76,7 +86,7 @@ def main():
                 print(abl_rows[-1], flush=True)
         # ---- forward ----
         for kind in ("forest", "xgb"):
-            for name, cols in (("without derivatives", BASE), ("with derivatives", ALL)):
+            for name, cols in (("without derivatives", BASE), ("with derivatives", fwd_all)):
                 model = make_model(kind).fit(D[cols], y)
                 p = model.predict_proba(F[cols])[:, 1]
                 h = ((p > 0.5) == F.y.values).astype(float)
@@ -114,7 +124,7 @@ def main():
         f.write("| minute | model | features | n | accuracy [95% CI] | AUC | log loss | with minus without |\n|---|---|---|---|---|---|---|---|\n")
         for r in abl_rows:
             f.write("| " + " | ".join(str(x) for x in r) + " |\n")
-        f.write(f"\nForward check: models trained on {a.start} to {a.end}, scored on {first} to {last}.\n\n| minute | model | features | n | accuracy [95% CI] |\n|---|---|---|---|---|\n")
+        f.write(f"\nForward check: models trained on {a.start} to {a.end}, scored on {first} to {last}." + (f" Left out of the forward models because they are not known for the whole period: {', '.join(dropped)}." if dropped else "") + "\n\n| minute | model | features | n | accuracy [95% CI] |\n|---|---|---|---|---|\n")
         for r in fwd_rows:
             f.write("| " + " | ".join(str(x) for x in r) + " |\n")
         f.write("\nSpike events split by what open interest did over the same 15 minutes (minute 0). Falling open interest during a move means positions were closed or liquidated; rising means positions were opened.\n\n| event | open interest | fires | up-rate [95% CI] | vs base |\n|---|---|---|---|---|\n")
