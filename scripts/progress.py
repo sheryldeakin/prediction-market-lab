@@ -31,7 +31,7 @@ PLAN = [
 
 
 def main():
-    text = "\n".join(p.read_text(errors="ignore") for p in sorted((ROOT / "logs").glob("queue*.log")))
+    text = "\n".join(p.read_text(errors="ignore") for p in sorted((ROOT / "logs").glob("queue_*.log")))
     running = own_jobs()
     seen_running = set()
     for label, module, result in PLAN:
