@@ -56,3 +56,12 @@ def test_permutation_gives_no_credit_for_day_drift():
     obs, p = permutation_pvalue(drift_only, y, t, n_perm=300)
     assert obs > 0.55
     assert p > 0.05
+
+
+def test_permutation_p_at_its_floor_is_reported_as_below_the_floor():
+    """p = 0.002 was the floor at 500 permutations and was printed as if exact
+    (council review, 2026-09-30)."""
+    from models.btc_15m.evaluate import format_p
+    assert format_p(1 / 501, 500) == "< 0.0020"
+    assert format_p(1 / 2001, 2000) == "< 0.0005"
+    assert format_p(0.0312, 2000) == "0.0312"

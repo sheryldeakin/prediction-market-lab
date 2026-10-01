@@ -105,12 +105,19 @@ def score(pred, y):
             "log_loss": float(log_loss(y, np.clip(pred, 1e-6, 1 - 1e-6)))}
 
 
+def format_p(p: float, n_perm: int) -> str:
+    """A permutation p at its floor, 1 / (n_perm + 1), means no permutation reached the
+    observed accuracy; the true p is somewhere below the floor, so say that."""
+    floor = 1 / (n_perm + 1)
+    return f"< {floor:.4f}" if p <= floor + 1e-12 else f"{p:.4f}"
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--start", default="2025-10")
     ap.add_argument("--end", default="2026-08")
     ap.add_argument("--minutes", default="0,1,3,5,8")
-    ap.add_argument("--n-perm", type=int, default=500)
+    ap.add_argument("--n-perm", type=int, default=2000)
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     s = Series(load(a.start, a.end))
@@ -138,8 +145,7 @@ def main():
                 bh = ((preds[base] > 0.5) == y).astype(float)
                 d, dlo, dhi = paired_difference_ci(hits, bh, t)
                 row.update({"vs": base, "diff": d, "diff_low": dlo, "diff_high": dhi})
-            if name in ("xgb-all", "xgb-price", "lead-only", "hgb-all"):
-                row["perm_p"] = permutation_pvalue(preds[name], y, t, n_perm=a.n_perm)[1]
+            row["perm_p"] = permutation_pvalue(preds[name], y, t, n_perm=a.n_perm)[1]     # every model, so each p sits beside its own model
             checks.append(row)
         if k == 0:
             pred, y2, _, _ = walk_forward(D, ALL, "xgb", label="y_gap1")
@@ -163,12 +169,12 @@ def main():
         for r in rows:
             f.write(f"| {r['minute']} | {r['model']} | {r['n_test']:,} | {r['accuracy']*100:.2f}% | {r['auc']:.3f} | {r['log_loss']:.4f} |\n")
     with open(OUT / "checks.md", "w") as f:
-        f.write("Day-block bootstrap (95%) and within-day permutation test. "
-                "\"vs\" is accuracy minus the baseline named, on the same windows.\n\n")
+        f.write(f"Day-block bootstrap (95%) and within-day permutation test ({a.n_perm:,} permutations; a p shown as below a value is at the test's floor, meaning no permutation reached the observed accuracy). "
+                "Each p belongs to the model on its row. \"vs\" is accuracy minus the baseline named, on the same windows.\n\n")
         f.write("| minute | model | accuracy [95% CI] | vs baseline | permutation p |\n|---|---|---|---|---|\n")
         for _, r in C.iterrows():
             vs = f"{r['diff']*100:+.2f} [{r['diff_low']*100:+.2f}, {r['diff_high']*100:+.2f}] vs {r['vs']}" if isinstance(r.get("vs"), str) else "baseline"
-            p = f"{r['perm_p']:.3f}" if pd.notna(r.get("perm_p")) else ""
+            p = format_p(r["perm_p"], a.n_perm) if pd.notna(r.get("perm_p")) else ""
             f.write(f"| {int(r['minute'])} | {r['model']} | {r['accuracy']*100:.2f} [{r['ci_low']*100:.2f}, {r['ci_high']*100:.2f}] | {vs} | {p} |\n")
     print(f"wrote {OUT}/walk_forward.md and checks.md")
 
