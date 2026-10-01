@@ -7,9 +7,13 @@ is one a script wrote. Files: README.md and docs/*.md.
     python scripts/update_readme.py
 """
 import re
+import sys
 from pathlib import Path
 
 import pandas as pd
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from models.btc_15m.log import current_rows, read_log  # noqa: E402
 
 for readme in [Path("README.md"), *sorted(Path("docs").glob("*.md"))]:
     original = readme.read_text(encoding="utf-8")
@@ -26,7 +30,6 @@ for readme in [Path("README.md"), *sorted(Path("docs").glob("*.md"))]:
 
     log = Path("results/btc_15m/predictions.csv")
     if log.exists():
-        from models.btc_15m.log import current_rows, read_log
         L = current_rows(read_log(log))
         mid = L.model_id.iloc[0] if "model_id" in L else "pre-manifest"
         lines = [f"Trained through {L.trained_through.iloc[0]} (models {mid}), scored on {L.time_utc.min()[:10]} to {L.time_utc.max()[:10]}.", "",
