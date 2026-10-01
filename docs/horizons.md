@@ -469,6 +469,7 @@ Null: the largest |z| across cells on rotated outcomes has median 2.57 and 95th 
 - **The edge is in small moves.** After a 3-standard-deviation drop in the last five minutes, the price touches +5 basis points before -5 in 56.5% of cases against 49.8% unconditionally, in every year. At 10 basis points the same patterns are at 55%; at 20 basis points no cell holds every year and the best deviations are under 3 points. The reversals from extremes are bounces of a few basis points, which is also what the minute-by-minute decomposition in the main report found for the boundary effect.
 - **Touch rates are high at small barriers.** Within 15 minutes, 97% of all minutes reach +5 or -5 basis points, so the 5-point question is nearly always decided; within 5 minutes only 64% reach +10 or -10, and 32% reach 20, so at larger barriers "neither" is the common outcome and the direction question only applies to the minority that moved.
 - **The search is far outside its null** (largest |z| 24 against a null 95th percentile of 3.8), and the cells that hold are the same families as in the direction tables: sharp drops, oversold RSI, and the 4-hour extremes.
+- **A 5-basis-point bounce cannot be traded on spot.** Binance's spot taker fee for a regular account is 0.100% per side (0.075% with the BNB discount; schedule logged in [sources.md](sources.md)), so a round trip costs 15 to 20 basis points against a bounce of 5 and a touch rate of 56.5%: a certain loss. The only instrument where the size works is a binary contract on the window's direction, whose payoff does not scale with the move; whether the edge survives that contract's spread and fee is a question about real quotes, which this repo does not have, and the break-even table in the main report (study 6) is the hypothetical version.
 
 ## Inside the window: the next five minutes against the close
 
@@ -752,6 +753,105 @@ The 24 strongest conditional cells (from horizons.md) within each HMM state, 201
 - **Bull and bear look the same from inside a minute.** Minutes in dated bull and bear phases have nearly identical microstructure: 10.7 against 11.5 basis points of one-minute volatility, the same peak hour (14:00 UTC), the same tail share, the same weekend ratio, and the same reversal-rule accuracy (52.4% in both). Direction at the scale of months leaves almost no fingerprint at the scale of minutes.
 - **The states the HMM finds are volatility states, not direction states.** In every year the three states are named by volatility and almost all are "flat" in mean return, which matches the published Bitcoin fits. The low-volatility state covers about 1,330 days and the high-volatility states about 190.
 - **The conditional effects scale with volatility.** The 4-hour-extreme reversals are 12 to 16 points in the high-volatility state and 7 to 8 points in the low- and mid-volatility states, with intervals that separate. The sign never changes; the size does. So the useful regime variable for these cells is the volatility state known at the time, not whether the market is bull or bear, and the simplest form of it, the trailing 60-minute volatility, is already a feature.
+
+## One probability per minute from the cells
+
+The cells above are read one at a time. A live view needs one number per minute, so the whole event set of both libraries (0/1 for each event) plus the trailing-hour volatility tercile goes into a logistic regression for the next-h-minute direction, fit on all earlier years and scored on each later year from 2020, at horizons of 5 and 15 minutes. Two baselines on the same minutes: call the opposite of the previous h minutes (the one-bit rule at this horizon), and let the strongest firing cell decide (ranking and direction from the training years). The same run checks whether the cells keep their promises: for every event whose training-years deviation was at least 3 points, the deviation the training years promised against the one the test year delivered.
+
+<!-- table:cells_model_h5:start -->
+One probability per minute from the cells, horizon 5 minutes, 2018 to 2026-08: a logistic regression on every event of both libraries (0/1) plus the trailing-hour volatility tercile, fit on all earlier years and scored on each later year. Baselines on the same minutes: call the opposite of the previous 5 minutes (one bit), and 'the strongest firing cell decides' (direction and ranking from the training years, abstaining when nothing fires). Day-block 95% intervals; 'vs the reversal rule' is the paired difference with the share of days the model wins.
+
+| test year | model | minutes scored | share of minutes | accuracy [95% CI] | vs the reversal rule |
+|---|---|---|---|---|---|
+| 2020 | cells model | 513,792 | 100% | 52.96% [52.76, 53.17] | +0.09 [-0.17, +0.36], days better 53% |
+| 2020 | previous-h reversal rule | 513,792 | 100% | 52.87% [52.62, 53.13] | baseline |
+| 2020 | strongest firing cell decides | 513,792 | 100% | 53.00% [52.79, 53.22] | abstains when no cell fires |
+| 2020 | cells model, confident only (p beyond 0.55) | 80,538 | 16% | 58.48% [57.90, 59.07] |  |
+| 2021 | cells model | 515,609 | 100% | 52.70% [52.50, 52.89] | +1.08 [+0.81, +1.32], days better 67% |
+| 2021 | previous-h reversal rule | 515,609 | 100% | 51.62% [51.41, 51.84] | baseline |
+| 2021 | strongest firing cell decides | 515,609 | 100% | 52.81% [52.58, 53.01] | abstains when no cell fires |
+| 2021 | cells model, confident only (p beyond 0.55) | 115,603 | 22% | 56.57% [56.16, 56.97] |  |
+| 2022 | cells model | 525,596 | 100% | 52.25% [52.04, 52.46] | +0.41 [+0.12, +0.67], days better 56% |
+| 2022 | previous-h reversal rule | 525,596 | 100% | 51.84% [51.62, 52.08] | baseline |
+| 2022 | strongest firing cell decides | 525,596 | 100% | 52.56% [52.32, 52.81] | abstains when no cell fires |
+| 2022 | cells model, confident only (p beyond 0.55) | 93,591 | 18% | 56.44% [55.93, 56.97] |  |
+| 2023 | cells model | 524,017 | 100% | 52.14% [51.91, 52.35] | +0.97 [+0.71, +1.25], days better 63% |
+| 2023 | previous-h reversal rule | 524,017 | 100% | 51.17% [50.89, 51.43] | baseline |
+| 2023 | strongest firing cell decides | 524,017 | 100% | 52.00% [51.76, 52.22] | abstains when no cell fires |
+| 2023 | cells model, confident only (p beyond 0.55) | 94,810 | 18% | 55.73% [55.12, 56.38] |  |
+| 2024 | cells model | 527,036 | 100% | 51.62% [51.39, 51.83] | +1.08 [+0.83, +1.34], days better 68% |
+| 2024 | previous-h reversal rule | 527,036 | 100% | 50.53% [50.32, 50.75] | baseline |
+| 2024 | strongest firing cell decides | 527,036 | 100% | 51.45% [51.21, 51.68] | abstains when no cell fires |
+| 2024 | cells model, confident only (p beyond 0.55) | 101,119 | 19% | 54.30% [53.77, 54.82] |  |
+| 2025 | cells model | 525,596 | 100% | 51.34% [51.12, 51.57] | +0.88 [+0.60, +1.20], days better 61% |
+| 2025 | previous-h reversal rule | 525,596 | 100% | 50.46% [50.22, 50.69] | baseline |
+| 2025 | strongest firing cell decides | 525,596 | 100% | 51.04% [50.80, 51.30] | abstains when no cell fires |
+| 2025 | cells model, confident only (p beyond 0.55) | 85,313 | 16% | 53.81% [53.25, 54.36] |  |
+| 2026 | cells model | 349,916 | 100% | 51.95% [51.71, 52.20] | +0.52 [+0.19, +0.86], days better 60% |
+| 2026 | previous-h reversal rule | 349,916 | 100% | 51.43% [51.15, 51.70] | baseline |
+| 2026 | strongest firing cell decides | 349,916 | 100% | 52.17% [51.90, 52.44] | abstains when no cell fires |
+| 2026 | cells model, confident only (p beyond 0.55) | 47,053 | 13% | 54.89% [54.22, 55.59] |  |
+
+Calibration of the strong cells, forward: for every event whose training-years deviation was at least 3 points, the up-rate the training years promised against the up-rate the test year delivered (both as deviations from the respective base rates), pooled into bins of the promised size. 650 cell-years.
+
+| promised deviation (points) | cell-years | mean promised | mean delivered | delivered as a share of promised | sign kept |
+|---|---|---|---|---|---|
+| [3, 4) | 77 | 3.6 | 3.4 | 93% | 99% |
+| [4, 5) | 139 | 4.6 | 4.8 | 104% | 100% |
+| [5, 6) | 167 | 5.5 | 4.8 | 89% | 100% |
+| [6, 8) | 195 | 6.8 | 5.8 | 85% | 100% |
+| [8, 12) | 59 | 8.9 | 6.9 | 77% | 100% |
+<!-- table:cells_model_h5:end -->
+
+<!-- table:cells_model_h15:start -->
+One probability per minute from the cells, horizon 15 minutes, 2018 to 2026-08: a logistic regression on every event of both libraries (0/1) plus the trailing-hour volatility tercile, fit on all earlier years and scored on each later year. Baselines on the same minutes: call the opposite of the previous 15 minutes (one bit), and 'the strongest firing cell decides' (direction and ranking from the training years, abstaining when nothing fires). Day-block 95% intervals; 'vs the reversal rule' is the paired difference with the share of days the model wins.
+
+| test year | model | minutes scored | share of minutes | accuracy [95% CI] | vs the reversal rule |
+|---|---|---|---|---|---|
+| 2020 | cells model | 513,782 | 100% | 54.23% [53.91, 54.56] | +1.04 [+0.77, +1.31], days better 65% |
+| 2020 | previous-h reversal rule | 513,782 | 100% | 53.19% [52.92, 53.49] | baseline |
+| 2020 | strongest firing cell decides | 513,782 | 100% | 54.13% [53.78, 54.47] | abstains when no cell fires |
+| 2020 | cells model, confident only (p beyond 0.55) | 157,261 | 31% | 58.45% [57.90, 59.04] |  |
+| 2021 | cells model | 515,599 | 100% | 52.99% [52.64, 53.30] | +0.29 [-0.01, +0.58], days better 53% |
+| 2021 | previous-h reversal rule | 515,599 | 100% | 52.70% [52.40, 53.00] | baseline |
+| 2021 | strongest firing cell decides | 515,599 | 100% | 53.17% [52.83, 53.50] | abstains when no cell fires |
+| 2021 | cells model, confident only (p beyond 0.55) | 188,244 | 37% | 55.76% [55.18, 56.29] |  |
+| 2022 | cells model | 525,586 | 100% | 52.55% [52.22, 52.91] | +0.17 [-0.11, +0.43], days better 53% |
+| 2022 | previous-h reversal rule | 525,586 | 100% | 52.38% [52.05, 52.73] | baseline |
+| 2022 | strongest firing cell decides | 525,586 | 100% | 53.01% [52.66, 53.39] | abstains when no cell fires |
+| 2022 | cells model, confident only (p beyond 0.55) | 157,701 | 30% | 55.85% [55.16, 56.55] |  |
+| 2023 | cells model | 524,007 | 100% | 53.07% [52.75, 53.39] | +0.73 [+0.46, +0.99], days better 62% |
+| 2023 | previous-h reversal rule | 524,007 | 100% | 52.35% [52.03, 52.66] | baseline |
+| 2023 | strongest firing cell decides | 524,007 | 100% | 53.05% [52.72, 53.38] | abstains when no cell fires |
+| 2023 | cells model, confident only (p beyond 0.55) | 157,388 | 30% | 56.46% [55.85, 57.10] |  |
+| 2024 | cells model | 527,026 | 100% | 52.34% [51.97, 52.68] | +0.47 [+0.19, +0.73], days better 58% |
+| 2024 | previous-h reversal rule | 527,026 | 100% | 51.88% [51.53, 52.21] | baseline |
+| 2024 | strongest firing cell decides | 527,026 | 100% | 52.14% [51.77, 52.48] | abstains when no cell fires |
+| 2024 | cells model, confident only (p beyond 0.55) | 165,926 | 31% | 54.92% [54.26, 55.53] |  |
+| 2025 | cells model | 525,586 | 100% | 51.66% [51.32, 52.01] | +0.30 [+0.02, +0.58], days better 50% |
+| 2025 | previous-h reversal rule | 525,586 | 100% | 51.36% [51.02, 51.68] | baseline |
+| 2025 | strongest firing cell decides | 525,586 | 100% | 51.52% [51.16, 51.89] | abstains when no cell fires |
+| 2025 | cells model, confident only (p beyond 0.55) | 163,611 | 31% | 53.85% [53.15, 54.57] |  |
+| 2026 | cells model | 349,906 | 100% | 52.58% [52.18, 52.98] | +0.59 [+0.28, +0.91], days better 62% |
+| 2026 | previous-h reversal rule | 349,906 | 100% | 51.99% [51.60, 52.36] | baseline |
+| 2026 | strongest firing cell decides | 349,906 | 100% | 52.68% [52.29, 53.08] | abstains when no cell fires |
+| 2026 | cells model, confident only (p beyond 0.55) | 89,648 | 26% | 55.20% [54.41, 56.02] |  |
+
+Calibration of the strong cells, forward: for every event whose training-years deviation was at least 3 points, the up-rate the training years promised against the up-rate the test year delivered (both as deviations from the respective base rates), pooled into bins of the promised size. 684 cell-years.
+
+| promised deviation (points) | cell-years | mean promised | mean delivered | delivered as a share of promised | sign kept |
+|---|---|---|---|---|---|
+| [3, 4) | 78 | 3.6 | 3.9 | 109% | 95% |
+| [4, 5) | 149 | 4.5 | 4.5 | 100% | 98% |
+| [5, 6) | 143 | 5.4 | 5.1 | 94% | 99% |
+| [6, 8) | 211 | 6.8 | 5.7 | 83% | 100% |
+| [8, 12) | 85 | 9.1 | 7.6 | 84% | 100% |
+<!-- table:cells_model_h15:end -->
+
+- **The model beats the one-bit rule at this horizon by about a point, most years.** At 5 minutes the paired gain over the previous-5-minute reversal is +0.1 to +1.1 points, with the interval above zero in six of seven test years; at 15 minutes +0.2 to +1.0, above zero in five of seven. The rule itself is 50.5 to 52.9% at 5 minutes and 51.4 to 53.2% at 15, so the model lands at 51.3 to 53.0% and 51.7 to 54.2%. Small, but it is out of sample in every row and the direction of the gain never flips.
+- **The strongest firing cell is as good as the regression.** "The strongest firing cell decides" is within half a point of the model in every year, above it in four of seven years at 5 minutes and three of seven at 15. With 186 events some cell fires on every minute, so the rule never abstains. A regression over all the cells adds nothing a ranked list of cells does not already carry, which fits the finding that the cells are one effect in several costumes.
+- **Where the model is confident, it is right 54 to 58% of the time, and that share is fading.** Probabilities beyond 0.55 either way cover 13 to 22% of minutes at 5 minutes (26 to 37% at 15) and score 58.5% in 2020, 56.6 to 55.7% in 2021 to 2023, and 53.8 to 54.9% in 2024 to 2026 at 5 minutes; at 15 minutes the series goes from 58.5% in 2020 to 53.9 to 55.2% in 2024 to 2026. This is the fading of the cells themselves, measured forward, with the model's threshold held fixed.
+- **The cells keep their sign and deliver about nine tenths of their size.** Over 650 cell-years at 5 minutes and 684 at 15, a cell's test-year deviation had the sign the training years promised in 99.8% and 98.7% of cases, and the delivered size was 89% and 90% of the promised size overall. Small promises (3 to 5 points) are delivered in full; large ones (8 to 12 points) deliver 77 to 84%. So the cells can be shown as probabilities, with the understanding that an 8-point cell is a 6- to 7-point cell next year.
 
 ## What is not yet done
 
