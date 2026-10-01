@@ -1255,6 +1255,27 @@ Markov-switching baseline: the baseline feature's logistic coefficient in each s
 
 Neither helps. The state model is two points below the one-bit rule at the open and ten below the lead z-score at minute 3: its states carry volatility, not the previous window or the lead. The switching baseline makes the rule's calls exactly at the open (a binary feature with per-state coefficients changes the probabilities, not the side) and is level with the lead z-score at minute 3. On the magnitude label the HMM's states lose to `vol60` alone by 6.5 points at the open, because three states are a coarse version of a continuous volatility measure. The one informative line is in the coefficient table: the reversal coefficient is about twice as large in the calmest minute-scale state as in the others, so the size of the reversal depends on the volatility state while its sign does not, which is what the regime study in [horizons.md](horizons.md) found at the daily scale (there, with the larger effect in the high-volatility state: the two scales of "volatility" condition the effect differently).
 
+**30. Hidden Markov models, round two: states inside the models that work.** Study 29 asked the states to predict on their own. Here they enter the forest on price, flow and indicators, walk-forward by month on the same windows, three ways: the three filtered state probabilities of the minute-scale HMM at the last closed minute as extra columns; the previous day's filtered state from the daily HMM of the regime study, one-hot; and a forest fit separately on the training windows of each minute-scale state, its predictions mixed by the filtered probabilities (a mixture of experts). Each variant is compared with the same forest without the extra columns on the same windows, paired by day.
+
+<!-- table:hmm_models2:start -->
+Hidden Markov models, round two (forest on price + flow + indicators, walk-forward by month, 2025-10 to 2026-08). '+minute states': the filtered probabilities of a 3-state HMM on the minute series added as features; '+daily regime': the previous day's filtered state from the regime study, one-hot; 'per-state forest': a forest fit per minute-scale state, mixed by the filtered probabilities. 'vs without' is accuracy minus the same model without the extra columns on the same windows, day-block 95% interval and share of days better; the last column is against the one-feature baseline.
+
+| minute | model | n | accuracy [95% CI] | AUC | log loss | vs without | vs one-feature baseline |
+|---|---|---|---|---|---|---|---|
+| 0 | base | 23328 | 53.48% [52.88, 54.10] | 0.547 | 0.6899 | reference | +1.27 [+0.58, +1.95] vs prev-window |
+| 0 | +minute states | 23328 | 53.57% [52.96, 54.21] | 0.547 | 0.6898 | +0.09 [-0.33, +0.50], days better 51% | +1.36 [+0.68, +2.05] vs prev-window |
+| 0 | +daily regime | 23328 | 53.39% [52.80, 54.05] | 0.546 | 0.6900 | -0.09 [-0.47, +0.31], days better 47% | +1.18 [+0.49, +1.92] vs prev-window |
+| 0 | +both | 23328 | 53.37% [52.77, 54.03] | 0.546 | 0.6900 | -0.11 [-0.51, +0.30], days better 51% | +1.16 [+0.48, +1.87] vs prev-window |
+| 0 | per-state forest | 23328 | 52.78% [52.21, 53.39] | 0.544 | 0.6908 | -0.70 [-1.22, -0.18], days better 41% | +0.57 [-0.08, +1.25] vs prev-window |
+| 3 | base | 23328 | 66.13% [65.53, 66.77] | 0.720 | 0.6158 | reference | -0.21 [-0.56, +0.10] vs lead-z |
+| 3 | +minute states | 23328 | 66.16% [65.54, 66.80] | 0.720 | 0.6157 | +0.03 [-0.17, +0.23], days better 54% | -0.18 [-0.51, +0.12] vs lead-z |
+| 3 | +daily regime | 23328 | 66.24% [65.62, 66.87] | 0.720 | 0.6155 | +0.11 [-0.06, +0.29], days better 53% | -0.10 [-0.43, +0.22] vs lead-z |
+| 3 | +both | 23328 | 66.17% [65.55, 66.80] | 0.720 | 0.6158 | +0.04 [-0.14, +0.23], days better 54% | -0.18 [-0.51, +0.15] vs lead-z |
+| 3 | per-state forest | 23328 | 66.29% [65.67, 66.92] | 0.719 | 0.6163 | +0.15 [-0.09, +0.42], days better 53% | -0.06 [-0.35, +0.24] vs lead-z |
+<!-- table:hmm_models2:end -->
+
+Nothing changes. At the open the state probabilities move the forest by a tenth of a point in either direction with intervals across zero, and the mixture of experts is seven tenths worse with an interval that excludes zero: three forests, each fit on the windows of one state, lose more to the smaller training sets than they gain from fitting one state at a time. At minute 3 every variant is within two tenths of the base forest and all of them, like the base forest, sit level with or just below the lead z-score. The states carry volatility, the forest already has `vol60` and the indicator bank, and a one-hot of the previous day's regime is a coarser copy of the same thing. This closes the HMM question for the window label on the current data: as a detector the states are volatility states (regime study), as predictors they lose (study 29), and as features they add nothing (this study). What has not been tried is a different observable for the HMM (order-flow imbalance rather than returns) or a non-homogeneous transition matrix; both are listed under open items in [horizons.md](horizons.md).
+
 ## What remains open
 
 - The forward log from October 2026 is the only test of the frozen models that nobody can revise. The question it answers is narrow: does the forest's increment over the one-bit rule, about half a point in the backtest and absent in 2025, show up at all. If it stays absent, the report already says what the project found.

@@ -757,4 +757,5 @@ The 24 strongest conditional cells (from horizons.md) within each HMM state, 201
 
 - Derivatives events (funding extremes, open-interest spikes, liquidation signatures) and tick-level events (large-trade bursts) for the library.
 - The mechanism of the reversal from the tick data: order-book replenishment and inventory after a sharp move.
+- HMM variants not yet tried, after the states lost as predictors (study 29 in [btc_15m.md](btc_15m.md)) and added nothing as features (study 30): an HMM observing order-flow imbalance rather than returns, a non-homogeneous transition matrix driven by time of day, and a hidden semi-Markov model with explicit state durations.
 
