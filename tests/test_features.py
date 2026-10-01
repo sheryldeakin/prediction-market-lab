@@ -164,3 +164,22 @@ def test_phase_offset_moves_the_window_grid_and_the_cache_key():
     a, b = next(iter(s0.window_starts())), next(iter(s7.window_starts()))
     assert b - a == 7 and s0.t[a] % 900 == 0 and s7.t[b] % 900 == 420
     assert s0.fingerprint() != s7.fingerprint()
+
+
+def test_features_all_matches_the_per_window_builder_at_every_minute():
+    """The vectorised builder must equal features(i, 0) row for row, on and off the
+    quarter-hour grid, so the any-minute studies measure the same features."""
+    from models.btc_15m.features import features_all
+    base = synthetic(n=HISTORY + 400, seed=3)
+    base.loc[HISTORY + 50, "ok"] = False                        # a gap: rows within HISTORY after it are dropped
+    s = Series(base)
+    A = features_all(s)
+    assert A.i.min() == HISTORY
+    assert not ((A.i > HISTORY + 50) & (A.i < HISTORY + 50 + HISTORY + 1)).any()
+    cols = PRICE_FEATURES + FLOW_FEATURES + INDICATOR_FEATURES
+    rows = A[A.i.isin([HISTORY, HISTORY + 1, HISTORY + 7, HISTORY + 15, HISTORY + 44])]
+    assert len(rows) == 5
+    for _, r in rows.iterrows():
+        f = s.features(int(r.i), 0)
+        for c in cols:
+            assert np.isclose(r[c], f[c], rtol=1e-9, atol=1e-9), (c, r[c], f[c])

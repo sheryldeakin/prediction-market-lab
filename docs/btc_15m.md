@@ -1,6 +1,6 @@
 # BTC 15-minute direction: a boundary reversal, and what models add to it
 
-Everything the model was tested on, in the order it was done, regenerated on 2026-10-01 after an outside review (studies 20 to 27 are the review's questions). Every table is generated into `results/btc_15m/` and spliced here by `scripts/update_readme.py`; the prose is written against those tables and checked before each commit. Bugs found on the way, and the decisions behind each study, are in [process.md](process.md).
+Everything the model was tested on, in the order it was done, regenerated on 2026-10-01 after an outside review (studies 20 to 28 are the review's questions and the sequence comparison). Every table is generated into `results/btc_15m/` and spliced here by `scripts/update_readme.py`; the prose is written against those tables and checked before each commit. Bugs found on the way, and the decisions behind each study, are in [process.md](process.md).
 
 ## The problem
 
@@ -166,11 +166,11 @@ GRU over the last 120 minutes (return, volume ratio, taker-buy share) plus lead 
 
 | minute | model | n | accuracy [95% CI] | AUC | log loss | vs baseline |
 |---|---|---|---|---|---|---|
-| 0 | gru-sequence | 23327 | 51.16% [50.57, 51.76] | 0.520 | 0.6924 | +0.84 [+0.09, +1.61] vs majority |
-| 3 | gru-sequence | 23327 | 65.89% [65.28, 66.54] | 0.715 | 0.6203 | -0.43 [-0.76, -0.10] vs lead-only |
+| 0 | gru-sequence | 23328 | 51.16% [50.57, 51.76] | 0.520 | 0.6924 | -1.05 [-1.68, -0.40] vs prev-window |
+| 3 | gru-sequence | 23328 | 65.89% [65.28, 66.54] | 0.715 | 0.6203 | -0.46 [-0.79, -0.12] vs lead-z |
 <!-- table:sequence:end -->
 
-It underperforms the hand-built features at the open and does not beat the one-feature baseline three minutes in. With 23,000 training windows the sequence model does not find anything the features miss. (This table is regenerated overnight with the review's baselines; the numbers in it are the ones to read.)
+It does not learn the one bit: 51.2% at the open is a point below the previous-window rule (-1.05 [-1.68, -0.40]), and three minutes in it is half a point below the lead z-score. With 23,000 training windows a GRU on the raw series finds less than the hand-built features, which themselves add little to the rule. Study 28 repeats this with honest tuning, three architectures and three sequence lengths.
 
 **3. A magnitude label.** Instead of up or down: does the window move at least 10 basis points from its open in either direction? That is the question that decides whether a window is worth acting on at all. The baseline is logistic regression on the trailing 60-minute volatility alone.
 
@@ -1181,6 +1181,35 @@ Permutation importance of each derivative feature on the held-out months (accura
 <!-- table:derivatives:end -->
 
 Corrected, the derivatives add nothing: -0.4 points at the open and flat at minute 3, with intervals across zero. The forward check leaves out the columns Binance had not yet published for the whole of September and says so.
+
+**28. Sequence models compared properly.** GRU, dilated causal TCN and a two-layer transformer over the last 30, 120 or 480 minutes of return, volume ratio and taker-buy share, with lead and hour as side inputs. Hidden size and learning rate are chosen for each test month on the month before it (never on the test month), the winner is refit on all earlier months, and early stopping uses the last tenth of the training rows. Runs on the GPU; the overnight queue carries it.
+
+<!-- table:sequence2:start -->
+Sequence models with honest tuning: hidden size and learning rate chosen per test month on the month before it, then refit on all earlier months. GRU, dilated causal TCN and a two-layer transformer over the last L minutes of return, volume ratio and taker-buy share, plus lead and hour. Last column: accuracy minus the simple baseline on the same windows, day-block 95% interval; 'chosen h' lists the hidden size picked for each test month.
+
+| minute | model | L | n | accuracy [95% CI] | AUC | log loss | vs baseline | chosen h |
+|---|---|---|---|---|---|---|---|---|
+| 0 | gru | 30 | 23328 | 51.34% [50.78, 51.91] | 0.521 | 0.6922 | -0.87 [-1.50, -0.26] vs prev-window | 32,64,64,16,64,16,64,16 |
+| 0 | tcn | 30 | 23328 | 51.30% [50.73, 51.91] | 0.515 | 0.6933 | -0.90 [-1.56, -0.26] vs prev-window | 64,64,16,64,64,16,64,16 |
+| 0 | transformer | 30 | 23328 | 52.18% [51.56, 52.80] | 0.532 | 0.6910 | -0.03 [-0.75, +0.69] vs prev-window | 32,64,64,64,64,64,32,32 |
+| 0 | gru | 120 | 23328 | 51.45% [50.88, 52.04] | 0.523 | 0.6921 | -0.75 [-1.40, -0.15] vs prev-window | 32,64,64,16,64,16,16,16 |
+| 0 | tcn | 120 | 23328 | 51.44% [50.84, 52.07] | 0.517 | 0.6931 | -0.76 [-1.42, -0.12] vs prev-window | 64,64,16,64,64,16,64,16 |
+| 0 | transformer | 120 | 23328 | 51.39% [50.78, 52.03] | 0.519 | 0.6923 | -0.81 [-1.60, +0.06] vs prev-window | 32,64,16,64,64,64,64,32 |
+| 0 | gru | 480 | 23328 | 51.48% [50.92, 52.05] | 0.524 | 0.6920 | -0.73 [-1.36, -0.11] vs prev-window | 32,64,64,16,64,16,16,16 |
+| 0 | tcn | 480 | 23328 | 51.39% [50.73, 52.01] | 0.518 | 0.6929 | -0.81 [-1.50, -0.14] vs prev-window | 64,64,16,64,64,16,64,16 |
+| 0 | transformer | 480 | 23328 | 50.67% [50.07, 51.26] | 0.511 | 0.6928 | -1.53 [-2.30, -0.74] vs prev-window | 16,64,64,64,32,64,64,32 |
+| 3 | gru | 30 | 23328 | 66.04% [65.41, 66.71] | 0.714 | 0.6217 | -0.30 [-0.64, +0.05] vs lead-z | 32,64,64,16,32,32,16,32 |
+| 3 | tcn | 30 | 23328 | 65.84% [65.24, 66.45] | 0.713 | 0.6224 | -0.50 [-0.86, -0.15] vs lead-z | 64,16,16,16,64,32,32,64 |
+| 3 | transformer | 30 | 23328 | 65.93% [65.32, 66.53] | 0.714 | 0.6218 | -0.41 [-0.78, -0.05] vs lead-z | 32,32,64,16,16,64,64,64 |
+| 3 | gru | 120 | 23328 | 65.94% [65.31, 66.61] | 0.713 | 0.6216 | -0.41 [-0.75, -0.06] vs lead-z | 32,64,64,64,32,32,16,32 |
+| 3 | tcn | 120 | 23328 | 65.64% [65.06, 66.25] | 0.713 | 0.6224 | -0.71 [-1.06, -0.36] vs lead-z | 16,16,32,16,64,64,16,64 |
+| 3 | transformer | 120 | 23328 | 65.91% [65.31, 66.50] | 0.713 | 0.6219 | -0.44 [-0.84, -0.05] vs lead-z | 32,32,64,32,32,64,64,16 |
+| 3 | gru | 480 | 23328 | 65.91% [65.28, 66.59] | 0.713 | 0.6216 | -0.43 [-0.77, -0.09] vs lead-z | 32,64,64,64,32,32,16,32 |
+| 3 | tcn | 480 | 23328 | 65.91% [65.33, 66.53] | 0.714 | 0.6219 | -0.44 [-0.77, -0.11] vs lead-z | 16,16,16,16,64,64,64,64 |
+| 3 | transformer | 480 | 23328 | 66.20% [65.62, 66.81] | 0.714 | 0.6231 | -0.15 [-0.44, +0.13] vs lead-z | 32,32,64,16,32,64,64,32 |
+<!-- table:sequence2:end -->
+
+Every sequence model at the open is at or below the one-bit rule: eight of nine configurations are 0.7 to 1.5 points below it with intervals that exclude zero, and the ninth (the transformer over 30 minutes) is level with it. Three minutes in, all nine are below the lead z-score. Longer context does not help; the transformer gets worse as the sequence grows. Given 23,000 windows and a one-bit effect, a model that must discover the previous window's direction from 480 raw returns is at a disadvantage against a rule that is handed it, and this table measures that disadvantage. The chosen hidden sizes change from month to month, which says the validation month does not pin the architecture down.
 
 ## What remains open
 

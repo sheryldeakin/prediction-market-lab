@@ -153,3 +153,80 @@ def dataset(series: Series, k: int, cache: bool = True) -> pd.DataFrame:
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
         D.to_parquet(key, index=False)
     return D
+
+
+def _rolling_sum(x: np.ndarray, w: int) -> np.ndarray:
+    """out[i] = sum(x[i-w:i]) (the w values before i), NaN where i < w."""
+    cs = np.concatenate([[0.0], np.cumsum(x, dtype=float)])
+    out = np.full(len(x), np.nan)
+    out[w:] = cs[w:-1] - cs[:-w - 1]
+    return out
+
+
+def _rolling_std_before(x: np.ndarray, w: int) -> np.ndarray:
+    """out[i] = std(x[i-w:i]) with ddof 0, matching numpy's .std() in features()."""
+    s1, s2 = _rolling_sum(x, w), _rolling_sum(x * x, w)
+    var = s2 / w - (s1 / w) ** 2
+    return np.sqrt(np.maximum(var, 0.0))
+
+
+def _rolling_extreme_before(x: np.ndarray, w: int, fn) -> np.ndarray:
+    """out[i] = fn(x[i-w:i]); fn is np.max or np.min. Uses pandas rolling for speed."""
+    r = pd.Series(x).rolling(w)
+    v = (r.max() if fn is np.max else r.min()).values
+    out = np.full(len(x), np.nan)
+    out[1:] = v[:-1]
+    return out
+
+
+def features_all(series: Series) -> pd.DataFrame:
+    """The minute-0 features of features() for EVERY minute i treated as a decision time,
+    vectorised. Row i reads only candles up to i-1 (the same as features(i, 0)); rows
+    without HISTORY clean candles behind them are dropped. Used by the any-minute studies,
+    where 4.7 million rows make the per-window Python builder impractical. Equality with
+    features(i, 0) is tested row for row in tests/test_features.py."""
+    assert series.ticks is None, "tick features are not vectorised; attach them per study"
+    c, o, h, l, r1, v, n = series.c, series.o, series.h, series.l, series.r1, series.v, series.n
+    N = len(c)
+    i = np.arange(N)
+    p = np.concatenate([[np.nan], c[:-1]])                     # c[i-1]
+    f = {"lead": np.zeros(N)}
+    for w in (5, 15, 60, 240):
+        prev = np.full(N, np.nan); prev[w + 1:] = c[:-w - 1]   # c[i-1-w]
+        f[f"ret{w}"] = (p / prev - 1) * 1e4
+    for w in range(1, 5):
+        s = i - WINDOW * w
+        ok_s = s >= 0
+        num = np.full(N, np.nan); den = np.full(N, np.nan)
+        num[ok_s] = c[s[ok_s] + WINDOW - 1]; den[ok_s] = o[s[ok_s]]
+        f[f"win{w}"] = (num / den - 1) * 1e4
+    for w in (15, 60, 240):
+        f[f"vol{w}"] = _rolling_std_before(r1, w)
+    hi, lo = _rolling_extreme_before(h, 240, np.max), _rolling_extreme_before(l, 240, np.min)
+    f["rangepos"] = np.where(hi > lo, (p - lo) / (hi - lo), 0.5)
+    f["hour"] = ((series.t // 3600) % 24).astype(int)
+    f["wday"] = ((series.t // 86400 + 3) % 7).astype(int)
+    signed = 2 * series._raw[1] - v
+    for w in (1, 3, 5, 15, 60):
+        vol = _rolling_sum(v, w)
+        f[f"flow{w}"] = np.where(vol > 0, _rolling_sum(signed, w) / np.where(vol > 0, vol, 1.0), 0.0)
+    base_v = _rolling_sum(v, 1440) / 1440 + 1e-9
+    base_n = _rolling_sum(n, 1440) / 1440 + 1e-9
+    v5, n5 = _rolling_sum(v, 5), _rolling_sum(n, 5)
+    f["vratio5"] = v5 / 5 / base_v
+    f["vratio15"] = _rolling_sum(v, 15) / 15 / base_v
+    f["nratio5"] = n5 / 5 / base_n
+    f["size5"] = (v5 / np.maximum(n5, 1.0)) / (base_v / base_n)
+    for name in INDICATOR_FEATURES:
+        arr = np.asarray(series.ind[name], dtype=float)
+        f[name] = np.concatenate([[np.nan], arr[:-1]])
+    for name, arr in series.extra.items():
+        arr = np.asarray(arr, dtype=float)
+        f[name] = np.concatenate([[np.nan], arr[:-1]])
+    D = pd.DataFrame(f)
+    D["t"] = series.t
+    D["i"] = i
+    bad = (~series.ok).astype(float)
+    clean = _rolling_sum(bad, HISTORY) == 0                     # all of ok[i-HISTORY:i]
+    D = D[(i >= HISTORY) & clean].reset_index(drop=True)
+    return D
