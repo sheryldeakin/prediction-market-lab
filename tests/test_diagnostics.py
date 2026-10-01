@@ -61,3 +61,28 @@ def test_permutation_importance_is_zero_for_an_unused_feature():
     model = LogisticRegression().fit(X[["a", "b"]], y)
     imp = permutation_importance(model, X, y, ["a", "b"])
     assert imp["a"] > 0.3 and abs(imp["b"]) < 0.02
+
+
+def test_conformal_empty_sets_are_counted_and_are_misses():
+    """Below 50% target coverage the threshold falls under 0.5 and some sets hold neither
+    class; they were reported only as single or double (council review, 2026-09-30)."""
+    from models.btc_15m.diagnostics import conformal_summary
+    rng = np.random.default_rng(0)
+    p_cal = rng.uniform(0.4, 0.6, 4000); y_cal = (rng.uniform(size=4000) < p_cal).astype(int)
+    p_new = rng.uniform(0.4, 0.6, 4000); y_new = (rng.uniform(size=4000) < p_new).astype(int)
+    up, down = conformal_sets(p_cal, y_cal, p_new, alpha=0.6)
+    s = conformal_summary(up, down, y_new)
+    assert s["empty"] > 0
+    assert s["empty"] + s["single"] + s["double"] == s["n"]
+    empty = ~up & ~down
+    assert s["covered"] == int(np.where(y_new == 1, up, down).sum()) and s["covered"] <= s["n"] - s["empty"]
+
+
+def test_brier_residual_is_small_for_calibrated_probabilities_and_bins_are_filled():
+    rng = np.random.default_rng(1)
+    p = rng.uniform(0.45, 0.55, 50_000)                  # the narrow range seen at the open
+    y = (rng.uniform(size=p.size) < p).astype(int)
+    d = brier_decomposition(p, y)
+    assert d["bins"] == 10                               # equal-width bins would use two of ten
+    assert abs(d["residual"]) < 1e-4
+    assert abs(d["brier"] - (d["reliability"] - d["resolution"] + d["uncertainty"] + d["residual"])) < 1e-12

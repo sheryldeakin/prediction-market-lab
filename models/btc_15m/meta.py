@@ -5,10 +5,13 @@ minutes only. Measuring them from the open would let a barrier touched in the mi
 the model has already seen decide the label (a 74% "result" at minute 3 came from
 exactly that before it was caught by a test).
 
-Triple barrier (Lopez de Prado, Advances in Financial Machine Learning, ch. 3): a window
-is labelled by whichever comes first inside its 15 minutes: the price touching an upper
-barrier (+b), the lower barrier (-b), or the time limit, in which case the sign of the
-final move decides. Barriers are set in basis points, either fixed or as a multiple of
+Minute-bar barrier label (after the triple barrier of Lopez de Prado, Advances in
+Financial Machine Learning, ch. 3): a window is labelled by whichever comes first inside
+its 15 minutes: a minute's high touching the upper barrier (+b), a minute's low touching
+the lower barrier (-b), or the time limit, in which case the sign of the final move
+decides. With one-minute bars the order inside a minute is unknown, so a minute whose
+high and low both cross is labelled by the side its close is on and counted as
+ambiguous. Barriers are set in basis points, either fixed or as a multiple of
 the trailing 60-minute volatility scaled to 15 minutes. The label is +1 or -1; the
 "first touch" also records how the window resolved.
 
@@ -43,13 +46,21 @@ COLS = PRICE_FEATURES + FLOW_FEATURES + INDICATOR_FEATURES
 SPREAD, FEE = 0.01, 0.0175
 
 
-def triple_barrier(closes: np.ndarray, open_price: float, upper_bp: float, lower_bp: float) -> tuple[int, str]:
-    """closes: the window's minute closes in order. Returns (label in {+1,-1}, touch)."""
-    for c in closes:
-        r = (c / open_price - 1) * 1e4
-        if r >= upper_bp:
+def triple_barrier(closes: np.ndarray, open_price: float, upper_bp: float, lower_bp: float,
+                   highs: np.ndarray | None = None, lows: np.ndarray | None = None) -> tuple[int, str]:
+    """Minute closes (and highs and lows) in order. Returns (label in {+1,-1}, touch), touch
+    one of upper, lower, both (ambiguous minute, labelled by its close), time. Without
+    highs and lows the closes stand in for them."""
+    highs = closes if highs is None else highs
+    lows = closes if lows is None else lows
+    for c, h, l in zip(closes, highs, lows):
+        up = (h / open_price - 1) * 1e4 >= upper_bp
+        down = (l / open_price - 1) * 1e4 <= -lower_bp
+        if up and down:
+            return (1 if c >= open_price else -1), "both"
+        if up:
             return 1, "upper"
-        if r <= -lower_bp:
+        if down:
             return -1, "lower"
     final = (closes[-1] / open_price - 1) * 1e4
     return (1 if final >= 0 else -1), "time"
@@ -67,7 +78,7 @@ def barrier_labels(s: Series, D: pd.DataFrame, k: int, mult: float | None, fixed
         i = ix[int(t)]
         entry = s.o[i] if k == 0 else s.c[i + k - 1]
         b = fixed_bp if fixed_bp is not None else max(mult * v60 * np.sqrt(remaining), 1.0)
-        lab, touch = triple_barrier(s.c[i + k:i + WINDOW], entry, b, b)
+        lab, touch = triple_barrier(s.c[i + k:i + WINDOW], entry, b, b, s.h[i + k:i + WINDOW], s.l[i + k:i + WINDOW])
         labels.append(lab)
         touches.append(touch)
     return np.array(labels), np.array(touches)
@@ -114,14 +125,14 @@ def main():
     for k in [int(x) for x in a.minutes.split(",")]:
         D = dataset(s, k)
         # --- triple-barrier labels vs the plain close-over-open label ---
-        for name, mult, fixed in (("close >= open (plain)", None, None), ("fixed 10 bp barriers", None, 10.0), ("1.0 x volatility barriers", 1.0, None), ("2.0 x volatility barriers", 2.0, None)):
+        for name, mult, fixed in (("close >= open (plain)", None, None), ("minute-bar barrier, fixed 10 bp", None, 10.0), ("minute-bar barrier, 1.0 x volatility", 1.0, None), ("minute-bar barrier, 2.0 x volatility", 2.0, None)):
             if mult is None and fixed is None:
                 y = D.y.values
                 touch_share = ""
             else:
                 lab, touch = barrier_labels(s, D, k, mult, fixed)
                 y = (lab > 0).astype(int)
-                touch_share = f"upper {np.mean(touch=='upper')*100:.0f}%, lower {np.mean(touch=='lower')*100:.0f}%, time {np.mean(touch=='time')*100:.0f}%"
+                touch_share = f"upper {np.mean(touch=='upper')*100:.0f}%, lower {np.mean(touch=='lower')*100:.0f}%, ambiguous {np.mean(touch=='both')*100:.1f}%, time {np.mean(touch=='time')*100:.0f}%"
             pred = walk_forward_oof(D, COLS, y)
             keep = ~np.isnan(pred)
             hits = ((pred[keep] > 0.5) == y[keep]).astype(float)
@@ -148,7 +159,7 @@ def main():
                           f"{e*100:+.2f} [{elo*100:+.2f}, {ehi*100:+.2f}]", f"{auc:.3f}" if name == "act always" else ""])
             print(mrows[-1], flush=True)
     with open(OUT / "meta.md", "w") as f:
-        f.write("Triple-barrier labels: which comes first in the 15 minutes, the upper barrier, the lower barrier, or the time limit (then the sign of the final move). XGBoost, price + flow + indicators, walk-forward.\n\n")
+        f.write("Minute-bar barrier labels: which comes first in the minutes after entry, a minute's high reaching the upper barrier, a minute's low reaching the lower barrier, or the time limit (then the sign of the final move). A minute that crosses both is ambiguous with one-minute bars and is labelled by its close. XGBoost, price + flow + indicators, walk-forward.\n\n")
         f.write("| minute | label | how windows resolved | share up | accuracy [95% CI] | AUC |\n|---|---|---|---|---|---|\n")
         for r in brows:
             f.write("| " + " | ".join(str(x) for x in r) + " |\n")

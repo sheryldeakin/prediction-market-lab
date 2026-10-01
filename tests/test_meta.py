@@ -79,8 +79,25 @@ def test_barrier_labels_ignore_minutes_already_seen():
     s.c[i + 0] = 100.0 * (1 + 30 / 1e4)
     s.c[i + 1:i + 15] = 100.0
     s.c[i + 14] = 100.0 * (1 - 2 / 1e4)
-    D = pd.DataFrame({"t": [int(s.t[i])], "vol60": [1.0]})
+    s.h[i:i + 15] = np.maximum(s.c[i:i + 15], 100.0)        # bars consistent with the closes
+    s.l[i:i + 15] = np.minimum(s.c[i:i + 15], 100.0)
+    D =pd.DataFrame({"t": [int(s.t[i])], "vol60": [1.0]})
     lab0, touch0 = barrier_labels(s, D, 0, None, 10.0)
     lab3, touch3 = barrier_labels(s, D, 3, None, 10.0)
     assert (lab0[0], touch0[0]) == (1, "upper")          # at the open the spike is in the future
     assert (lab3[0], touch3[0]) == (-1, "time")          # at minute 3 the spike is in the past
+
+
+def test_barrier_touch_uses_the_minute_high_and_low():
+    """Closes alone missed a barrier crossed inside a minute (council review, 2026-09-30)."""
+    closes = np.array([100.05, 100.02, 99.99])
+    highs = np.array([100.12, 100.05, 100.02])         # first minute's high crosses +10 bp; its close does not
+    lows = np.array([100.00, 99.98, 99.95])
+    assert triple_barrier(closes, 100.0, 10, 10) == (-1, "time")
+    assert triple_barrier(closes, 100.0, 10, 10, highs, lows) == (1, "upper")
+
+
+def test_a_minute_crossing_both_barriers_is_ambiguous_and_follows_its_close():
+    closes = np.array([99.97]); highs = np.array([100.2]); lows = np.array([99.8])
+    assert triple_barrier(closes, 100.0, 10, 10, highs, lows) == (-1, "both")
+    assert triple_barrier(np.array([100.03]), 100.0, 10, 10, highs, lows) == (1, "both")

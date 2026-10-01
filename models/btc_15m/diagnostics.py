@@ -43,26 +43,37 @@ COLS = PRICE_FEATURES + FLOW_FEATURES + INDICATOR_FEATURES
 
 # ---------------- pure functions ----------------
 
-def brier_decomposition(p: np.ndarray, y: np.ndarray, bins: int = 10) -> dict:
-    """Brier = reliability - resolution + uncertainty, binned on predicted probability."""
+def prob_bins(p: np.ndarray, bins: int = 10, quantile: bool = True) -> np.ndarray:
+    """Bin index per probability. Quantile bins by default: at the open every probability
+    sits in 0.4 to 0.6, so equal-width bins leave most of the ten empty."""
+    if quantile:
+        edges = np.unique(np.quantile(p, np.linspace(0, 1, bins + 1)))
+    else:
+        edges = np.linspace(0, 1, bins + 1)
+    return np.clip(np.searchsorted(edges[1:-1], p, side="right"), 0, max(len(edges) - 2, 0))
+
+
+def brier_decomposition(p: np.ndarray, y: np.ndarray, bins: int = 10, quantile: bool = True) -> dict:
+    """Binned Murphy decomposition: Brier ~ reliability - resolution + uncertainty. It is
+    exact only when every probability in a bin is equal, so the residual
+    brier - (reliability - resolution + uncertainty) is reported beside it."""
     p = np.clip(p, 0, 1)
-    edges = np.linspace(0, 1, bins + 1)
-    idx = np.clip(np.digitize(p, edges[1:-1]), 0, bins - 1)
+    idx = prob_bins(p, bins, quantile)
     base = y.mean()
     rel = res = 0.0
-    for b in range(bins):
+    for b in np.unique(idx):
         m = idx == b
-        if m.any():
-            rel += m.mean() * (p[m].mean() - y[m].mean()) ** 2
-            res += m.mean() * (y[m].mean() - base) ** 2
+        rel += m.mean() * (p[m].mean() - y[m].mean()) ** 2
+        res += m.mean() * (y[m].mean() - base) ** 2
     unc = base * (1 - base)
-    return {"brier": float(np.mean((p - y) ** 2)), "reliability": float(rel), "resolution": float(res), "uncertainty": float(unc)}
+    brier = float(np.mean((p - y) ** 2))
+    return {"brier": brier, "reliability": float(rel), "resolution": float(res), "uncertainty": float(unc),
+            "residual": float(brier - (rel - res + unc)), "bins": int(len(np.unique(idx)))}
 
 
-def ece(p: np.ndarray, y: np.ndarray, bins: int = 10) -> float:
-    edges = np.linspace(0, 1, bins + 1)
-    idx = np.clip(np.digitize(p, edges[1:-1]), 0, bins - 1)
-    return float(sum((idx == b).mean() * abs(p[idx == b].mean() - y[idx == b].mean()) for b in range(bins) if (idx == b).any()))
+def ece(p: np.ndarray, y: np.ndarray, bins: int = 10, quantile: bool = True) -> float:
+    idx = prob_bins(p, bins, quantile)
+    return float(sum((idx == b).mean() * abs(p[idx == b].mean() - y[idx == b].mean()) for b in np.unique(idx)))
 
 
 def recalibrate(p_train, y_train, p_apply, method: str) -> np.ndarray:
@@ -81,6 +92,17 @@ def conformal_sets(p_cal, y_cal, p_new, alpha: float):
     s = np.where(y_cal == 1, 1 - p_cal, p_cal)
     q = float(np.quantile(s, min(1.0, np.ceil((n + 1) * (1 - alpha)) / n), method="higher"))
     return (1 - p_new) <= q, p_new <= q
+
+
+def conformal_summary(up: np.ndarray, down: np.ndarray, y: np.ndarray) -> dict:
+    """Counts of empty, single-class and two-class sets, and coverage with an empty set
+    counted as a miss (it contains neither class, so it never contains the truth)."""
+    single = up ^ down
+    empty = ~up & ~down
+    truth_in = np.where(y == 1, up, down)
+    right = ((up & (y == 1)) | (down & (y == 0))) & single
+    return {"n": int(len(y)), "covered": int(truth_in.sum()), "empty": int(empty.sum()), "single": int(single.sum()),
+            "double": int((up & down).sum()), "single_right": int(right.sum())}
 
 
 def permutation_importance(model, X: pd.DataFrame, y: np.ndarray, cols, seed=0) -> dict:
@@ -147,26 +169,23 @@ def main():
         common = ~np.isnan(variants["isotonic"])
         for name, v in variants.items():
             d = brier_decomposition(v[common], y[common])
-            cal_rows.append([k, name, int(common.sum()), f"{d['brier']:.4f}", f"{d['reliability']:.5f}", f"{d['resolution']:.5f}", f"{ece(v[common], y[common])*100:.2f}%"])
+            cal_rows.append([k, name, int(common.sum()), f"{d['brier']:.4f}", f"{d['reliability']:.5f}", f"{d['resolution']:.5f}", f"{d['uncertainty']:.5f}", f"{d['residual']:+.5f}", f"{ece(v[common], y[common])*100:.2f}%"])
             print(cal_rows[-1], flush=True)
         for m in months[3:]:
             te = (month == m).values
             cal_month_rows.append([k, str(m), int(te.sum()), f"{ece(p[te], y[te])*100:.2f}%", f"{p[te].mean()*100:.1f}%", f"{y[te].mean()*100:.1f}%"])
 
         # ---- conformal ----
-        for alpha in (0.10, 0.20, 0.30, 0.40):
-            cov, issued, right = [], 0, 0
-            n_total = 0
+        for alpha in (0.10, 0.20, 0.30, 0.40, 0.50, 0.60):
+            tot = {"n": 0, "covered": 0, "empty": 0, "single": 0, "double": 0, "single_right": 0}
             for i in range(4, len(months)):
                 cal, te = (month == months[i - 1]).values, (month == months[i]).values
                 up, down = conformal_sets(p[cal], y[cal], p[te], alpha)
-                truth_in = np.where(y[te] == 1, up, down)
-                cov.append(truth_in.mean())
-                single = up ^ down
-                issued += int(single.sum())
-                right += int(((up & (y[te] == 1)) | (down & (y[te] == 0)))[single].sum())
-                n_total += int(te.sum())
-            conf_rows.append([k, f"{1-alpha:.0%}", n_total, f"{np.mean(cov)*100:.1f}%", f"{100*issued/n_total:.1f}%", f"{100*right/issued:.2f}%" if issued else "no single-class sets"])
+                for key, v in conformal_summary(up, down, y[te]).items():
+                    tot[key] += v
+                n_total = tot["n"]
+            conf_rows.append([k, f"{1-alpha:.0%}", n_total, f"{100*tot['covered']/n_total:.1f}%", f"{100*tot['empty']/n_total:.1f}%", f"{100*tot['single']/n_total:.1f}%",
+                              f"{100*tot['double']/n_total:.1f}%", f"{100*tot['single_right']/tot['single']:.2f}%" if tot["single"] else "no single-class sets"])
             print(conf_rows[-1], flush=True)
 
         # ---- adversarial validation ----
@@ -198,14 +217,14 @@ def main():
             imp_rows.append([k, str(m), ", ".join(f"{n} {v*100:+.2f}" for n, v in top_pi), ", ".join(f"{n} {v:.3f}" for n, v in top_shap)])
             print(imp_rows[-1], flush=True)
 
-    md(OUT / "calibration.md", "Calibration of the XGBoost probabilities (price + flow + indicators), walk-forward. Platt and isotonic recalibration are fit on earlier months' out-of-fold probabilities only. Brier = reliability - resolution + uncertainty; lower reliability is better calibration, higher resolution is more information. ECE is the expected calibration error over ten bins.",
-       ["minute", "probabilities", "n", "Brier", "reliability", "resolution", "ECE"], cal_rows)
+    md(OUT / "calibration.md", "Calibration of the XGBoost probabilities (price + flow + indicators), walk-forward. Platt and isotonic recalibration are fit on earlier months' out-of-fold probabilities only. Binned decomposition over ten quantile bins of the predicted probability: Brier is approximately reliability - resolution + uncertainty, and the residual column is the part the binning does not account for. Lower reliability is better calibration, higher resolution is more information. ECE is the expected calibration error over the same quantile bins.",
+       ["minute", "probabilities", "n", "Brier", "reliability", "resolution", "uncertainty", "residual", "ECE"], cal_rows)
     with open(OUT / "calibration.md", "a") as f:
         f.write("\nReliability by month (raw probabilities): ECE, mean predicted, observed rate of up.\n\n| minute | month | n | ECE | mean predicted | observed |\n|---|---|---|---|---|---|\n")
         for r in cal_month_rows:
             f.write("| " + " | ".join(str(x) for x in r) + " |\n")
-    md(OUT / "conformal.md", "Split conformal prediction sets: the previous month calibrates the threshold, the current month is scored. Coverage is how often the set contains the truth (should be at least the target). A single-class set is a call; a two-class set is an abstention.",
-       ["minute", "target coverage", "n", "coverage", "share with a single-class set", "accuracy when a call is made"], conf_rows)
+    md(OUT / "conformal.md", "Split conformal prediction sets: the previous month calibrates the threshold, the current month is scored. Coverage is how often the set contains the truth (should be at least the target); an empty set contains neither class and counts as a miss. Empty sets appear when the target is below about 50%. A single-class set is a call; a two-class set is an abstention.",
+       ["minute", "target coverage", "n", "coverage", "empty sets", "single-class sets", "two-class sets", "accuracy when a call is made"], conf_rows)
     md(OUT / "adversarial.md", "Adversarial validation: a classifier trained to tell a test month's windows from all earlier months, scored on a held-out half. AUC 0.5 means the month is indistinguishable; higher means the feature distribution moved, and the top features say where.",
        ["minute", "month", "AUC", "top features"], adv_rows)
     md(OUT / "importance.md", "Feature importance on each held-out month. Permutation importance is the accuracy drop (points) when the feature is shuffled; SHAP is the mean absolute contribution from the booster. Top five of each.",
