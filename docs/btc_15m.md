@@ -1,6 +1,6 @@
 # BTC 15-minute direction: a boundary reversal, and what models add to it
 
-Everything the model was tested on, in the order it was done, regenerated on 2026-10-01 after an outside review (studies 20 to 28 are the review's questions and the sequence comparison). Every table is generated into `results/btc_15m/` and spliced here by `scripts/update_readme.py`; the prose is written against those tables and checked before each commit. Bugs found on the way, and the decisions behind each study, are in [process.md](process.md).
+Everything the model was tested on, in the order it was done, regenerated on 2026-10-01 after an outside review (studies 20 to 29 are the review's questions, the sequence comparison and the hidden Markov predictors). Every table is generated into `results/btc_15m/` and spliced here by `scripts/update_readme.py`; the prose is written against those tables and checked before each commit. Bugs found on the way, and the decisions behind each study, are in [process.md](process.md).
 
 ## The problem
 
@@ -1210,6 +1210,50 @@ Sequence models with honest tuning: hidden size and learning rate chosen per tes
 <!-- table:sequence2:end -->
 
 Every sequence model at the open is at or below the one-bit rule: eight of nine configurations are 0.7 to 1.5 points below it with intervals that exclude zero, and the ninth (the transformer over 30 minutes) is level with it. Three minutes in, all nine are below the lead z-score. Longer context does not help; the transformer gets worse as the sequence grows. Given 23,000 windows and a one-bit effect, a model that must discover the previous window's direction from 480 raw returns is at a disadvantage against a rule that is handed it, and this table measures that disadvantage. The chosen hidden sizes change from month to month, which says the validation month does not pin the architecture down.
+
+**29. Hidden Markov models as predictors.** Two rows. A three-state Gaussian HMM on the minute series (return, log volume ratio, taker share), fit on the training months and filtered forward, predicts with each state's training up-rate mixed by the filtered probabilities at the last closed minute. A Markov-switching version of the one-feature baseline refits the baseline's logistic coefficient in each state and mixes the same way. Both are also scored on the magnitude label against a logistic on `vol60`.
+
+<!-- table:hmm_models:start -->
+Hidden Markov models as predictors, walk-forward by month, 2025-10 to 2026-08. hmm-state: a 3-state Gaussian HMM on the minute series (return, log volume ratio, taker share) fit on the training months, filtered forward, each state's training up-rate mixed by the filtered probabilities at the last closed minute. ms-baseline: the one-feature baseline refit per state and mixed the same way. Direction label and the magnitude label (window moves at least 10 bp). Last column: accuracy minus the baseline on the same windows, day-block 95% interval, share of days better.
+
+| minute | label | model | n | accuracy [95% CI] | AUC | log loss | vs baseline |
+|---|---|---|---|---|---|---|---|
+| 0 | direction | prev-window | 23328 | 52.21% [51.63, 52.82] | 0.519 | 0.6922 | baseline |
+| 0 | direction | hmm-state | 23328 | 50.11% [49.45, 50.74] | 0.502 | 0.6932 | -2.10 [-2.94, -1.27], days better 37% |
+| 0 | direction | ms-baseline | 23328 | 52.21% [51.63, 52.82] | 0.524 | 0.6921 | +0.00 [+0.00, +0.00], days better 50% |
+| 0 | magnitude (>= 10 bp) | vol60 logistic | 23328 | 64.70% [63.40, 65.99] | 0.708 | 0.6360 | baseline |
+| 0 | magnitude (>= 10 bp) | hmm-state | 23328 | 58.17% [57.00, 59.30] | 0.593 | 0.6762 | -6.53 [-7.56, -5.51], days better 18% |
+| 0 | magnitude (>= 10 bp) | ms-baseline | 23328 | 57.79% [56.70, 58.86] | 0.595 | 0.6757 | -6.91 [-7.97, -5.82], days better 19% |
+| 3 | direction | lead-z | 23328 | 66.35% [65.73, 66.98] | 0.721 | 0.6150 | baseline |
+| 3 | direction | hmm-state | 23328 | 55.83% [55.18, 56.47] | 0.578 | 0.6849 | -10.51 [-11.24, -9.76], days better 2% |
+| 3 | direction | ms-baseline | 23328 | 66.21% [65.60, 66.84] | 0.721 | 0.6148 | -0.13 [-0.36, +0.06], days better 48% |
+| 3 | magnitude (>= 10 bp) | vol60 logistic | 23328 | 65.17% [63.88, 66.43] | 0.715 | 0.6320 | baseline |
+| 3 | magnitude (>= 10 bp) | hmm-state | 23328 | 62.83% [61.63, 64.03] | 0.643 | 0.6585 | -2.34 [-3.19, -1.43], days better 36% |
+| 3 | magnitude (>= 10 bp) | ms-baseline | 23328 | 62.82% [61.77, 63.82] | 0.651 | 0.6561 | -2.35 [-3.28, -1.41], days better 39% |
+
+Markov-switching baseline: the baseline feature's logistic coefficient in each state per test month (states ordered by the HMM's internal index, which can change between months; 'vol' is the state's return standard deviation in standardised units and 'share' its share of training windows).
+
+| label | month | minute | state 0 coef | state 0 share | state 0 vol | state 1 coef | state 1 share | state 1 vol | state 2 coef | state 2 share | state 2 vol |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| direction | 2026-01 | 0 | -0.165 | 0.380 | 0.453 | -0.304 | 0.248 | 1.623 | -0.090 | 0.371 | 0.459 |
+| direction | 2026-02 | 0 | -0.148 | 0.376 | 0.438 | -0.302 | 0.251 | 1.644 | -0.173 | 0.373 | 0.434 |
+| direction | 2026-03 | 0 | -0.314 | 0.254 | 1.656 | -0.149 | 0.374 | 0.428 | -0.191 | 0.372 | 0.421 |
+| direction | 2026-04 | 0 | -0.138 | 0.376 | 0.441 | -0.339 | 0.250 | 1.659 | -0.133 | 0.374 | 0.433 |
+| direction | 2026-05 | 0 | -0.145 | 0.381 | 0.436 | -0.324 | 0.246 | 1.670 | -0.157 | 0.373 | 0.443 |
+| direction | 2026-06 | 0 | -0.150 | 0.373 | 0.436 | -0.301 | 0.241 | 1.684 | -0.143 | 0.386 | 0.428 |
+| direction | 2026-07 | 0 | -0.169 | 0.386 | 0.432 | -0.299 | 0.240 | 1.681 | -0.135 | 0.374 | 0.439 |
+| direction | 2026-08 | 0 | -0.165 | 0.388 | 0.431 | -0.309 | 0.237 | 1.684 | -0.123 | 0.375 | 0.438 |
+| direction | 2026-01 | 3 | 1.754 | 0.354 | 0.459 | 1.619 | 0.306 | 1.622 | 1.810 | 0.340 | 0.453 |
+| direction | 2026-02 | 3 | 1.572 | 0.310 | 1.644 | 1.835 | 0.344 | 0.434 | 1.749 | 0.347 | 0.438 |
+| direction | 2026-03 | 3 | 1.800 | 0.343 | 0.421 | 1.542 | 0.312 | 1.656 | 1.721 | 0.344 | 0.428 |
+| direction | 2026-04 | 3 | 1.704 | 0.346 | 0.441 | 1.553 | 0.304 | 1.659 | 1.805 | 0.349 | 0.433 |
+| direction | 2026-05 | 3 | 1.812 | 0.354 | 0.436 | 1.574 | 0.299 | 1.670 | 1.721 | 0.347 | 0.443 |
+| direction | 2026-06 | 3 | 1.581 | 0.297 | 1.684 | 1.701 | 0.348 | 0.436 | 1.799 | 0.356 | 0.428 |
+| direction | 2026-07 | 3 | 1.675 | 0.349 | 0.439 | 1.600 | 0.297 | 1.681 | 1.827 | 0.354 | 0.432 |
+| direction | 2026-08 | 3 | 1.618 | 0.295 | 1.684 | 1.831 | 0.354 | 0.431 | 1.655 | 0.351 | 0.438 |
+<!-- table:hmm_models:end -->
+
+Neither helps. The state model is two points below the one-bit rule at the open and ten below the lead z-score at minute 3: its states carry volatility, not the previous window or the lead. The switching baseline makes the rule's calls exactly at the open (a binary feature with per-state coefficients changes the probabilities, not the side) and is level with the lead z-score at minute 3. On the magnitude label the HMM's states lose to `vol60` alone by 6.5 points at the open, because three states are a coarse version of a continuous volatility measure. The one informative line is in the coefficient table: the reversal coefficient is about twice as large in the calmest minute-scale state as in the others, so the size of the reversal depends on the volatility state while its sign does not, which is what the regime study in [horizons.md](horizons.md) found at the daily scale (there, with the larger effect in the high-volatility state: the two scales of "volatility" condition the effect differently).
 
 ## What remains open
 

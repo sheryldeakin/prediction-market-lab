@@ -11,7 +11,7 @@ Models, prediction logs and tracking tools for prediction markets. Each model li
 
 ### BTC 15-minute direction, in short
 
-The question was whether machine learning on free Binance candles predicts the direction of a 15-minute window. The answer, after 28 studies and an outside review that forced the baselines and the statistics to be redone, is in two parts.
+The question was whether machine learning on free Binance candles predicts the direction of a 15-minute window. The answer, after 29 studies and an outside review that forced the baselines and the statistics to be redone, is in two parts.
 
 **There is a real effect, and it is one bit.** Consecutive 15-minute windows tend to go opposite ways. Calling the opposite of the previous window is right about 52% of the time, and that holds everywhere it was looked for: in the eleven study months, in nine earlier months no study had loaded, in September 2026 after the rules were frozen, on Coinbase and Bitstamp as well as Binance, under labels built from 60-second volume-weighted prices (so it is not noise in a shared boundary print), and at every one of the 15 ways of placing a 15-minute grid on the clock (so it is about any 15-minute boundary, not the quarter hour). A search over about 900 event rules finds the same reversal hundreds of times over against a null that finds nothing, and the rules kept their direction out of sample.
 
@@ -36,7 +36,7 @@ The question was whether machine learning on free Binance candles predicts the d
 | event rules: kept their direction in 2025 | 737 of 745 |  |  |  |  | scored once |
 <!-- table:headline:end -->
 
-Every row above is read from a table a study wrote. The full tables, the 28 studies and what each one found: [docs/btc_15m.md](docs/btc_15m.md). Bugs found on the way, including fifteen from the review, and the decisions behind each study: [docs/process.md](docs/process.md).
+Every row above is read from a table a study wrote. The full tables, the 29 studies and what each one found: [docs/btc_15m.md](docs/btc_15m.md). Bugs found on the way, including fifteen from the review, and the decisions behind each study: [docs/process.md](docs/process.md).
 
 ![accuracy by entry minute](results/btc_15m/by_minute.png)
 
