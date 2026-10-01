@@ -27,15 +27,18 @@ PLAN = [
 def main():
     text = "\n".join(p.read_text(errors="ignore") for p in sorted((ROOT / "logs").glob("queue*.log")))
     running = own_jobs()
+    seen_running = set()
     for label, module, result in PLAN:
         base, _, nth = module.partition("#")
         done_lines = re.findall(rf"\d\d:\d\d:\d\d done .*models\.btc_15m\.{base}(?: |$)", text, flags=re.M)
         n_needed = int(nth) if nth else 1
-        is_running = any(base in j for j in running)
-        if len(done_lines) >= n_needed:
+        ran_directly = not nth and (ROOT / "results" / "btc_15m" / result).exists() and not done_lines
+        is_running = any(base in j for j in running) and base not in seen_running and len(done_lines) == n_needed - 1
+        if len(done_lines) >= n_needed or ran_directly:
             mark = "[x]"
         elif is_running:
             mark = "[~] running"
+            seen_running.add(base)
         else:
             mark = "[ ]"
         print(f"{mark} {label}" + (f"  -> results/btc_15m/{result}" if mark == "[x]" else ""))
