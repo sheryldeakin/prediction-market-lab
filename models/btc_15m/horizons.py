@@ -84,11 +84,13 @@ def year_frame(year: int, end: str) -> tuple[Series, pd.DataFrame] | None:
     return s, D
 
 
-def score_year(s: Series, D: pd.DataFrame, cutoffs, rng, null_runs: int):
-    """Per-cell statistics for one year, and the null distribution of the max |z|."""
+def score_year(s: Series, D: pd.DataFrame, cutoffs, rng, null_runs: int, masks_in: dict | None = None):
+    """Per-cell statistics for one year, and the null distribution of the max |z|.
+    masks_in: an external candidate set aligned to D's rows (the price-action library);
+    default is the event library plus the sweeps."""
     idx = D.i.values
     L = labels(s, idx)
-    C = candidates(D, cutoffs)
+    C = masks_in if masks_in is not None else candidates(D, cutoffs)
     t = D.t.values
     months = pd.to_datetime(D.t, unit="s").dt.to_period("M").astype(str).values
     rows = []
