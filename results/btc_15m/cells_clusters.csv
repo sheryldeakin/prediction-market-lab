@@ -1,0 +1,187 @@
+event,cluster,cluster_name,fires,dev30,held30,years30
+"pa: repeated rejection at the 4h low (2+ touches in 30 minutes, no close below)",1,"pa: repeated rejection at the 4h low (2+ touches in 30 minutes, no close below)",70041,0.02732247561575921,8,9
+"pa: support held (4h low tested within 3 bp, no close below, price now 3+ bp above)",2,"pa: support held (4h low tested within 3 bp, no close below, price now 3+ bp above)",112632,0.028667710833821063,9,9
+lib: US afternoon (14-17 UTC),3,lib: US afternoon (14-17 UTC),751526,0.0023842877635396574,7,9
+pa: 10 minutes after funding settlement (16:00 UTC),3,lib: US afternoon (14-17 UTC),31320,-0.015904527270778682,6,9
+pa: 10 minutes before funding settlement (16:00 UTC),3,lib: US afternoon (14-17 UTC),31320,-0.0002595719706509666,4,9
+lib: high volatility (vol60 in top decile),4,lib: high volatility (vol60 in top decile),406011,0.009538173698879207,7,9
+pa: failed breakdown below the 1h low,5,pa: failed breakdown below the 1h low,378816,0.027178425050163792,9,9
+pa: failed breakdown below the 4h low,5,pa: failed breakdown below the 1h low,152573,0.042735918731231864,9,9
+pa: failed breakdown below the daily low,5,pa: failed breakdown below the 1h low,43443,0.05978923435904654,9,9
+pa: bearish engulfing,6,pa: bearish engulfing,352438,0.00457380497996411,6,9
+pa: rejecting the ups (3+ up-minutes undone by the next minute in the last 15),7,pa: rejecting the ups (3+ up-minutes undone by the next minute in the last 15),872671,0.012695722273693325,9,9
+"pa: approaching a $1,000 level from above (within 10 bp, falling)",8,"pa: approaching a $100 level from above (within 10 bp, falling)",85067,-0.002774181462884676,7,9
+"pa: approaching a $100 level from above (within 10 bp, falling)",8,"pa: approaching a $100 level from above (within 10 bp, falling)",876536,0.01020305284260289,9,9
+lib: sweep: taker sell share > 0.1 (15 min),9,lib: sweep: taker sell share > 0.1 (15 min),1214056,0.02243588728815094,9,9
+lib: sweep: taker sell share > 0.2 (15 min),9,lib: sweep: taker sell share > 0.1 (15 min),564445,0.027118588966455713,9,9
+lib: sweep: taker sell share > 0.3 (15 min),9,lib: sweep: taker sell share > 0.1 (15 min),241347,0.02877776433489413,8,9
+lib: taker selling 60 pct+ of last 15 min,9,lib: sweep: taker sell share > 0.1 (15 min),564445,0.027118588966455713,9,9
+"pa: absorption: heavy taker selling in the last 5 minutes, price did not fall",9,lib: sweep: taker sell share > 0.1 (15 min),82492,-0.004999931120162343,7,9
+pa: taker selling above 70% of the last minute,10,pa: taker selling above 70% of the last minute,716684,0.0063443132630790445,8,9
+"pa: crossed a $1,000 level downward in the last 3 minutes",11,pa: crossed a $100 level downward in the last 3 minutes,78268,0.03132428853044854,9,9
+pa: crossed a $100 level downward in the last 3 minutes,11,pa: crossed a $100 level downward in the last 3 minutes,634380,0.02194254481770444,9,9
+lib: sweep: larger trades than usual (size5 > 1.2),12,lib: sweep: larger trades than usual (size5 > 1.2),805741,-0.0002573166318941044,5,9
+lib: sweep: more trades than usual (nratio5 > 1.5),12,lib: sweep: larger trades than usual (size5 > 1.2),619785,0.006473671253964212,8,9
+lib: trade count last 5 min 3x average,12,lib: sweep: larger trades than usual (size5 > 1.2),115317,0.014066129394360635,8,9
+lib: volume last 5 min 3x the daily average,12,lib: sweep: larger trades than usual (size5 > 1.2),181724,0.009963632102585279,7,9
+"pa: liquidity sweep of the 1h low (took it out, closed back above)",13,pa: wick rejection at the 1h low,90976,0.06244043563916929,9,9
+pa: pin bar at a new 1h low (long lower wick),13,pa: wick rejection at the 1h low,25091,0.06602444732504174,9,9
+pa: wick rejection at the 1h low,13,pa: wick rejection at the 1h low,111805,0.061200856063711034,9,9
+pa: wick rejection at the 4h low,13,pa: wick rejection at the 1h low,42192,0.0810480503643662,9,9
+pa: wick rejection at the daily low,13,pa: wick rejection at the 1h low,12238,0.08978481448774032,9,9
+pa: doji at a new 1h low,14,pa: doji at a new 1h low,19465,0.06299422599568173,9,9
+lib: OBV falling over 60 min,15,lib: OBV falling over 60 min,239577,0.050340658069624775,9,9
+lib: sweep: OBV falling,15,lib: OBV falling over 60 min,239577,0.050340658069624775,9,9
+lib: 4h return below -50 bp,16,lib: MACD histogram negative,1058822,0.033359301220061144,9,9
+lib: ADX14 above 30 (trending),16,lib: MACD histogram negative,1220270,0.003813934854819467,6,9
+lib: EMA9 below EMA21 by 10 bp,16,lib: MACD histogram negative,336193,0.05412552695753159,9,9
+lib: MACD histogram negative,16,lib: MACD histogram negative,2266972,0.011263811279790462,9,9
+lib: RSI14 below 30,16,lib: MACD histogram negative,169066,0.06752338285844924,9,9
+lib: RSI60 below 35,16,lib: MACD histogram negative,23920,0.05499489082141862,8,9
+lib: below lower Bollinger band,16,lib: MACD histogram negative,234206,0.04974099832905148,9,9
+lib: last 15 min down more than 2 sd,16,lib: MACD histogram negative,93759,0.053155507072200826,8,9
+lib: last 5 min down more than 2 sd,16,lib: MACD histogram negative,115175,0.04921190131002593,9,9
+lib: lower quarter of 4h range,16,lib: MACD histogram negative,872592,0.053069386639033676,9,9
+lib: previous window down,16,lib: MACD histogram negative,2240880,0.024581202494300455,9,9
+lib: price 30 bp+ below 60-min VWAP,16,lib: MACD histogram negative,428752,0.05587623967772407,9,9
+lib: price at 4h low (rangepos <= 0.02),16,lib: MACD histogram negative,46704,0.08296393235024219,9,9
+lib: sweep: 15-min move < -1.5 sd,16,lib: MACD histogram negative,243919,0.04974609054621216,9,9
+lib: sweep: 15-min move < -2 sd,16,lib: MACD histogram negative,93759,0.053155507072200826,8,9
+lib: sweep: 15-min move < -2.5 sd,16,lib: MACD histogram negative,34916,0.05081885789169701,8,9
+lib: sweep: 15-min move < -3 sd,16,lib: MACD histogram negative,12180,0.04048507876192605,8,9
+lib: sweep: 4h return < -100 bp,16,lib: MACD histogram negative,574290,0.03508317388420054,9,9
+lib: sweep: 4h return < -25 bp,16,lib: MACD histogram negative,1520520,0.029896387857952345,9,9
+lib: sweep: 4h return < -50 bp,16,lib: MACD histogram negative,1058822,0.033359301220061144,9,9
+lib: sweep: 5-min move < -1.5 sd,16,lib: MACD histogram negative,267900,0.04178188974460346,9,9
+lib: sweep: 5-min move < -2 sd,16,lib: MACD histogram negative,115175,0.04921190131002593,9,9
+lib: sweep: 5-min move < -2.5 sd,16,lib: MACD histogram negative,50986,0.05358278629437695,8,9
+lib: sweep: 5-min move < -3 sd,16,lib: MACD histogram negative,23148,0.0536051654941331,8,9
+lib: sweep: EMA9 < EMA21 - 10 bp,16,lib: MACD histogram negative,336193,0.05412552695753159,9,9
+lib: sweep: MACD hist < 0,16,lib: MACD histogram negative,2266972,0.011263811279790462,9,9
+lib: sweep: RSI14 < 20,16,lib: MACD histogram negative,22141,0.06581733086358876,8,9
+lib: sweep: RSI14 < 25,16,lib: MACD histogram negative,64233,0.0684398906278029,9,9
+lib: sweep: RSI14 < 30,16,lib: MACD histogram negative,169066,0.06752338285844924,9,9
+lib: sweep: RSI14 < 35,16,lib: MACD histogram negative,396054,0.06089910513800138,9,9
+lib: sweep: RSI60 < 35,16,lib: MACD histogram negative,23920,0.05499489082141862,8,9
+lib: sweep: RSI60 < 40,16,lib: MACD histogram negative,134567,0.07069503095163512,9,9
+lib: sweep: RSI60 < 45,16,lib: MACD histogram negative,678414,0.06512748652434103,9,9
+lib: sweep: previous window down,16,lib: MACD histogram negative,2240880,0.024581202494300455,9,9
+lib: sweep: price < VWAP60 - 15 bp,16,lib: MACD histogram negative,951046,0.04756613327355917,9,9
+lib: sweep: price < VWAP60 - 30 bp,16,lib: MACD histogram negative,428752,0.05587623967772407,9,9
+lib: sweep: price < VWAP60 - 50 bp,16,lib: MACD histogram negative,184486,0.057249815581404254,9,9
+lib: sweep: range position < 0.05,16,lib: MACD histogram negative,110297,0.08344524624215913,9,9
+lib: sweep: range position < 0.1,16,lib: MACD histogram negative,248065,0.07766941780641526,9,9
+lib: sweep: range position < 0.15,16,lib: MACD histogram negative,428339,0.06860459915348531,9,9
+lib: sweep: two windows down,16,lib: MACD histogram negative,1060719,0.041487726284171064,9,9
+lib: three windows down in a row,16,lib: MACD histogram negative,485255,0.05419098095172082,9,9
+lib: two windows down in a row,16,lib: MACD histogram negative,1060719,0.041487726284171064,9,9
+pa: acceptance below the 4h low (last 5 closes all below it),16,lib: MACD histogram negative,113365,0.06409556625096846,9,9
+pa: delta divergence: new 4h low with net taker buying over the hour,16,lib: MACD histogram negative,11250,0.08651587201197063,8,8
+pa: lower highs (three successive 10-minute highs declining),16,lib: MACD histogram negative,1321651,0.0342943090467352,9,9
+pa: volume climax at a new 1h low (hour's largest volume),17,pa: volume climax at a new 1h low (hour's largest volume),32695,0.0648151184799832,9,9
+pa: broke below the previous day's low in the last 5 minutes,18,pa: broke below the previous day's low in the last 5 minutes,23048,0.025491156783090687,9,9
+pa: lost the session VWAP in the last 5 minutes after 30+ minutes above,19,pa: lost the session VWAP in the last 5 minutes after 30+ minutes above,37967,0.02573672389828395,9,9
+pa: crossed below the daily open in the last 5 minutes,20,pa: crossed below the daily open in the last 5 minutes,80838,0.005239736375977892,7,9
+pa: retest from below of a 4h low broken in the last hour,21,pa: retest from below of a 4h low broken in the last hour,64654,0.04819897638380171,9,9
+pa: approaching the previous day's low from above (within 10 bp),22,pa: approaching the previous day's low from above (within 10 bp),41468,0.028823630045048357,5,9
+pa: 10 minutes after the US equity open (13:30 UTC),23,pa: 10 minutes after the US equity open (13:30 UTC),31300,-0.016486690505244102,6,9
+pa: 10 minutes before funding settlement (00:00 UTC),24,pa: last 5 minutes of the hour,31340,-0.010749159622192377,7,9
+pa: last 5 minutes of a 4-hour block,24,pa: last 5 minutes of the hour,93850,0.002238446455330726,5,9
+pa: last 5 minutes of the UTC day,24,pa: last 5 minutes of the hour,15670,-0.01068515962219239,6,9
+pa: last 5 minutes of the hour,24,pa: last 5 minutes of the hour,375430,0.0007842411685561793,6,9
+pa: 10 minutes before funding settlement (08:00 UTC),25,pa: 10 minutes before funding settlement (08:00 UTC),31240,0.010862575965562653,6,9
+lib: ADX14 below 15 (ranging),26,lib: ADX14 below 15 (ranging),591518,-0.001362393179855452,6,9
+pa: first 5 minutes of a 4-hour block,27,pa: first 5 minutes of the hour,93862,-0.0030993727926620545,5,9
+pa: first 5 minutes of the UTC day,27,pa: first 5 minutes of the hour,15670,-0.007382286302436292,4,9
+pa: first 5 minutes of the hour,27,pa: first 5 minutes of the hour,375422,-0.0013379846560956773,6,9
+lib: Asia early (0-3 UTC),28,lib: Asia early (0-3 UTC),750052,-0.010626586659505685,9,9
+pa: 10 minutes after funding settlement (00:00 UTC),28,lib: Asia early (0-3 UTC),31340,-0.008530978070145277,5,9
+pa: first hour of the week (Monday 00:00 to 01:00 UTC),28,lib: Asia early (0-3 UTC),26940,-0.018731295080121207,6,9
+pa: 10 minutes after funding settlement (08:00 UTC),29,pa: 10 minutes after funding settlement (08:00 UTC),31250,-0.0011125969963073866,3,9
+pa: 10 minutes after the US equity close (20:00 UTC),30,pa: 10 minutes after the US equity close (20:00 UTC),31340,0.01275172773712975,8,9
+"pa: repeated rejection at the 4h high (2+ touches in 30 minutes, no close above)",31,"pa: repeated rejection at the 4h high (2+ touches in 30 minutes, no close above)",83078,-0.022273936469024726,9,9
+"pa: resistance held (4h high tested within 3 bp, no close above, price now 3+ bp below)",32,"pa: resistance held (4h high tested within 3 bp, no close above, price now 3+ bp below)",131836,-0.03156971223112073,9,9
+pa: failed breakout above the 1h high,33,pa: failed breakout above the 1h high,386901,-0.025634458933399003,9,9
+pa: failed breakout above the 4h high,33,pa: failed breakout above the 1h high,164492,-0.04500638578831099,9,9
+pa: failed breakout above the daily high,33,pa: failed breakout above the 1h high,48439,-0.052735338450713584,9,9
+lib: low volatility (vol60 in bottom decile),34,lib: weekend,973930,-0.0017790391793172343,7,9
+lib: weekend,34,lib: weekend,1288191,-0.0004958929543758603,5,9
+pa: Saturday or Sunday,34,lib: weekend,1288191,-0.0004958929543758603,5,9
+pa: range breakdown downward (prior hour under 15 bp),34,lib: weekend,12183,0.03690355260094833,4,5
+pa: range breakout upward (prior hour under 15 bp),34,lib: weekend,12227,-0.02697241558610758,4,5
+pa: squeeze: last hour's range under 40% of the previous day's median hourly range,35,pa: squeeze: last hour's range under 40% of the previous day's median hourly range,71735,-0.005011773191038423,8,9
+pa: inside bar (last minute inside the previous one),36,pa: inside bar (last minute inside the previous one),998242,-0.0007493502712008215,8,9
+"pa: support flipped to resistance (4h low broken, retested within 5 bp, last 3 closes below)",37,"pa: support flipped to resistance (4h low broken, retested within 5 bp, last 3 closes below)",7312,0.03460282512401776,3,4
+"pa: resistance flipped to support (4h high broken, retested within 5 bp, last 3 closes above)",38,"pa: resistance flipped to support (4h high broken, retested within 5 bp, last 3 closes above)",10027,-0.04877711509605336,5,5
+pa: bullish engulfing,39,pa: bullish engulfing,352897,-0.005211196894199378,8,9
+pa: rejecting the downs (3+ down-minutes undone by the next minute in the last 15),40,pa: rejecting the downs (3+ down-minutes undone by the next minute in the last 15),881126,-0.014374272716056246,9,9
+"pa: approaching a $1,000 level from below (within 10 bp, rising)",41,"pa: approaching a $100 level from below (within 10 bp, rising)",91729,-0.005226599367565327,6,9
+"pa: approaching a $100 level from below (within 10 bp, rising)",41,"pa: approaching a $100 level from below (within 10 bp, rising)",883628,-0.011762687724761176,9,9
+lib: sweep: taker buy share > 0.1 (15 min),42,lib: sweep: taker buy share > 0.1 (15 min),1095258,-0.02358616749013328,9,9
+lib: sweep: taker buy share > 0.2 (15 min),42,lib: sweep: taker buy share > 0.1 (15 min),504483,-0.027281824360565667,9,9
+lib: sweep: taker buy share > 0.3 (15 min),42,lib: sweep: taker buy share > 0.1 (15 min),206994,-0.02683373812024934,8,9
+lib: taker buying 60 pct+ of last 15 min,42,lib: sweep: taker buy share > 0.1 (15 min),504483,-0.027281824360565667,9,9
+"pa: absorption: heavy taker buying in the last 5 minutes, price did not rise",42,lib: sweep: taker buy share > 0.1 (15 min),80817,0.0018494643128249308,5,9
+pa: taker buying above 70% of the last minute,43,pa: taker buying above 70% of the last minute,690655,-0.007943499624920596,9,9
+"pa: crossed a $1,000 level upward in the last 3 minutes",44,pa: crossed a $100 level upward in the last 3 minutes,78448,-0.017636833683966173,8,9
+pa: crossed a $100 level upward in the last 3 minutes,44,pa: crossed a $100 level upward in the last 3 minutes,634948,-0.016853082795344303,9,9
+"pa: liquidity sweep of the 1h high (took it out, closed back below)",45,pa: wick rejection at the 1h high,91745,-0.06505495733646556,9,9
+pa: pin bar at a new 1h high (long upper wick),45,pa: wick rejection at the 1h high,23732,-0.06904585823969954,9,9
+pa: wick rejection at the 1h high,45,pa: wick rejection at the 1h high,116079,-0.06455195590353528,9,9
+pa: wick rejection at the 4h high,45,pa: wick rejection at the 1h high,45745,-0.0861950874026303,9,9
+pa: wick rejection at the daily high,45,pa: wick rejection at the 1h high,13898,-0.06852275621189387,9,9
+pa: doji at a new 1h high,46,pa: doji at a new 1h high,20617,-0.0676660319453676,9,9
+lib: OBV rising over 60 min,47,lib: OBV rising over 60 min,200989,-0.04835504189943467,9,9
+lib: sweep: OBV rising,47,lib: OBV rising over 60 min,200989,-0.04835504189943467,9,9
+lib: 4h return above +50 bp,48,lib: previous window up,1124579,-0.031176324398338427,9,9
+lib: EMA9 above EMA21 by 10 bp,48,lib: previous window up,337631,-0.044282461431630636,9,9
+lib: MACD histogram positive,48,lib: previous window up,2238014,-0.011409711811821193,9,9
+lib: RSI14 above 70,48,lib: previous window up,179989,-0.05991994875501315,9,9
+lib: RSI60 above 65,48,lib: previous window up,31440,-0.02972140047158903,7,9
+lib: above upper Bollinger band,48,lib: previous window up,227185,-0.04867544392841429,9,9
+lib: last 15 min up more than 2 sd,48,lib: previous window up,98307,-0.04397811547458467,9,9
+lib: last 5 min up more than 2 sd,48,lib: previous window up,115372,-0.039416164757526136,9,9
+lib: previous window up,48,lib: previous window up,2264106,-0.024328927464092133,9,9
+lib: price 30 bp+ above 60-min VWAP,48,lib: previous window up,469191,-0.0448099804482863,9,9
+lib: price at 4h high (rangepos >= 0.98),48,lib: previous window up,64692,-0.08660630495459945,9,9
+lib: sweep: 15-min move > +1.5 sd,48,lib: previous window up,248823,-0.044171713591972986,9,9
+lib: sweep: 15-min move > +2 sd,48,lib: previous window up,98307,-0.04397811547458467,9,9
+lib: sweep: 15-min move > +2.5 sd,48,lib: previous window up,37783,-0.038845483091501425,8,9
+lib: sweep: 15-min move > +3 sd,48,lib: previous window up,14324,-0.025218674966623836,6,9
+lib: sweep: 4h return > +100 bp,48,lib: previous window up,599590,-0.029515733220275252,9,9
+lib: sweep: 4h return > +25 bp,48,lib: previous window up,1611782,-0.028671204613434136,9,9
+lib: sweep: 4h return > +50 bp,48,lib: previous window up,1124579,-0.031176324398338427,9,9
+lib: sweep: 5-min move > +1.5 sd,48,lib: previous window up,269069,-0.03640876328188416,9,9
+lib: sweep: 5-min move > +2 sd,48,lib: previous window up,115372,-0.039416164757526136,9,9
+lib: sweep: 5-min move > +2.5 sd,48,lib: previous window up,51389,-0.04324049379592271,9,9
+lib: sweep: 5-min move > +3 sd,48,lib: previous window up,23845,-0.04501920713021536,8,9
+lib: sweep: EMA9 > EMA21 + 10 bp,48,lib: previous window up,337631,-0.044282461431630636,9,9
+lib: sweep: MACD hist > 0,48,lib: previous window up,2238014,-0.011409711811821193,9,9
+lib: sweep: RSI14 > 65,48,lib: previous window up,415898,-0.058176011486300486,9,9
+lib: sweep: RSI14 > 70,48,lib: previous window up,179989,-0.05991994875501315,9,9
+lib: sweep: RSI14 > 75,48,lib: previous window up,70751,-0.055488684516369506,9,9
+lib: sweep: RSI14 > 80,48,lib: previous window up,25400,-0.04273896284460082,8,9
+lib: sweep: RSI60 > 55,48,lib: previous window up,732014,-0.06362586329262468,9,9
+lib: sweep: RSI60 > 60,48,lib: previous window up,153484,-0.06266078577468867,9,9
+lib: sweep: RSI60 > 65,48,lib: previous window up,31440,-0.02972140047158903,7,9
+lib: sweep: previous window up,48,lib: previous window up,2264106,-0.024328927464092133,9,9
+lib: sweep: price > VWAP60 + 15 bp,48,lib: previous window up,1028997,-0.040205263997060633,9,9
+lib: sweep: price > VWAP60 + 30 bp,48,lib: previous window up,469191,-0.0448099804482863,9,9
+lib: sweep: price > VWAP60 + 50 bp,48,lib: previous window up,200443,-0.04834904523543664,9,9
+lib: sweep: range position > 0.85,48,lib: previous window up,571005,-0.06767305092849088,9,9
+lib: sweep: range position > 0.90,48,lib: previous window up,337836,-0.0767246056573752,9,9
+lib: sweep: range position > 0.95,48,lib: previous window up,151420,-0.08698509816189075,9,9
+lib: sweep: two windows up,48,lib: previous window up,1083956,-0.04095636142361406,9,9
+lib: three windows up in a row,48,lib: previous window up,501329,-0.05382073728729871,9,9
+lib: two windows up in a row,48,lib: previous window up,1083956,-0.04095636142361406,9,9
+lib: upper quarter of 4h range,48,lib: previous window up,1099656,-0.04961577796066674,9,9
+pa: acceptance above the 4h high (last 5 closes all above it),48,lib: previous window up,133621,-0.06811082311161223,9,9
+pa: delta divergence: new 4h high with net taker selling over the hour,48,lib: previous window up,19158,-0.07771821869137131,8,9
+pa: higher lows (three successive 10-minute lows rising),48,lib: previous window up,1344338,-0.03250039959248272,9,9
+pa: volume climax at a new 1h high (hour's largest volume),49,pa: volume climax at a new 1h high (hour's largest volume),29788,-0.06138858412221981,9,9
+pa: broke above the previous day's high in the last 5 minutes,50,pa: broke above the previous day's high in the last 5 minutes,26848,-0.029767254114381903,8,9
+pa: reclaimed the session VWAP in the last 5 minutes after 30+ minutes below,51,pa: reclaimed the session VWAP in the last 5 minutes after 30+ minutes below,36927,-0.04099161258761248,9,9
+pa: crossed above the daily open in the last 5 minutes,52,pa: crossed above the daily open in the last 5 minutes,80739,-0.02543720952959866,8,9
+pa: retest from above of a 4h high broken in the last hour,53,pa: retest from above of a 4h high broken in the last hour,75921,-0.055394528156176556,9,9
+pa: approaching the previous day's high from below (within 10 bp),54,pa: approaching the previous day's high from below (within 10 bp),53701,-0.015292247391031265,6,9
+pa: 10 minutes after the London open (07:00 UTC),55,pa: 10 minutes after the London open (07:00 UTC),31231,-0.005895783664483142,6,9

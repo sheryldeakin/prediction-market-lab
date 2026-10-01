@@ -68,3 +68,11 @@ def test_year_stats_is_the_up_rate_difference_within_the_selection():
     assert fires_s == int((mask & sel).sum())
     assert np.isclose(dev_s, y[mask & sel].mean() - y[~mask & sel].mean())
     assert year_stats(np.zeros(n, bool), Y, t, 5)[2] == float("inf")
+
+
+def test_overlap_coefficient_is_one_for_a_nested_event_and_jaccard_is_not():
+    from models.btc_15m.cells_profile import listed, overlap_matrix
+    co = np.array([[100.0, 10.0], [10.0, 10.0]])            # event 1 fires only when event 0 does
+    assert np.isclose(overlap_matrix(co)[0, 1], 1.0)
+    assert np.isclose(jaccard_matrix(co)[0, 1], 0.1)
+    assert listed(["a", "b", "c"], limit=2) == "a; b; and 1 more" and listed(["a"], limit=2) == "a"

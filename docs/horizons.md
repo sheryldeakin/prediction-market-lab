@@ -752,7 +752,7 @@ The 24 strongest conditional cells (from horizons.md) within each HMM state, 201
 - **Bitcoin's bull and bear phases are short.** At the standard thresholds there are 67 dated phases in nine years, most of them two to twenty weeks; the wider thresholds (30% and 40%) reduce them to 28 and recover the familiar cycles (the 2018 bear, the March 2020 to April 2021 bull, the 2022 bear).
 - **Bull and bear look the same from inside a minute.** Minutes in dated bull and bear phases have nearly identical microstructure: 10.7 against 11.5 basis points of one-minute volatility, the same peak hour (14:00 UTC), the same tail share, the same weekend ratio, and the same reversal-rule accuracy (52.4% in both). Direction at the scale of months leaves almost no fingerprint at the scale of minutes.
 - **The states the HMM finds are volatility states, not direction states.** In every year the three states are named by volatility and almost all are "flat" in mean return, which matches the published Bitcoin fits. The low-volatility state covers about 1,330 days and the high-volatility states about 190.
-- **The conditional effects scale with volatility.** The 4-hour-extreme reversals are 12 to 16 points in the high-volatility state and 7 to 8 points in the low- and mid-volatility states, with intervals that separate. The sign never changes; the size does. So the useful regime variable for these cells is the volatility state known at the time, not whether the market is bull or bear, and the simplest form of it, the trailing 60-minute volatility, is already a feature.
+- **The conditional effects scale with volatility.** The 4-hour-extreme reversals are 12 to 16 points in the high-volatility state and 7 to 8 points in the low- and mid-volatility states, with intervals that separate. The sign never changes; the size does. So the useful regime variable for these cells is the volatility state known at the time, not whether the market is bull or bear. The trailing 60-minute volatility, the simplest form of it, turns out not to scale the cells at all (the volatility table in the cells section below), which points at the era rather than the volatility as the reason the daily state does.
 
 ## One probability per minute from the cells
 
@@ -852,6 +852,150 @@ Calibration of the strong cells, forward: for every event whose training-years d
 - **The strongest firing cell is as good as the regression.** "The strongest firing cell decides" is within half a point of the model in every year, above it in four of seven years at 5 minutes and three of seven at 15. With 186 events some cell fires on every minute, so the rule never abstains. A regression over all the cells adds nothing a ranked list of cells does not already carry, which fits the finding that the cells are one effect in several costumes.
 - **Where the model is confident, it is right 54 to 58% of the time, and that share is fading.** Probabilities beyond 0.55 either way cover 13 to 22% of minutes at 5 minutes (26 to 37% at 15) and score 58.5% in 2020, 56.6 to 55.7% in 2021 to 2023, and 53.8 to 54.9% in 2024 to 2026 at 5 minutes; at 15 minutes the series goes from 58.5% in 2020 to 53.9 to 55.2% in 2024 to 2026. This is the fading of the cells themselves, measured forward, with the model's threshold held fixed.
 - **The cells keep their sign and deliver about nine tenths of their size.** Over 650 cell-years at 5 minutes and 684 at 15, a cell's test-year deviation had the sign the training years promised in 99.8% and 98.7% of cases, and the delivered size was 89% and 90% of the promised size overall. Small promises (3 to 5 points) are delivered in full; large ones (8 to 12 points) deliver 77 to 84%. So the cells can be shown as probabilities, with the understanding that an 8-point cell is a 6- to 7-point cell next year.
+
+## The cells as a few effects: overlap, horizon, volatility
+
+Three questions about the 186 events of both libraries, asked of the same nine years. Which events fire on the same minutes, so that the list can be read as a few effects rather than 186 names; how the deviation builds from one minute to sixty for the strongest cells; and whether the trailing-hour volatility, which a live view knows, changes the size of a cell.
+
+<!-- table:cells_clusters:start -->
+Co-firing clusters of the 186 events of both libraries that fire at least 4,500 times over 2018 to 2026-08 ('lib' is the horizons event set, 'pa' the price-action library). Overlap coefficient of firing minutes pooled over years (shared minutes over the rarer event's minutes, so an event nested inside a broader one scores 1), average linkage, cut at 0.5. Each cluster is named by its most frequent member; 'union' is the up-rate deviation when any member fires, points, 95% interval from day-clustered errors, years held out of years with enough firings; 'opposite' counts members whose own 30-minute deviation has the other sign. The 30 clusters (of 55) whose union deviation at 30 minutes held in every year, by absolute deviation; every event's cluster is in cells_clusters.csv.
+
+| cluster (most frequent member) | members | minutes any member fires | union deviation at 5 min | union deviation at 30 min | opposite | other members |
+|---|---|---|---|---|---|---|
+| pa: doji at a new 1h high | 1 | 0.46% | -5.3 [-6.0, -4.5] 9/9 | -6.8 [-7.6, -6.0] 9/9 | 0 |  |
+| pa: wick rejection at the 1h high | 5 | 2.71% | -5.3 [-5.7, -5.0] 9/9 | -6.7 [-7.1, -6.3] 9/9 | 0 | pa: liquidity sweep of the 1h high (took it out, closed back below); pa: pin bar at a new 1h high (long upper wick); pa: wick rejection at the 4h high; pa: wick rejection at the daily high |
+| pa: volume climax at a new 1h low (hour's largest volume) | 1 | 0.73% | +6.2 [+5.6, +6.8] 9/9 | +6.5 [+5.9, +7.1] 9/9 | 0 |  |
+| pa: wick rejection at the 1h low | 5 | 2.62% | +5.1 [+4.8, +5.5] 9/9 | +6.3 [+5.9, +6.8] 9/9 | 0 | pa: liquidity sweep of the 1h low (took it out, closed back above); pa: pin bar at a new 1h low (long lower wick); pa: wick rejection at the 4h low; pa: wick rejection at the daily low |
+| pa: doji at a new 1h low | 1 | 0.43% | +5.1 [+4.3, +5.8] 9/9 | +6.3 [+5.5, +7.2] 9/9 | 0 |  |
+| pa: volume climax at a new 1h high (hour's largest volume) | 1 | 0.66% | -5.1 [-5.7, -4.4] 9/9 | -6.2 [-6.8, -5.5] 9/9 | 0 |  |
+| pa: retest from above of a 4h high broken in the last hour | 1 | 1.69% | -2.6 [-3.1, -2.1] 9/9 | -5.6 [-6.4, -4.8] 9/9 | 0 |  |
+| lib: previous window up | 45 | 78.10% | -3.6 [-3.8, -3.4] 9/9 | -5.4 [-5.6, -5.1] 9/9 | 0 | lib: 4h return above +50 bp; lib: EMA9 above EMA21 by 10 bp; lib: MACD histogram positive; lib: RSI14 above 70; lib: RSI60 above 65; lib: above upper Bollinger band; and 38 more |
+| lib: OBV falling over 60 min | 2 | 5.32% | +3.7 [+3.3, +4.0] 9/9 | +5.3 [+4.6, +6.0] 9/9 | 0 | lib: sweep: OBV falling |
+| lib: OBV rising over 60 min | 2 | 4.46% | -3.4 [-3.8, -3.0] 9/9 | -5.1 [-5.9, -4.3] 9/9 | 0 | lib: sweep: OBV rising |
+| pa: retest from below of a 4h low broken in the last hour | 1 | 1.44% | +1.8 [+1.2, +2.3] 8/9 | +4.9 [+4.0, +5.8] 9/9 | 0 |  |
+| lib: MACD histogram negative | 46 | 83.55% | +2.3 [+2.1, +2.5] 9/9 | +4.2 [+3.9, +4.5] 9/9 | 0 | lib: 4h return below -50 bp; lib: ADX14 above 30 (trending); lib: EMA9 below EMA21 by 10 bp; lib: RSI14 below 30; lib: RSI60 below 35; lib: below lower Bollinger band; and 39 more |
+| pa: reclaimed the session VWAP in the last 5 minutes after 30+ minutes below | 1 | 0.82% | -4.6 [-5.4, -3.8] 9/9 | -4.1 [-5.0, -3.2] 9/9 | 0 |  |
+| pa: resistance held (4h high tested within 3 bp, no close above, price now 3+ bp below) | 1 | 2.93% | -1.4 [-1.8, -0.9] 9/9 | -3.3 [-4.0, -2.5] 9/9 | 0 |  |
+| lib: sweep: taker buy share > 0.1 (15 min) | 5 | 24.72% | -2.4 [-2.5, -2.2] 9/9 | -3.2 [-3.5, -2.9] 9/9 | 1 | lib: sweep: taker buy share > 0.2 (15 min); lib: sweep: taker buy share > 0.3 (15 min); lib: taker buying 60 pct+ of last 15 min; pa: absorption: heavy taker buying in the last 5 minutes, price did not rise |
+| lib: sweep: taker sell share > 0.1 (15 min) | 5 | 27.38% | +2.5 [+2.3, +2.7] 9/9 | +3.1 [+2.8, +3.4] 9/9 | 1 | lib: sweep: taker sell share > 0.2 (15 min); lib: sweep: taker sell share > 0.3 (15 min); lib: taker selling 60 pct+ of last 15 min; pa: absorption: heavy taker selling in the last 5 minutes, price did not fall |
+| pa: failed breakdown below the 1h low | 3 | 8.96% | +0.9 [+0.6, +1.2] 8/9 | +3.0 [+2.6, +3.4] 9/9 | 0 | pa: failed breakdown below the 4h low; pa: failed breakdown below the daily low |
+| pa: support held (4h low tested within 3 bp, no close below, price now 3+ bp above) | 1 | 2.50% | +2.1 [+1.5, +2.6] 9/9 | +2.9 [+2.1, +3.8] 9/9 | 0 |  |
+| pa: failed breakout above the 1h high | 3 | 9.16% | -1.2 [-1.5, -0.9] 9/9 | -2.9 [-3.3, -2.5] 9/9 | 0 | pa: failed breakout above the 4h high; pa: failed breakout above the daily high |
+| pa: crossed a $100 level downward in the last 3 minutes | 2 | 14.08% | +2.3 [+2.1, +2.4] 9/9 | +2.7 [+2.5, +2.9] 9/9 | 0 | pa: crossed a $1,000 level downward in the last 3 minutes |
+| pa: lost the session VWAP in the last 5 minutes after 30+ minutes above | 1 | 0.84% | +3.2 [+2.4, +3.9] 9/9 | +2.6 [+1.7, +3.5] 9/9 | 0 |  |
+| pa: broke below the previous day's low in the last 5 minutes | 1 | 0.51% | +2.5 [+1.5, +3.5] 8/9 | +2.6 [+1.2, +3.9] 9/9 | 0 |  |
+| pa: repeated rejection at the 4h high (2+ touches in 30 minutes, no close above) | 1 | 1.84% | -0.5 [-1.1, +0.1] 5/9 | -2.3 [-3.4, -1.1] 9/9 | 0 |  |
+| pa: crossed a $100 level upward in the last 3 minutes | 2 | 14.09% | -2.0 [-2.2, -1.8] 9/9 | -2.1 [-2.3, -1.9] 9/9 | 0 | pa: crossed a $1,000 level upward in the last 3 minutes |
+| pa: rejecting the downs (3+ down-minutes undone by the next minute in the last 15) | 1 | 19.56% | -1.8 [-1.9, -1.6] 9/9 | -1.8 [-2.1, -1.5] 9/9 | 0 |  |
+| pa: approaching a $100 level from below (within 10 bp, rising) | 2 | 19.62% | -1.3 [-1.5, -1.1] 9/9 | -1.7 [-1.9, -1.5] 9/9 | 0 | pa: approaching a $1,000 level from below (within 10 bp, rising) |
+| pa: rejecting the ups (3+ up-minutes undone by the next minute in the last 15) | 1 | 19.37% | +1.4 [+1.2, +1.6] 9/9 | +1.6 [+1.3, +1.9] 9/9 | 0 |  |
+| pa: approaching a $100 level from above (within 10 bp, falling) | 2 | 19.46% | +1.0 [+0.8, +1.2] 7/9 | +1.5 [+1.3, +1.7] 9/9 | 1 | pa: approaching a $1,000 level from above (within 10 bp, falling) |
+| lib: Asia early (0-3 UTC) | 3 | 16.65% | -0.4 [-0.6, -0.2] 8/9 | -1.3 [-1.8, -0.8] 9/9 | 0 | pa: 10 minutes after funding settlement (00:00 UTC); pa: first hour of the week (Monday 00:00 to 01:00 UTC) |
+| pa: taker buying above 70% of the last minute | 1 | 15.33% | -0.2 [-0.3, -0.0] 6/9 | -1.0 [-1.1, -0.8] 9/9 | 0 |  |
+
+How many clusters under each measure and cut: all 186 active events, and the 120 events whose 30-minute cell held its sign in every year.
+
+| measure | cut | clusters, all active events | clusters, events held every year at 30 min |
+|---|---|---|---|
+| overlap coefficient | 0.5 | 55 | 30 |
+| overlap coefficient | 0.7 | 72 | 40 |
+| overlap coefficient | 0.9 | 94 | 58 |
+| Jaccard | 0.2 | 85 | 44 |
+| Jaccard | 0.3 | 108 | 57 |
+| Jaccard | 0.5 | 146 | 87 |
+<!-- table:cells_clusters:end -->
+
+<!-- table:cells_decay:start -->
+The effect by horizon, 2018 to 2026-08: for one cell per cluster among the strongest events held every year at 30 minutes, the pooled deviation at horizons 1 to 60 minutes (points, firing-weighted over years; the number after +/- is half the 95% interval from day-clustered errors pooled as if years were independent; in brackets, years held at that horizon). Every minute to 30, then every five. Below, where each peaks.
+
+| horizon (min) | pa: wick rejection at the daily low | lib: sweep: range position > 0.95 | pa: wick rejection at the 4h high | lib: sweep: range position < 0.05 | pa: doji at a new 1h high | pa: volume climax at a new 1h low (hour's largest volume) | pa: doji at a new 1h low | pa: volume climax at a new 1h high (hour's largest volume) |
+|---|---|---|---|---|---|---|---|---|
+| 1 | +2.2 +/-0.9 (7/9) | -1.3 +/-0.3 (8/9) | -2.7 +/-0.5 (9/9) | +1.6 +/-0.3 (8/9) | -1.6 +/-0.7 (9/9) | +3.6 +/-0.6 (8/9) | +2.7 +/-0.7 (7/9) | -3.2 +/-0.6 (8/9) |
+| 2 | +3.9 +/-0.9 (8/9) | -3.0 +/-0.3 (9/9) | -4.0 +/-0.5 (9/9) | +3.4 +/-0.4 (9/9) | -2.9 +/-0.7 (9/9) | +5.1 +/-0.6 (9/9) | +3.7 +/-0.7 (9/9) | -3.9 +/-0.6 (9/9) |
+| 3 | +4.9 +/-0.9 (9/9) | -4.0 +/-0.4 (9/9) | -4.8 +/-0.5 (9/9) | +4.4 +/-0.4 (9/9) | -4.2 +/-0.8 (9/9) | +5.8 +/-0.6 (9/9) | +4.8 +/-0.7 (9/9) | -4.5 +/-0.6 (9/9) |
+| 4 | +5.9 +/-1.0 (8/9) | -4.8 +/-0.4 (9/9) | -5.6 +/-0.5 (9/9) | +5.2 +/-0.4 (9/9) | -4.8 +/-0.8 (9/9) | +6.1 +/-0.6 (9/9) | +4.9 +/-0.7 (9/9) | -4.9 +/-0.6 (9/9) |
+| 5 | +6.8 +/-1.0 (9/9) | -5.4 +/-0.4 (9/9) | -6.0 +/-0.5 (9/9) | +6.0 +/-0.5 (9/9) | -5.3 +/-0.8 (9/9) | +6.2 +/-0.6 (9/9) | +5.1 +/-0.7 (9/9) | -5.1 +/-0.6 (9/9) |
+| 6 | +7.8 +/-1.0 (9/9) | -5.9 +/-0.4 (9/9) | -6.6 +/-0.6 (9/9) | +6.6 +/-0.5 (9/9) | -5.6 +/-0.8 (9/9) | +6.6 +/-0.6 (9/9) | +5.4 +/-0.8 (9/9) | -5.5 +/-0.6 (9/9) |
+| 7 | +7.5 +/-1.0 (9/9) | -6.3 +/-0.4 (9/9) | -6.8 +/-0.6 (9/9) | +6.8 +/-0.5 (9/9) | -5.6 +/-0.8 (9/9) | +6.5 +/-0.6 (9/9) | +5.6 +/-0.7 (9/9) | -5.5 +/-0.6 (9/9) |
+| 8 | +7.9 +/-1.1 (9/9) | -6.7 +/-0.5 (9/9) | -7.1 +/-0.6 (9/9) | +7.2 +/-0.5 (9/9) | -6.0 +/-0.7 (9/9) | +6.4 +/-0.6 (9/9) | +5.8 +/-0.7 (9/9) | -5.5 +/-0.6 (9/9) |
+| 9 | +8.0 +/-1.1 (9/9) | -7.0 +/-0.5 (9/9) | -7.1 +/-0.6 (9/9) | +7.2 +/-0.5 (9/9) | -6.1 +/-0.7 (9/9) | +6.4 +/-0.6 (9/9) | +5.9 +/-0.7 (9/9) | -5.4 +/-0.6 (9/9) |
+| 10 | +7.9 +/-1.1 (9/9) | -7.2 +/-0.5 (9/9) | -7.2 +/-0.6 (9/9) | +7.3 +/-0.5 (9/9) | -6.0 +/-0.8 (9/9) | +6.1 +/-0.6 (9/9) | +6.0 +/-0.7 (9/9) | -5.4 +/-0.6 (9/9) |
+| 11 | +8.1 +/-1.1 (9/9) | -7.4 +/-0.5 (9/9) | -7.5 +/-0.6 (9/9) | +7.3 +/-0.6 (9/9) | -6.0 +/-0.8 (9/9) | +5.9 +/-0.6 (9/9) | +6.5 +/-0.8 (9/9) | -5.4 +/-0.6 (9/9) |
+| 12 | +7.7 +/-1.1 (9/9) | -7.5 +/-0.5 (9/9) | -7.6 +/-0.6 (9/9) | +7.5 +/-0.6 (9/9) | -6.0 +/-0.7 (9/9) | +6.0 +/-0.6 (9/9) | +5.6 +/-0.8 (9/9) | -5.6 +/-0.6 (9/9) |
+| 13 | +7.8 +/-1.2 (9/9) | -7.7 +/-0.5 (9/9) | -7.7 +/-0.6 (9/9) | +7.6 +/-0.6 (9/9) | -6.5 +/-0.7 (9/9) | +6.1 +/-0.6 (9/9) | +5.8 +/-0.8 (9/9) | -5.4 +/-0.6 (9/9) |
+| 14 | +8.0 +/-1.2 (9/9) | -7.8 +/-0.5 (9/9) | -7.6 +/-0.6 (9/9) | +7.7 +/-0.6 (9/9) | -6.7 +/-0.8 (9/9) | +6.1 +/-0.6 (9/9) | +5.8 +/-0.8 (9/9) | -5.4 +/-0.6 (9/9) |
+| 15 | +8.1 +/-1.2 (9/9) | -8.0 +/-0.5 (9/9) | -8.0 +/-0.6 (9/9) | +7.7 +/-0.6 (9/9) | -6.7 +/-0.8 (9/9) | +6.1 +/-0.6 (9/9) | +5.8 +/-0.8 (9/9) | -5.0 +/-0.6 (9/9) |
+| 16 | +8.2 +/-1.2 (9/9) | -8.1 +/-0.6 (9/9) | -8.1 +/-0.6 (9/9) | +7.8 +/-0.6 (9/9) | -6.9 +/-0.8 (9/9) | +6.1 +/-0.6 (9/9) | +5.6 +/-0.8 (9/9) | -5.5 +/-0.6 (9/9) |
+| 17 | +8.4 +/-1.2 (9/9) | -8.3 +/-0.6 (9/9) | -8.2 +/-0.6 (9/9) | +8.1 +/-0.6 (9/9) | -7.2 +/-0.8 (9/9) | +6.2 +/-0.6 (9/9) | +5.7 +/-0.8 (9/9) | -5.7 +/-0.7 (9/9) |
+| 18 | +9.0 +/-1.2 (9/9) | -8.3 +/-0.6 (9/9) | -8.2 +/-0.6 (9/9) | +8.1 +/-0.7 (9/9) | -7.2 +/-0.8 (9/9) | +6.2 +/-0.6 (9/9) | +5.7 +/-0.8 (9/9) | -5.8 +/-0.7 (9/9) |
+| 19 | +9.0 +/-1.2 (9/9) | -8.4 +/-0.6 (9/9) | -8.2 +/-0.7 (9/9) | +8.2 +/-0.7 (9/9) | -7.2 +/-0.8 (9/9) | +6.2 +/-0.6 (9/9) | +5.9 +/-0.8 (9/9) | -6.0 +/-0.6 (9/9) |
+| 20 | +9.0 +/-1.3 (9/9) | -8.5 +/-0.6 (9/9) | -8.5 +/-0.7 (9/9) | +8.2 +/-0.7 (9/9) | -7.2 +/-0.8 (9/9) | +6.3 +/-0.6 (9/9) | +6.0 +/-0.8 (9/9) | -6.0 +/-0.7 (9/9) |
+| 21 | +9.2 +/-1.3 (9/9) | -8.6 +/-0.6 (9/9) | -8.6 +/-0.7 (9/9) | +8.3 +/-0.7 (9/9) | -7.1 +/-0.8 (9/9) | +6.3 +/-0.6 (9/9) | +5.9 +/-0.8 (9/9) | -6.1 +/-0.7 (9/9) |
+| 22 | +8.9 +/-1.3 (9/9) | -8.7 +/-0.6 (9/9) | -8.7 +/-0.7 (9/9) | +8.3 +/-0.7 (9/9) | -7.0 +/-0.8 (9/9) | +6.1 +/-0.6 (9/9) | +5.9 +/-0.8 (9/9) | -6.0 +/-0.7 (9/9) |
+| 23 | +9.1 +/-1.3 (9/9) | -8.8 +/-0.6 (9/9) | -8.7 +/-0.7 (9/9) | +8.5 +/-0.7 (9/9) | -7.1 +/-0.8 (9/9) | +6.4 +/-0.6 (9/9) | +5.9 +/-0.8 (9/9) | -6.2 +/-0.7 (9/9) |
+| 24 | +9.0 +/-1.3 (9/9) | -8.8 +/-0.6 (9/9) | -8.7 +/-0.7 (9/9) | +8.5 +/-0.7 (9/9) | -6.9 +/-0.8 (9/9) | +6.5 +/-0.6 (9/9) | +5.8 +/-0.8 (9/9) | -6.3 +/-0.7 (9/9) |
+| 25 | +9.3 +/-1.3 (9/9) | -8.9 +/-0.6 (9/9) | -8.7 +/-0.7 (9/9) | +8.5 +/-0.7 (9/9) | -6.8 +/-0.8 (9/9) | +6.4 +/-0.6 (9/9) | +5.9 +/-0.8 (9/9) | -6.2 +/-0.6 (9/9) |
+| 26 | +9.2 +/-1.3 (9/9) | -9.0 +/-0.6 (9/9) | -8.7 +/-0.7 (9/9) | +8.5 +/-0.7 (9/9) | -6.7 +/-0.8 (9/9) | +6.5 +/-0.6 (9/9) | +5.9 +/-0.8 (9/9) | -6.0 +/-0.6 (9/9) |
+| 27 | +9.2 +/-1.3 (9/9) | -9.0 +/-0.6 (9/9) | -8.8 +/-0.7 (9/9) | +8.6 +/-0.7 (9/9) | -6.8 +/-0.8 (9/9) | +6.6 +/-0.6 (9/9) | +6.2 +/-0.8 (9/9) | -6.2 +/-0.6 (9/9) |
+| 28 | +9.2 +/-1.4 (9/9) | -9.0 +/-0.7 (9/9) | -8.7 +/-0.7 (9/9) | +8.7 +/-0.7 (9/9) | -6.9 +/-0.8 (9/9) | +6.6 +/-0.6 (9/9) | +6.4 +/-0.8 (9/9) | -6.3 +/-0.7 (9/9) |
+| 29 | +9.3 +/-1.3 (9/9) | -9.1 +/-0.7 (9/9) | -8.7 +/-0.7 (9/9) | +8.6 +/-0.7 (9/9) | -6.9 +/-0.8 (9/9) | +6.6 +/-0.6 (9/9) | +6.4 +/-0.8 (9/9) | -6.1 +/-0.7 (9/9) |
+| 30 | +9.0 +/-1.4 (9/9) | -9.0 +/-0.7 (9/9) | -8.7 +/-0.7 (9/9) | +8.6 +/-0.7 (9/9) | -6.8 +/-0.8 (9/9) | +6.5 +/-0.6 (9/9) | +6.3 +/-0.8 (9/9) | -6.2 +/-0.6 (9/9) |
+| 35 | +9.6 +/-1.4 (9/9) | -9.0 +/-0.7 (9/9) | -8.6 +/-0.7 (9/9) | +8.2 +/-0.8 (9/9) | -6.3 +/-0.8 (9/9) | +6.3 +/-0.6 (9/9) | +5.7 +/-0.9 (9/9) | -6.0 +/-0.6 (9/9) |
+| 40 | +10.1 +/-1.4 (9/9) | -8.9 +/-0.7 (9/9) | -8.6 +/-0.7 (9/9) | +8.2 +/-0.8 (9/9) | -5.9 +/-0.8 (9/9) | +6.2 +/-0.6 (9/9) | +5.4 +/-0.9 (9/9) | -6.0 +/-0.7 (9/9) |
+| 45 | +9.9 +/-1.4 (9/9) | -8.9 +/-0.7 (9/9) | -8.6 +/-0.7 (9/9) | +8.1 +/-0.8 (9/9) | -6.0 +/-0.8 (9/9) | +5.9 +/-0.6 (9/9) | +5.6 +/-0.9 (9/9) | -6.1 +/-0.7 (9/9) |
+| 50 | +10.1 +/-1.4 (9/9) | -9.1 +/-0.7 (9/9) | -8.8 +/-0.7 (9/9) | +7.9 +/-0.8 (9/9) | -5.7 +/-0.8 (9/9) | +5.7 +/-0.6 (9/9) | +5.3 +/-0.8 (9/9) | -6.0 +/-0.7 (9/9) |
+| 55 | +10.1 +/-1.5 (9/9) | -9.0 +/-0.8 (9/9) | -8.6 +/-0.8 (9/9) | +8.1 +/-0.8 (9/9) | -5.6 +/-0.8 (9/9) | +5.9 +/-0.6 (9/9) | +5.2 +/-0.9 (9/9) | -6.0 +/-0.7 (9/9) |
+| 60 | +10.4 +/-1.4 (9/9) | -8.8 +/-0.8 (9/9) | -8.6 +/-0.8 (9/9) | +8.3 +/-0.9 (9/9) | -5.5 +/-0.8 (9/9) | +5.8 +/-0.6 (9/9) | +5.2 +/-0.8 (9/9) | -6.2 +/-0.7 (9/9) |
+
+| event | deviation at 1 min | at 5 min | at 15 min | at 30 min | at 60 min | peak horizon (min) | deviation at peak | horizons of 60 held every year |
+|---|---|---|---|---|---|---|---|---|
+| pa: wick rejection at the daily low | +2.2 | +6.8 | +8.1 | +9.0 | +10.4 | 60 | +10.4 | 57/60 |
+| lib: sweep: range position > 0.95 | -1.3 | -5.4 | -8.0 | -9.0 | -8.8 | 48 | -9.2 | 59/60 |
+| pa: wick rejection at the 4h high | -2.7 | -6.0 | -8.0 | -8.7 | -8.6 | 49 | -8.9 | 60/60 |
+| lib: sweep: range position < 0.05 | +1.6 | +6.0 | +7.7 | +8.6 | +8.3 | 28 | +8.7 | 59/60 |
+| pa: doji at a new 1h high | -1.6 | -5.3 | -6.7 | -6.8 | -5.5 | 17 | -7.2 | 60/60 |
+| pa: volume climax at a new 1h low (hour's largest volume) | +3.6 | +6.2 | +6.1 | +6.5 | +5.8 | 27 | +6.6 | 59/60 |
+| pa: doji at a new 1h low | +2.7 | +5.1 | +5.8 | +6.3 | +5.2 | 11 | +6.5 | 59/60 |
+| pa: volume climax at a new 1h high (hour's largest volume) | -3.2 | -5.1 | -5.0 | -6.2 | -6.2 | 28 | -6.3 | 59/60 |
+<!-- table:cells_decay:end -->
+
+<!-- table:cells_volatility:start -->
+The strongest cells by tercile of the trailing-hour volatility (vol60; tercile cutoffs from the previous year, so known at the time), 2018 to 2026-08: the 12 largest pooled deviations held every year at each of 5, 30 minutes, one per group of near-identical events (Jaccard 0.3). Because the cutoffs come from the previous year, a calm year after a wild one puts most of its minutes in the low tercile, which is why some terciles have few years with enough firings. Deviation of the up-rate from the tercile's own unconditional rate, points, 95% interval, years held; firings in brackets.
+
+| event | horizon (min) | all minutes | low-volatility third | middle third | high-volatility third |
+|---|---|---|---|---|---|
+| lib: sweep: RSI14 < 25 | 5 | +7.5 [+6.9, +8.1] 9/9 [64,233] | +6.9 [+5.9, +7.8] 8/8 [30,986] | +8.3 [+7.1, +9.4] 9/9 [14,669] | +8.0 [+6.9, +9.1] 9/9 [18,578] |
+| lib: RSI14 below 30 | 5 | +7.4 [+7.0, +7.8] 9/9 [169,065] | +6.8 [+6.2, +7.4] 9/9 [80,102] | +8.3 [+7.5, +9.0] 9/9 [40,735] | +7.8 [+7.1, +8.5] 9/9 [48,228] |
+| lib: sweep: 5-min move < -3 sd | 5 | +7.1 [+6.2, +7.9] 9/9 [23,148] | +7.2 [+5.7, +8.6] 6/6 [8,908] | +7.5 [+5.9, +9.2] 8/9 [6,071] | +7.0 [+5.6, +8.5] 7/8 [8,169] |
+| lib: sweep: 15-min move < -3 sd | 5 | +6.9 [+5.5, +8.4] 9/9 [12,180] | +5.9 [+3.0, +8.7] 4/4 [3,979] | +3.1 [-1.3, +7.4] 2/2 [3,152] | +7.5 [+4.6, +10.4] 4/4 [5,049] |
+| pa: wick rejection at the daily low | 5 | +6.8 [+5.8, +7.8] 9/9 [12,238] | +3.4 [-0.6, +7.5] 1/1 [1,770] | +2.1 [-1.3, +5.6] 1/2 [2,813] | +6.6 [+5.3, +8.0] 7/7 [7,655] |
+| lib: sweep: RSI14 < 20 | 5 | +6.8 [+5.7, +8.0] 9/9 [22,141] | +5.6 [+3.8, +7.4] 7/7 [11,191] | +5.4 [+2.9, +7.9] 4/5 [4,583] | +8.3 [+6.4, +10.2] 8/8 [6,367] |
+| pa: pin bar at a new 1h high (long upper wick) | 5 | -6.8 [-7.4, -6.1] 9/9 [23,729] | -5.6 [-6.6, -4.7] 7/7 [12,007] | -7.3 [-8.6, -6.0] 8/8 [6,230] | -8.3 [-9.8, -6.7] 4/4 [5,492] |
+| lib: price at 4h low (rangepos <= 0.02) | 5 | +6.7 [+6.1, +7.3] 9/9 [46,704] | +5.1 [+4.1, +6.1] 8/8 [17,981] | +8.1 [+6.9, +9.3] 9/9 [11,633] | +7.4 [+6.5, +8.3] 8/8 [17,090] |
+| lib: sweep: RSI14 > 75 | 5 | -6.6 [-7.2, -5.9] 9/9 [70,751] | -6.6 [-7.5, -5.7] 8/8 [33,410] | -6.6 [-7.8, -5.4] 9/9 [16,582] | -6.4 [-7.4, -5.4] 9/9 [20,759] |
+| lib: RSI14 above 70 | 5 | -6.6 [-7.0, -6.2] 9/9 [179,989] | -6.5 [-7.1, -5.9] 9/9 [83,633] | -6.6 [-7.4, -5.9] 9/9 [44,725] | -6.8 [-7.4, -6.1] 9/9 [51,631] |
+| lib: sweep: RSI60 < 35 | 5 | +6.3 [+5.2, +7.4] 9/9 [23,920] | +6.4 [+4.0, +8.7] 5/5 [5,318] | +2.2 [-0.4, +4.9] 3/4 [4,924] | +6.1 [+4.7, +7.6] 8/9 [13,678] |
+| pa: wick rejection at the 4h low | 5 | +6.2 [+5.7, +6.7] 9/9 [42,192] | +6.2 [+5.3, +7.2] 7/7 [14,640] | +6.0 [+4.9, +7.0] 9/9 [11,079] | +6.5 [+5.6, +7.3] 9/9 [16,473] |
+| pa: wick rejection at the daily low | 30 | +9.0 [+7.6, +10.4] 9/9 [12,238] | +13.3 [+7.9, +18.7] 1/1 [1,770] | +1.2 [-3.5, +6.0] 2/2 [2,813] | +8.6 [+6.7, +10.4] 7/7 [7,655] |
+| lib: sweep: range position > 0.95 | 30 | -9.0 [-9.7, -8.3] 9/9 [151,420] | -8.9 [-10.0, -7.8] 9/9 [59,149] | -9.3 [-10.5, -8.2] 9/9 [41,048] | -9.0 [-10.1, -7.9] 9/9 [51,223] |
+| pa: wick rejection at the 4h high | 30 | -8.7 [-9.4, -8.0] 9/9 [45,742] | -9.3 [-10.5, -8.2] 7/7 [17,841] | -8.8 [-10.0, -7.6] 9/9 [12,608] | -8.2 [-9.3, -7.0] 9/9 [15,293] |
+| lib: sweep: range position < 0.05 | 30 | +8.6 [+7.8, +9.3] 9/9 [110,296] | +8.0 [+6.7, +9.3] 8/8 [40,101] | +8.3 [+7.0, +9.6] 9/9 [28,610] | +9.2 [+8.0, +10.3] 9/9 [41,585] |
+| pa: wick rejection at the 4h low | 30 | +8.2 [+7.5, +8.9] 9/9 [42,191] | +8.8 [+7.5, +10.0] 7/7 [14,640] | +7.1 [+5.8, +8.4] 9/9 [11,079] | +8.4 [+7.3, +9.5] 9/9 [16,472] |
+| lib: sweep: range position < 0.1 | 30 | +8.2 [+7.6, +8.8] 9/9 [248,062] | +8.4 [+7.4, +9.5] 9/9 [88,631] | +7.9 [+6.8, +9.1] 9/9 [66,754] | +8.1 [+7.1, +9.1] 9/9 [92,677] |
+| lib: sweep: range position > 0.90 | 30 | -8.3 [-8.8, -7.7] 9/9 [337,835] | -8.3 [-9.2, -7.4] 9/9 [129,123] | -8.9 [-9.9, -8.0] 9/9 [92,763] | -7.9 [-8.8, -7.0] 9/9 [115,949] |
+| lib: sweep: RSI60 < 40 | 30 | +7.3 [+6.4, +8.1] 9/9 [134,567] | +9.6 [+8.0, +11.1] 8/8 [36,555] | +6.0 [+4.4, +7.5] 9/9 [31,996] | +6.3 [+5.0, +7.6] 9/9 [66,016] |
+| pa: pin bar at a new 1h high (long upper wick) | 30 | -6.9 [-7.6, -6.2] 9/9 [23,729] | -7.3 [-8.3, -6.2] 7/7 [12,007] | -6.0 [-7.3, -4.6] 8/8 [6,230] | -6.1 [-7.7, -4.4] 4/4 [5,492] |
+| pa: wick rejection at the daily high | 30 | -6.9 [-8.1, -5.7] 9/9 [13,898] | -6.1 [-9.6, -2.6] 2/2 [2,810] | -6.5 [-9.7, -3.4] 3/3 [3,777] | -6.8 [-8.5, -5.0] 7/7 [7,311] |
+| lib: sweep: RSI14 < 25 | 30 | +6.9 [+6.2, +7.7] 9/9 [64,233] | +8.1 [+6.9, +9.3] 8/8 [30,986] | +6.0 [+4.6, +7.5] 8/9 [14,669] | +5.8 [+4.4, +7.2] 8/9 [18,578] |
+| pa: acceptance above the 4h high (last 5 closes all above it) | 30 | -7.0 [-7.8, -6.2] 9/9 [133,621] | -8.4 [-9.8, -7.1] 8/8 [41,533] | -7.6 [-9.0, -6.2] 9/9 [36,607] | -5.9 [-7.0, -4.7] 9/9 [55,481] |
+
+Across the 24 cells, the high-volatility deviation is 1.0 times the low-volatility one (median; range 0.6 to 1.9); the sign agrees between the two terciles in 24 of 24.
+<!-- table:cells_volatility:end -->
+
+- **The indicator library is two effects.** Under the nesting measure (an event that fires inside a broader one is a costume of it), 85 of the 107 events of the horizons set fall into two clusters: "price recently rose" (named by its most frequent member, previous window up: 45 members, firing on 78% of minutes) and "price recently fell" (MACD histogram negative: 46 members, 84%). RSI, Bollinger bands, EMA crossings, VWAP distance, 4-hour returns and the window sequence are all ways of saying one of those two things, and no member of either cluster points against its union at 30 minutes.
+- **The price-action library adds the probes.** Its holding events form small clusters of their own: wick rejections, liquidity sweeps and pin bars at a low (five members, one effect) and at a high (five, the mirror), dojis and volume climaxes at a new hourly extreme, retests of a broken level, failed breakouts and breakdowns, round-number crossings. These are not nested in the indicator clusters because they describe one candle's shape at an extreme, not where the price sits in its range. Of the 120 events whose 30-minute cell held every year, 30 clusters remain at the nesting cut of 0.5 (40 at 0.7); under Jaccard, which keeps a rare event apart from a broad one, 44 to 87.
+- **The deviation builds for half an hour, not five minutes.** For the eight strongest cells, the 1-minute deviation is 28% of the 30-minute one (median), 59% by 3 minutes, 77% by 5 and 91% by 15. The range-position and wick-rejection cells keep rising to a peak at 48 to 60 minutes; the one-candle events (doji, volume climax at an hourly extreme) peak at 11 to 28 minutes and fade a little by 60. The next five minutes carry most of the effect and the rest accrues slowly, so a 5-minute call leaves about a quarter of it on the table.
+- **The trailing-hour volatility does not change the size of a cell.** Across the 24 strongest cells, the deviation in the high-volatility third is 1.0 times the deviation in the low third (median; range 0.6 to 1.9), the middle third 0.96 times, and the sign agrees in all 24. This differs from the regime section, where the daily HMM's high-volatility state roughly doubled the 4-hour-extreme cells. The two conditionings are different: the daily high-volatility state is concentrated in 2018 to 2022, when every cell was larger (the eras section), so part of that doubling is the era rather than the volatility. That reading fits both tables but has not been tested on its own. For the live view the consequence is simple: show the cell's probability without a volatility adjustment.
 
 ## What is not yet done
 
