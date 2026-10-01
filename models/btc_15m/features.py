@@ -43,6 +43,7 @@ class Series:
         self.ind = compute_indicators(self.o, self.h, self.l, self.c, self.v)
         self.ticks = None                      # optional TickFlow, set by the caller
         self.extra = {}                        # optional per-minute arrays (e.g. derivatives), value at i known at minute i's close
+        self.phase = 0                         # window starts at quarter hour + phase minutes (0..14); 0 is the clock-aligned grid
         self._raw = (frame.trades.values.astype(float), frame.taker_buy.values.astype(float))
 
     def fingerprint(self) -> str:
@@ -61,13 +62,13 @@ class Series:
         if self.ticks is not None:
             for k in sorted(self.ticks.c):
                 h.update(np.ascontiguousarray(self.ticks.c[k][::997]).tobytes())
-        h.update(f"{HISTORY}-{WINDOW}-{FEATURE_VERSION}-{_INDICATOR_SOURCE}".encode())
+        h.update((f"{HISTORY}-{WINDOW}-{FEATURE_VERSION}-{_INDICATOR_SOURCE}" + (f"-phase{self.phase}" if self.phase else "")).encode())
         return f"{int(self.t[0])}-{int(self.t[-1])}-{len(self.t)}-{h.hexdigest()[:16]}"
 
     def window_starts(self):
         """Every quarter-hour start with HISTORY minutes behind it and all fifteen of its
         own candles inside the series (the last complete window included)."""
-        first = ((self.t[0] // 900) + 1) * 900
+        first = ((self.t[0] // 900) + 1) * 900 + 60 * self.phase
         i0 = int((first - self.t[0]) // 60)
         return range(i0 + HISTORY, len(self.t) - WINDOW + 1, WINDOW)
 

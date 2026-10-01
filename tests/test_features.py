@@ -156,3 +156,11 @@ def test_cache_key_covers_every_column_and_extra_contents():
     s2.extra = {"basis_bp": np.ones(len(a))}
     assert s1.fingerprint() != s2.fingerprint()
     assert Series(a).fingerprint() == Series(a.copy()).fingerprint()
+
+
+def test_phase_offset_moves_the_window_grid_and_the_cache_key():
+    s0, s7 = Series(synthetic()), Series(synthetic())
+    s7.phase = 7
+    a, b = next(iter(s0.window_starts())), next(iter(s7.window_starts()))
+    assert b - a == 7 and s0.t[a] % 900 == 0 and s7.t[b] % 900 == 420
+    assert s0.fingerprint() != s7.fingerprint()
