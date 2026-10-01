@@ -529,3 +529,7 @@ The 24 strongest conditional cells (from horizons.md) within each HMM state, 201
 
 ## What is not yet done
 
+- A price-action library: trader vernacular (failed breakouts, wick rejections, round-number approaches and crossings, liquidity sweeps, retests, breaks of structure, range breakouts, VWAP reclaims; time-of-day and funding-settlement effects; volume climaxes, absorption, delta divergence, large-trade bursts; mechanical candle patterns; volatility squeezes; funding extremes and liquidation signatures) turned into ex-ante events and run through the same machinery. Most are expected to collapse into the few effects above under new names; the write-up will say which.
+- The mechanism of the reversal from the tick data: order-book replenishment and inventory after a sharp move.
+- Hidden Markov predictors in the 15-minute window framework (`hmm_models.py`), reported in the main report once run.
+
