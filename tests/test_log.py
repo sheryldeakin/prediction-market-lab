@@ -87,3 +87,13 @@ def test_saved_models_are_reused_only_when_the_manifest_matches(tmp_path, monkey
     (tmp_path / "manifest.json").write_text(json.dumps(stale))
     with pytest.raises(Retrained):                          # so must a different feature version
         L.train_or_load("2025-10", "2026-08")
+
+
+def test_a_new_model_id_scores_an_already_logged_window_as_a_new_row():
+    """September was scored by the pre-fix models; the re-fitted models score it again
+    beside those rows rather than over them (decided 2026-10-01)."""
+    old = rows([900, 1800]); old["model_id"] = L.PRE_MANIFEST
+    new = rows([900, 1800, 2700], prob=0.55); new["model_id"] = "refit1"
+    out = L.merge_log(old, new)
+    assert len(out) == 3 and (out.model_id == "refit1").all()
+    assert L.merge_log(pd.concat([old, out]), new).empty              # and only once per model_id

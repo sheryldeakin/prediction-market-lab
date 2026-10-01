@@ -26,8 +26,10 @@ for readme in [Path("README.md"), *sorted(Path("docs").glob("*.md"))]:
 
     log = Path("results/btc_15m/predictions.csv")
     if log.exists():
-        L = pd.read_csv(log)
-        lines = [f"Trained through {L.trained_through.iloc[0]}, scored on {L.time_utc.min()[:10]} to {L.time_utc.max()[:10]}.", "",
+        from models.btc_15m.log import current_rows, read_log
+        L = current_rows(read_log(log))
+        mid = L.model_id.iloc[0] if "model_id" in L else "pre-manifest"
+        lines = [f"Trained through {L.trained_through.iloc[0]} (models {mid}), scored on {L.time_utc.min()[:10]} to {L.time_utc.max()[:10]}.", "",
                  "| minute | model | windows | accuracy |", "|---|---|---|---|"]
         for k, g in L.groupby("minute"):
             acc = ((g.prob_up > 0.5) == (g.outcome_up == 1)).mean()

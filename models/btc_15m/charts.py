@@ -110,7 +110,8 @@ def forward():
     p = OUT / "predictions.csv"
     if not p.exists():
         return
-    L = pd.read_csv(p)
+    from models.btc_15m.log import current_rows, read_log
+    L = current_rows(read_log(p))
     fig, ax = plt.subplots(figsize=(8, 4), dpi=150)
     style(ax, "Forward log: cumulative accuracy on windows after the training cutoff")
     for k, color in ((0, SERIES["forest"]), (3, SERIES["xgb-all"])):

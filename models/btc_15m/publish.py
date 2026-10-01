@@ -51,7 +51,8 @@ def prediction_docs(log: pd.DataFrame) -> list[dict]:
     """One document per row of the forward log, keyed for idempotent upserts."""
     docs = []
     for r in log.itertuples(index=False):
-        docs.append({"_id": f"{MODEL_ID}:{int(r.t)}:{int(r.minute)}", "model": MODEL_ID, "category": "crypto",
+        mid = str(getattr(r, "model_id", "pre-manifest"))
+        docs.append({"_id": f"{MODEL_ID}:{int(r.t)}:{int(r.minute)}:{mid}", "model": MODEL_ID, "model_id": mid, "category": "crypto",
                      "t": int(r.t), "time_utc": str(r.time_utc), "minute": int(r.minute), "model_name": str(r.model),
                      "prob_up": float(r.prob_up), "outcome_up": int(r.outcome_up), "trained_through": str(r.trained_through)})
     return docs

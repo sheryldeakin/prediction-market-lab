@@ -35,7 +35,7 @@ def log(rows):
 def test_documents_are_keyed_by_model_window_and_minute():
     L = log([(900, "1970-01-01 00:15", 0, "forest", "2026-08", 0.61, 1), (900, "1970-01-01 00:15", 3, "xgb-all", "2026-08", 0.7, 1)])
     docs = prediction_docs(L)
-    assert [d["_id"] for d in docs] == ["btc_15m:900:0", "btc_15m:900:3"]
+    assert [d["_id"] for d in docs] == ["btc_15m:900:0:pre-manifest", "btc_15m:900:3:pre-manifest"]
     assert docs[0]["prob_up"] == 0.61 and docs[0]["outcome_up"] == 1
 
 
@@ -47,7 +47,7 @@ def test_upsert_is_idempotent_and_never_changes_a_logged_probability():
     L2 = log([(900, "x", 0, "forest", "2026-08", 0.99, 1), (1800, "y", 0, "forest", "2026-08", 0.4, 0), (2700, "z", 0, "forest", "2026-08", 0.5, 1)])
     c2 = upsert_all(preds, models, prediction_docs(L2), model_doc(L2, None))
     assert c2 == {"sent": 3, "inserted": 1, "in_db": 3}
-    assert preds.docs["btc_15m:900:0"]["prob_up"] == 0.61        # the re-sent 0.99 did not overwrite
+    assert preds.docs["btc_15m:900:0:pre-manifest"]["prob_up"] == 0.61        # the re-sent 0.99 did not overwrite
 
 
 def test_model_doc_carries_backtest_levels_and_baselines():

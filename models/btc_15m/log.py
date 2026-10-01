@@ -14,7 +14,9 @@ Integrity:
              feature version, the indicator code hash, each model's parameters and the
              code commit. Saved models are reused only when the manifest matches the
              request; model_id (a hash of the manifest) is written on every row.
-  append     new rows are appended to the file; existing rows are never rewritten.
+  append     new rows are appended to the file; existing rows are never rewritten. A
+             window may appear once per model_id (September 2026 does: once from the
+             models frozen before the bug fixes, once from the re-fitted ones).
   chain      every row carries prev_hash (the previous row's row_hash) and row_hash
              (SHA-256 of prev_hash and the row's content), so editing, deleting or
              reordering any row breaks every hash after it. --verify checks the chain.
@@ -140,13 +142,36 @@ def verify_chain(log: pd.DataFrame) -> int | None:
 
 
 def merge_log(existing: pd.DataFrame | None, new: pd.DataFrame) -> pd.DataFrame:
-    """Rows of new whose (t, minute) is not already logged, in time order. Existing rows
-    are never changed; the caller appends what this returns."""
+    """Rows of new whose (t, minute, model_id) is not already logged, in time order.
+    Existing rows are never changed; the caller appends what this returns. A different
+    model_id on an already-logged window is a new row, never a replacement: when the
+    frozen models were re-fitted after the 2026-10-01 bug fixes, September was scored
+    again under the new model_id beside the pre-manifest rows."""
     new = new.sort_values(["t", "minute"]).reset_index(drop=True)
     if existing is None or existing.empty:
         return new
-    key = set(zip(existing.t, existing.minute))
-    return new[[(t, m) not in key for t, m in zip(new.t, new.minute)]].reset_index(drop=True)
+    mid = existing.model_id if "model_id" in existing else pd.Series([PRE_MANIFEST] * len(existing))
+    key = set(zip(existing.t, existing.minute, mid))
+    return new[[(t, m, i) not in key for t, m, i in zip(new.t, new.minute, new.model_id)]].reset_index(drop=True)
+
+
+def read_log(path: Path = LOG) -> pd.DataFrame:
+    return pd.read_csv(path, dtype={"model_id": str, "prev_hash": str, "row_hash": str})
+
+
+def current_model_id() -> str | None:
+    mpath = MODELS / "manifest.json"
+    return json.loads(mpath.read_text())["model_id"] if mpath.exists() else None
+
+
+def current_rows(log: pd.DataFrame) -> pd.DataFrame:
+    """The rows scored by the current frozen models (the manifest's model_id). Before a
+    manifest exists, every row. Readers of the log use this so that a window scored
+    under two model versions is counted once."""
+    mid = current_model_id()
+    if mid is None or "model_id" not in log or not (log.model_id == mid).any():
+        return log
+    return log[log.model_id == mid]
 
 
 def append_rows(path: Path, new: pd.DataFrame) -> int:
@@ -208,6 +233,7 @@ def main():
     added = append_rows(LOG, new)
     log = pd.read_csv(LOG, dtype={"model_id": str})
     print(f"logged {added} new windows; {len(log)} total; models {manifest['model_id']} trained through {manifest['train_end']}")
+    log = log[log.model_id == manifest["model_id"]]
     for k in LOCKED:
         L = log[log.minute == k]
         if len(L):
