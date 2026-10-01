@@ -131,13 +131,13 @@ def main():
             delivered = y[fires_te].mean()
             cal.append({"year": Y, "event": F["names"][j], "promised": promised, "delivered": delivered, "fires": int(fires_te.sum()), "base_test": y.mean()})
     R = pd.DataFrame(rows, columns=["test year", "model", "minutes scored", "share of minutes", "accuracy [95% CI]", "vs the reversal rule"])
-    R.to_csv(OUT / "cells_model.csv", index=False)
+    R.to_csv(OUT / f"cells_model_h{h}.csv", index=False)
     Cal = pd.DataFrame(cal)
-    Cal.to_csv(OUT / "cells_calibration.csv", index=False)
+    Cal.to_csv(OUT / f"cells_calibration_h{h}.csv", index=False)
     Cal["promise_dev"] = Cal.promised - Cal.base_test
     Cal["delivered_dev"] = Cal.delivered - Cal.base_test
     bins = pd.cut(Cal.promise_dev.abs() * 100, [3, 4, 5, 6, 8, 12, 30], right=False)
-    with open(OUT / "cells_model.md", "w") as f:
+    with open(OUT / f"cells_model_h{h}.md", "w") as f:
         f.write(f"One probability per minute from the cells, horizon {h} minutes, {years[0]} to {a.end}: a logistic regression on every event of both libraries (0/1) plus the trailing-hour volatility tercile, fit on all earlier years and scored on each later year. Baselines on the same minutes: call the opposite of the previous {h} minutes (one bit), and 'the strongest firing cell decides' (direction and ranking from the training years, abstaining when nothing fires). Day-block 95% intervals; 'vs the reversal rule' is the paired difference with the share of days the model wins.\n\n")
         f.write("| test year | model | minutes scored | share of minutes | accuracy [95% CI] | vs the reversal rule |\n|---|---|---|---|---|---|\n")
         for r in rows:
@@ -148,7 +148,7 @@ def main():
             same = (np.sign(g.delivered_dev) == np.sign(g.promise_dev)).mean()
             ratio = (g.delivered_dev * np.sign(g.promise_dev)).mean() / g.promise_dev.abs().mean()
             f.write(f"| {b} | {len(g):,} | {g.promise_dev.abs().mean()*100:.1f} | {(g.delivered_dev * np.sign(g.promise_dev)).mean()*100:.1f} | {ratio*100:.0f}% | {same*100:.0f}% |\n")
-    print("wrote cells_model.md")
+    print(f"wrote cells_model_h{h}.md")
 
 
 if __name__ == "__main__":
