@@ -6,7 +6,7 @@ Everything the model was tested on, in the order it was done. Every table is gen
 
 Predicts whether Bitcoin closes a 15-minute window (aligned to the quarter hour) at or above where it opened. Data is free public 1-minute candles from Binance, including the taker-buy volume that gives a per-minute measure of order flow.
 
-The question is asked at several points inside the window: at the open (minute 0, nothing of the window seen yet) and 1, 3, 5 and 8 minutes in. Later entries are easier because the current lead over the open is known, so every model is compared with a logistic regression that sees only that lead. A model that cannot beat the lead-only baseline has found nothing the current price does not already say.
+The question is asked at several points inside the window: at the open (minute 0, nothing of the window seen yet) and 1, 3, 5 and 8 minutes in. Every model is compared with a one-feature baseline that knows the one thing most worth knowing at that minute. At the open that is the previous window's direction (back-to-back windows share a boundary print, so a reversal between them is the first thing to rule out). After the open it is the current lead over the open, scaled by the volatility expected over the minutes that remain. A model that cannot beat its one-feature baseline has found nothing the obvious thing does not already say.
 
 Evaluation is walk-forward by calendar month: each test month is predicted by a model trained only on earlier months. The first three months are training only.
 
@@ -15,7 +15,10 @@ Evaluation is walk-forward by calendar month: each test month is predicted by a 
 | name | what it is | features |
 |---|---|---|
 | majority | predicts the more common class in the training data | none |
-| lead-only | logistic regression | current lead over the open (minutes 1+) |
+| prev-window | the training up-rate after an up window and after a down window (minute 0) | previous window's direction |
+| win1-logistic | logistic regression (minute 0) | previous window's move in bp |
+| lead-only | logistic regression (minutes 1+) | current lead over the open |
+| lead-z | logistic regression (minutes 1+) | lead divided by vol60 times the square root of the minutes remaining |
 | logistic-all | logistic regression, standardised inputs | all 24 |
 | forest | random forest, 300 trees, leaves of 50+ windows, 4 threads | all 24 |
 | hgb-all | histogram gradient boosting (scikit-learn) | all 24 |
@@ -103,8 +106,8 @@ So far the open-of-window signal has not shown up in the forward period: 50.4% o
 ## Checks the numbers pass
 
 - **No lookahead.** Features are pure functions of past candles. `tests/test_features.py` multiplies every candle from the entry minute onward by three and asserts the features do not change, at five different entry minutes.
-- **Day-clustered uncertainty.** Windows in one day share conditions, so every interval resamples whole days and the permutation test shuffles labels within days. `tests/test_stats.py` checks that the bootstrap widens correctly when a day's windows are identical, and that a model which only knows each day's drift gets no credit.
-- **Baselines at the same moment.** Every model is reported next to the strongest simple predictor available at that minute.
+- **Uncertainty that respects time.** Windows in one day share conditions and neighbouring windows are correlated, so every interval resamples whole days (and, for the headline, whole months), the model-against-baseline test works on daily differences with random sign flips, and the significance test rotates the label sequence within each month rather than shuffling it. `tests/test_stats.py` checks that the day bootstrap widens when a day's windows are identical, that the month bootstrap is wider when months differ, and that the rotation test gives no credit for the labels' own runs. (A within-day label permutation was used until 2026-10-01; it ignored the dependence between neighbouring windows and was retired.)
+- **One-feature baselines at the same moment.** Every model is reported next to the previous window's direction at the open and the lead z-score after it, on the same windows.
 - **Shared-boundary check.** The label is re-measured from one minute in to see how much of the open-of-window signal is boundary noise.
 - **Numbers come from scripts.** The tables in this file are spliced from `results/` by `scripts/update_readme.py`; the charts are drawn from the same CSVs.
 
