@@ -97,6 +97,7 @@ def main():
         for r in S.itertuples():
             acc = f"{r.accuracy_calling_selected_direction*100:.1f}%" if not np.isnan(r.accuracy_calling_selected_direction) else ""
             f.write(f"| {r.test_year} | {r.selected_on} | {r.cells_selected} | {r.kept_sign} | {acc} | {r.firings:,} |\n")
+        f.write(f"\nAcross all test years and spans, {int(S.kept_sign.sum()):,} of {int(S.cells_selected.sum()):,} selected cell-years kept their sign in the test year.\n")
         f.write("\nBy span, averaged over test years:\n\n| selected on | mean cells selected | share that kept their sign | mean accuracy of the selected direction |\n|---|---|---|---|\n")
         for span, g in S.groupby("selected_on", sort=False):
             kept = g.kept_sign.sum() / max(g.cells_selected.sum(), 1)
