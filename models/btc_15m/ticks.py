@@ -5,8 +5,9 @@ Columns: agg_trade_id, price, qty, first_trade_id, last_trade_id, timestamp,
 is_buyer_maker, is_best_match. is_buyer_maker = True means the buyer was the resting
 order, so the aggressor sold. Timestamps are microseconds from 2025, milliseconds before.
 
-Each month is reduced to a per-second table (volume, signed volume, trade count, count
-of large trades, signed large volume) and cached as
+Each month is reduced to a per-second table (notional volume, base quantity, signed
+volume, trade count, count of large trades, signed large volume; notional over quantity
+is the second's VWAP) and cached as
 data/binance_ticks/BTCUSDT-1s-v2-YYYY-MM.parquet. The raw file is deleted after reduction.
 
 A trade is large when its notional is at or above the 99th percentile of the PREVIOUS
@@ -82,7 +83,7 @@ def reduce_month(month: str, symbol: str = "BTCUSDT") -> Path:
     sign = np.where(d.buyer_maker.values, -1.0, 1.0)          # aggressor bought -> +
     big, q = large_trade_mask(sec, notional, prev_cutoff)
     pd.DataFrame({"day": q.index.values, "cutoff": q.values}).to_csv(cutoff_path(month, symbol), index=False)
-    g = pd.DataFrame({"sec": sec, "vol": notional, "svol": sign * notional, "n": 1.0,
+    g = pd.DataFrame({"sec": sec, "vol": notional, "qty": qty, "svol": sign * notional, "n": 1.0,
                       "big_n": big.astype(float), "big_svol": np.where(big, sign * notional, 0.0)})
     r = g.groupby("sec").sum().reset_index()
     r.to_parquet(out, index=False)
