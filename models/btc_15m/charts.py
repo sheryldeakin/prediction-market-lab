@@ -15,7 +15,8 @@ import pandas as pd
 
 OUT = Path("results/btc_15m")
 SURFACE, INK, MUTED, GRID = "#fcfcfb", "#1a1a19", "#6b6a63", "#e6e5df"
-SERIES = {"majority": "#6b6a63", "logistic-all": "#2a78d6", "forest": "#eb6834", "xgb-all": "#1baf7a", "lead-only": "#eda100"}
+SERIES = {"majority": "#6b6a63", "prev-window": "#6b6a63", "logistic-all": "#2a78d6", "forest": "#eb6834", "xgb-all": "#1baf7a",
+          "lead-only": "#eda100", "one-feature baseline": "#eda100"}
 
 
 def style(ax, title):
@@ -42,12 +43,12 @@ def spread(labels, gap):
 
 def monthly():
     m = pd.read_csv(OUT / "walk_forward_monthly.csv")
-    m = m[(m.minute == 0) & m.model.isin(["majority", "logistic-all", "forest", "xgb-all"])]
+    m = m[(m.minute == 0) & m.model.isin(["prev-window", "logistic-all", "forest", "xgb-all"])]
     fig, ax = plt.subplots(figsize=(8, 4), dpi=150)
     style(ax, "Accuracy at the window open, by test month (walk-forward)")
     months = sorted(m.month.unique())
     labels = []
-    for name in ["majority", "logistic-all", "forest", "xgb-all"]:
+    for name in ["prev-window", "logistic-all", "forest", "xgb-all"]:
         d = m[m.model == name].set_index("month").reindex(months)
         ax.plot(range(len(months)), d.accuracy * 100, color=SERIES[name], linewidth=2, marker="o", markersize=5,
                 markeredgecolor=SURFACE, markeredgewidth=1.5, label=name)
@@ -83,11 +84,12 @@ def calibration():
 
 def by_minute():
     w = pd.read_csv(OUT / "walk_forward.csv")
-    w = w[w.model.isin(["majority", "lead-only", "forest"])]
+    base = w[((w.minute == 0) & (w.model == "prev-window")) | ((w.minute > 0) & (w.model == "lead-z"))].assign(model="one-feature baseline")
+    w = pd.concat([w[w.model.isin(["majority", "forest"])], base])
     fig, ax = plt.subplots(figsize=(7, 4), dpi=150)
-    style(ax, "Accuracy by entry minute: the current lead explains almost all of it")
+    style(ax, "Accuracy by entry minute against a one-feature baseline")
     labels = []
-    for name in ["majority", "lead-only", "forest"]:
+    for name in ["majority", "one-feature baseline", "forest"]:
         d = w[w.model == name].sort_values("minute")
         ax.plot(d.minute, d.accuracy * 100, color=SERIES[name], linewidth=2, marker="o", markersize=5,
                 markeredgecolor=SURFACE, markeredgewidth=1.5, label=name)
