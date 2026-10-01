@@ -2,13 +2,13 @@ Accuracy at the open (forest, price + flow) by regime, walk-forward predictions.
 
 | split | group | windows | accuracy [95% CI] |
 |---|---|---|---|
-| session | Asia 00-07 | 7776 | 53.36% [52.25, 54.57] |
-| session | Europe 08-13 | 5832 | 52.30% [51.01, 53.72] |
-| session | US 14-21 | 7776 | 53.14% [52.07, 54.26] |
-| session | late 22-23 | 1943 | 52.86% [50.82, 54.97] |
-| volatility | low | 7776 | 52.83% [51.78, 53.89] |
-| volatility | mid | 7775 | 53.25% [52.14, 54.28] |
-| volatility | high | 7776 | 52.85% [51.75, 54.00] |
-| trend | flat | 7776 | 52.25% [51.27, 53.34] |
-| trend | mid | 7775 | 52.59% [51.44, 53.78] |
-| trend | strong | 7776 | 54.09% [53.09, 55.12] |
+| session | Asia 00-07 | 7776 | 53.02% [51.90, 54.18] |
+| session | Europe 08-13 | 5832 | 52.07% [50.82, 53.45] |
+| session | US 14-21 | 7776 | 52.85% [51.77, 53.99] |
+| session | late 22-23 | 1944 | 52.06% [50.05, 54.06] |
+| volatility | low | 7776 | 52.46% [51.50, 53.48] |
+| volatility | mid | 7776 | 52.74% [51.58, 53.82] |
+| volatility | high | 7776 | 52.75% [51.62, 53.85] |
+| trend | flat | 7776 | 51.83% [50.74, 52.93] |
+| trend | mid | 7776 | 52.30% [51.19, 53.47] |
+| trend | strong | 7776 | 53.82% [52.81, 54.86] |

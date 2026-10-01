@@ -9,24 +9,24 @@ RSI60 > 60 AND taker buy share > 0.2 (15 min),pair,567,1.8%,"36.3% [32.3, 40.2]"
 15-min move > +2 sd AND more trades than usual (nratio5 > 1.5),pair,326,1.0%,"36.5% [31.4, 41.7]",-13.2,4/4,fires 28,too few
 taker buy share > 0.3 (15 min) AND EMA9 > EMA21 + 10 bp,pair,327,1.0%,"36.7% [31.4, 42.0]",-13.0,4/4,fires 20,too few
 RSI60 > 55 AND 5-min move > +2 sd,pair,442,1.4%,"36.9% [33.0, 40.6]",-12.9,6/6,-4.2 on 35,same
-15-min move > +1.5 sd AND larger trades than usual (size5 > 1.2),pair,689,2.1%,"36.9% [33.2, 40.6]",-12.9,7/8,-11.6 on 47,same
+15-min move > +1.5 sd AND larger trades than usual (size5 > 1.2),pair,689,2.1%,"36.9% [33.2, 40.6]",-12.9,7/8,-11.7 on 47,same
 15-min move > +2 sd AND EMA9 > EMA21 + 10 bp,pair,391,1.2%,"36.8% [32.4, 41.5]",-12.9,4/4,fires 27,too few
 RSI60 > 60 AND 15-min move > +2 sd,pair,352,1.1%,"36.9% [32.0, 41.9]",-12.8,6/6,-6.2 on 32,same
 RSI60 > 60 AND taker buy share > 0.3 (15 min),pair,321,1.0%,"37.1% [31.7, 42.5]",-12.7,5/5,+1.5 on 35,flipped
 15-min move > +2 sd AND taker buy share > 0.2 (15 min),pair,470,1.5%,"37.0% [33.0, 41.1]",-12.7,6/7,+1.1 on 49,flipped
-RSI60 > 60 AND taker buy share > 0.1 (15 min),pair,810,2.5%,"37.2% [34.1, 40.1]",-12.6,8/8,-7.6 on 78,same
-range position > 0.95 AND 5-min move > +1.5 sd,pair,350,1.1%,"37.1% [32.3, 42.2]",-12.6,5/5,-6.0 on 41,same
+RSI60 > 60 AND taker buy share > 0.1 (15 min),pair,810,2.5%,"37.2% [34.1, 40.1]",-12.6,8/8,-7.7 on 78,same
+range position > 0.95 AND 5-min move > +1.5 sd,pair,350,1.1%,"37.1% [32.3, 42.2]",-12.6,5/5,-6.1 on 41,same
 15-min move > +1.5 sd AND 5-min move > +2 sd,pair,342,1.1%,"37.1% [32.0, 42.0]",-12.6,3/3,+6.7 on 30,flipped
 range position > 0.85 AND 15-min move > +2 sd,pair,432,1.3%,"37.3% [32.8, 41.6]",-12.5,6/7,-1.2 on 41,same
 range position > 0.95 AND EMA9 > EMA21 + 10 bp,pair,351,1.1%,"37.3% [32.4, 42.0]",-12.4,4/4,fires 27,too few
 range position > 0.90 AND 5-min move > +1.5 sd,pair,515,1.6%,"37.5% [33.6, 41.3]",-12.3,7/8,-3.0 on 49,same
-RSI60 > 60 AND 15-min move > +1.5 sd,pair,589,1.8%,"37.5% [33.7, 41.2]",-12.2,8/8,-7.9 on 50,same
+RSI60 > 60 AND 15-min move > +1.5 sd,pair,589,1.8%,"37.5% [33.7, 41.2]",-12.2,8/8,-8.0 on 50,same
 5-min move > +2 sd AND price > VWAP60 + 15 bp,pair,434,1.4%,"37.6% [33.3, 41.8]",-12.2,6/7,+4.3 on 35,flipped
 "range position > 0.95, Europe (8-13 UTC)",session,322,1.0%,"37.6% [32.1, 42.8]",-12.2,3/4,-8.0 on 31,same
-RSI14 > 70 AND RSI60 > 60,pair,540,1.7%,"37.6% [33.7, 41.6]",-12.1,8/8,-9.9 on 50,same
+RSI14 > 70 AND RSI60 > 60,pair,540,1.7%,"37.6% [33.7, 41.6]",-12.1,8/8,-10.0 on 50,same
 RSI14 > 65 AND RSI60 > 60,pair,810,2.5%,"37.8% [34.5, 40.9]",-12.0,8/8,-11.7 on 68,same
 range position > 0.95 AND more trades than usual (nratio5 > 1.5),pair,329,1.0%,"37.7% [32.1, 43.0]",-12.0,5/5,+1.3 on 39,flipped
-5-min move > +1.5 sd AND 4h return > +50 bp,pair,495,1.5%,"37.8% [33.2, 42.2]",-12.0,6/7,+2.1 on 50,flipped
+5-min move > +1.5 sd AND 4h return > +50 bp,pair,495,1.5%,"37.8% [33.2, 42.2]",-12.0,6/7,+2.0 on 50,flipped
 RSI60 > 60 AND MACD hist > 0,pair,764,2.4%,"37.8% [34.5, 41.2]",-11.9,8/8,-15.0 on 63,same
 taker buy share > 0.2 (15 min) AND EMA9 > EMA21 + 10 bp,pair,687,2.1%,"37.8% [34.1, 41.4]",-11.9,8/8,-2.7 on 36,same
 5-min move > +2 sd AND taker buy share > 0.2 (15 min),pair,313,1.0%,"38.0% [32.7, 43.5]",-11.7,4/4,+3.0 on 34,flipped
@@ -34,51 +34,51 @@ taker buy share > 0.2 (15 min) AND EMA9 > EMA21 + 10 bp,pair,687,2.1%,"37.8% [34
 range position > 0.90 AND 15-min move > +2 sd,pair,349,1.1%,"38.1% [33.3, 42.9]",-11.6,5/6,-4.5 on 33,same
 RSI14 > 70 AND 4h return > +50 bp,pair,501,1.6%,"38.3% [34.0, 42.7]",-11.4,8/8,-5.8 on 43,same
 15-min move > +1.5 sd AND 4h return > +50 bp,pair,733,2.3%,"38.3% [35.2, 41.7]",-11.4,8/8,-3.8 on 65,same
-5-min move > +1.5 sd AND taker buy share > 0.3 (15 min),pair,385,1.2%,"38.4% [33.7, 43.3]",-11.3,5/5,+5.9 on 43,flipped
+5-min move > +1.5 sd AND taker buy share > 0.3 (15 min),pair,385,1.2%,"38.4% [33.7, 43.3]",-11.3,5/5,+5.8 on 43,flipped
 5-min move > +1.5 sd AND 15-min move > +1.5 sd,pair,589,1.8%,"38.5% [34.8, 42.4]",-11.2,7/8,+2.8 on 55,flipped
 5-min move > +1.5 sd AND 15-min move > +2 sd,pair,309,1.0%,"38.5% [32.9, 44.1]",-11.2,2/2,fires 29,too few
 15-min move < -1.5 sd AND 4h return < -100 bp,pair,399,1.2%,"60.9% [56.4, 65.4]",+11.2,3/4,fires 21,too few
 5-min move > +2 sd AND more trades than usual (nratio5 > 1.5),pair,306,1.0%,"38.6% [33.0, 44.2]",-11.2,3/3,fires 25,too few
 range position > 0.85 AND 5-min move > +1.5 sd,pair,629,2.0%,"38.6% [35.1, 42.2]",-11.1,6/8,-2.3 on 65,same
-taker buy share > 0.3 (15 min) AND OBV rising,pair,596,1.9%,"38.6% [34.9, 42.4]",-11.1,7/8,-7.6 on 52,same
-RSI14 > 70 AND 4h return > +25 bp,pair,703,2.2%,"38.7% [35.2, 42.2]",-11.0,8/8,+0.1 on 66,flipped
+taker buy share > 0.3 (15 min) AND OBV rising,pair,596,1.9%,"38.6% [34.9, 42.4]",-11.1,7/8,-7.7 on 52,same
+"RSI60 > 60, Europe (8-13 UTC)",session,349,1.1%,"38.7% [33.3, 43.8]",-11.1,4/5,-11.3 on 31,same
+RSI14 > 70 AND 4h return > +25 bp,pair,703,2.2%,"38.7% [35.2, 42.2]",-11.0,8/8,+0.0 on 66,flipped
 range position > 0.95 AND two windows up,pair,870,2.7%,"38.7% [35.5, 42.0]",-11.0,8/8,-7.4 on 87,same
-"RSI60 > 60, Europe (8-13 UTC)",session,349,1.1%,"38.7% [33.3, 43.8]",-11.0,4/5,-11.2 on 31,same
 "range position > 0.95, US (14-21 UTC)",session,434,1.4%,"38.7% [34.1, 43.0]",-11.0,7/7,-10.9 on 41,same
 range position > 0.95 AND taker buy share > 0.2 (15 min),pair,607,1.9%,"38.9% [35.0, 42.8]",-10.9,7/8,-3.5 on 56,same
 5-min move > +1.5 sd AND EMA9 > EMA21 + 10 bp,pair,340,1.1%,"38.8% [34.0, 43.9]",-10.9,3/3,fires 20,too few
 RSI14 > 65 AND 5-min move > +2 sd,pair,526,1.6%,"39.0% [34.9, 42.8]",-10.8,7/7,+5.6 on 45,flipped
 RSI14 > 70 AND more trades than usual (nratio5 > 1.5),pair,442,1.4%,"38.9% [34.3, 43.6]",-10.8,6/6,+5.9 on 34,flipped
-RSI60 > 60 AND range position > 0.95,pair,501,1.6%,"38.9% [34.8, 42.7]",-10.8,8/8,-7.6 on 52,same
-range position > 0.95 AND 15-min move > +1.5 sd,pair,431,1.3%,"39.0% [34.4, 43.4]",-10.8,6/6,-3.1 on 47,same
-range position > 0.90 AND larger trades than usual (size5 > 1.2),pair,1008,3.1%,"39.0% [36.2, 41.8]",-10.7,8/8,-12.4 on 80,same
+RSI60 > 60 AND range position > 0.95,pair,501,1.6%,"38.9% [34.8, 42.7]",-10.8,8/8,-7.7 on 52,same
+range position > 0.95 AND 15-min move > +1.5 sd,pair,431,1.3%,"39.0% [34.4, 43.4]",-10.8,6/6,-3.2 on 47,same
+range position > 0.90 AND larger trades than usual (size5 > 1.2),pair,1008,3.1%,"39.0% [36.2, 41.8]",-10.7,8/8,-12.5 on 80,same
 15-min move > +2 sd AND taker buy share > 0.1 (15 min),pair,613,1.9%,"39.0% [35.3, 42.7]",-10.7,7/8,+2.5 on 61,flipped
 RSI14 > 65 AND range position > 0.95,pair,828,2.6%,"39.1% [36.1, 42.2]",-10.6,8/8,-6.2 on 80,same
-15-min move > +1.5 sd AND taker buy share > 0.3 (15 min),pair,682,2.1%,"39.1% [35.2, 42.8]",-10.6,8/8,+0.1 on 60,flipped
+15-min move > +1.5 sd AND taker buy share > 0.3 (15 min),pair,682,2.1%,"39.1% [35.2, 42.8]",-10.6,8/8,+0.0 on 60,flipped
 EMA9 < EMA21 - 10 bp AND larger trades than usual (size5 > 1.2),pair,588,1.8%,"60.4% [56.5, 64.7]",+10.6,4/4,fires 17,too few
-range position > 0.95 AND 4h return > +50 bp,pair,788,2.5%,"39.2% [36.0, 42.4]",-10.5,8/8,-12.8 on 62,same
+range position > 0.95 AND 4h return > +50 bp,pair,788,2.5%,"39.2% [36.0, 42.4]",-10.5,8/8,-12.9 on 62,same
 range position > 0.95 AND taker buy share > 0.1 (15 min),pair,852,2.7%,"39.2% [35.9, 42.5]",-10.5,8/8,-6.2 on 80,same
-15-min move > +1.5 sd AND taker buy share > 0.2 (15 min),pair,1138,3.5%,"39.3% [36.5, 42.0]",-10.5,8/8,-2.6 on 93,same
+15-min move > +1.5 sd AND taker buy share > 0.2 (15 min),pair,1138,3.5%,"39.3% [36.5, 42.0]",-10.5,8/8,-2.7 on 93,same
 15-min move > +1.5 sd AND EMA9 > EMA21 + 10 bp,pair,734,2.3%,"39.2% [35.8, 42.9]",-10.5,7/8,-8.5 on 41,same
 "RSI60 > 60, Asia (0-7 UTC)",session,319,1.0%,"39.2% [33.0, 44.4]",-10.5,3/3,fires 28,too few
-RSI14 > 65 AND 4h return > +100 bp,pair,537,1.7%,"39.3% [35.2, 43.5]",-10.4,7/7,-11.2 on 31,same
+RSI14 > 65 AND 4h return > +100 bp,pair,537,1.7%,"39.3% [35.2, 43.5]",-10.4,7/7,-11.3 on 31,same
 RSI14 > 65 AND price > VWAP60 + 50 bp,pair,442,1.4%,"39.4% [34.6, 44.0]",-10.4,4/4,fires 23,too few
-RSI14 > 65 AND more trades than usual (nratio5 > 1.5),pair,808,2.5%,"39.4% [35.9, 42.9]",-10.4,8/8,+0.1 on 70,flipped
+RSI14 > 65 AND more trades than usual (nratio5 > 1.5),pair,808,2.5%,"39.4% [35.9, 42.9]",-10.4,8/8,+0.0 on 70,flipped
 taker buy share > 0.1 (15 min) AND price > VWAP60 + 50 bp,pair,468,1.5%,"39.3% [34.9, 43.6]",-10.4,5/5,fires 27,too few
 EMA9 > EMA21 + 10 bp AND larger trades than usual (size5 > 1.2),pair,516,1.6%,"39.3% [34.4, 43.8]",-10.4,3/4,fires 29,too few
 RSI60 > 55 AND 5-min move > +1.5 sd,pair,841,2.6%,"39.5% [36.5, 42.5]",-10.3,7/8,-3.4 on 73,same
 range position > 0.95 AND 4h return > +25 bp,pair,1049,3.3%,"39.5% [36.7, 42.1]",-10.3,8/8,-8.4 on 89,same
-range position > 0.85 AND larger trades than usual (size5 > 1.2),pair,1497,4.7%,"39.5% [37.0, 41.9]",-10.3,8/8,-11.7 on 123,same
+range position > 0.85 AND larger trades than usual (size5 > 1.2),pair,1497,4.7%,"39.5% [37.0, 41.9]",-10.3,8/8,-11.8 on 123,same
 15-min move > +2 sd AND price > VWAP60 + 30 bp,pair,368,1.1%,"39.4% [34.5, 44.2]",-10.3,3/4,fires 28,too few
 range position > 0.95 AND price > VWAP60 + 15 bp,pair,899,2.8%,"39.5% [36.7, 42.4]",-10.2,8/8,-9.2 on 81,same
-15-min move > +1.5 sd AND more trades than usual (nratio5 > 1.5),pair,623,1.9%,"39.5% [35.3, 43.5]",-10.2,8/8,+3.8 on 54,flipped
+15-min move > +1.5 sd AND more trades than usual (nratio5 > 1.5),pair,623,1.9%,"39.5% [35.3, 43.5]",-10.2,8/8,+3.7 on 54,flipped
 15-min move < -1.5 sd AND price < VWAP60 - 50 bp,pair,327,1.0%,"59.9% [55.0, 64.6]",+10.2,3/3,fires 13,too few
 15-min move < -1.5 sd AND more trades than usual (nratio5 > 1.5),pair,677,2.1%,"60.0% [56.5, 63.6]",+10.2,8/8,+15.6 on 61,same
 range position > 0.95,single,1246,3.9%,"39.6% [37.0, 42.1]",-10.1,8/8,-8.6 on 116,same
 RSI14 > 70 AND range position > 0.85,pair,769,2.4%,"39.7% [36.5, 43.0]",-10.1,8/8,-6.5 on 76,same
 range position > 0.90 AND 15-min move > +1.5 sd,pair,722,2.3%,"39.6% [36.1, 42.9]",-10.1,7/8,-1.6 on 62,same
 OBV falling AND EMA9 < EMA21 - 10 bp,pair,583,1.8%,"59.9% [56.2, 63.7]",+10.1,7/7,fires 26,too few
-RSI14 > 65 AND EMA9 > EMA21 + 10 bp,pair,905,2.8%,"39.8% [36.5, 43.0]",-10.0,8/8,-7.9 on 50,same
+RSI14 > 65 AND EMA9 > EMA21 + 10 bp,pair,905,2.8%,"39.8% [36.5, 43.0]",-10.0,8/8,-8.0 on 50,same
 RSI14 > 70 AND range position > 0.90,pair,680,2.1%,"39.7% [36.4, 43.2]",-10.0,8/8,-4.5 on 66,same
 RSI60 > 55 AND range position > 0.95,pair,1211,3.8%,"39.7% [37.1, 42.2]",-10.0,8/8,-9.1 on 115,same
 RSI60 > 55 AND 15-min move > +2 sd,pair,602,1.9%,"39.7% [35.9, 43.5]",-10.0,7/8,-2.6 on 57,same
@@ -86,12 +86,12 @@ range position > 0.95 AND previous window up,pair,1204,3.8%,"39.7% [37.0, 42.2]"
 15-min move > +1.5 sd AND 4h return > +100 bp,pair,360,1.1%,"39.7% [34.7, 44.9]",-10.0,3/3,fires 21,too few
 5-min move > +2 sd AND taker buy share > 0.1 (15 min),pair,438,1.4%,"39.7% [35.1, 44.2]",-10.0,5/5,-1.1 on 43,same
 taker sell share > 0.3 (15 min) AND EMA9 < EMA21 - 10 bp,pair,450,1.4%,"59.8% [55.3, 64.2]",+10.0,5/6,fires 22,too few
-RSI14 > 65 AND 4h return > +50 bp,pair,1091,3.4%,"39.9% [37.0, 42.6]",-9.9,8/8,-9.0 on 88,same
+RSI14 > 65 AND 4h return > +50 bp,pair,1091,3.4%,"39.9% [37.0, 42.6]",-9.9,8/8,-9.1 on 88,same
 RSI60 > 55 AND 15-min move > +1.5 sd,pair,1324,4.1%,"39.9% [37.3, 42.4]",-9.9,8/8,-7.0 on 128,same
 15-min move > +1.5 sd AND 4h return > +25 bp,pair,1043,3.3%,"39.8% [36.8, 42.6]",-9.9,8/8,-1.4 on 103,same
 RSI14 > 65 AND range position > 0.90,pair,1266,3.9%,"40.0% [37.4, 42.5]",-9.8,8/8,-4.4 on 112,same
 RSI60 > 60 AND previous window up,pair,1065,3.3%,"39.9% [36.8, 42.9]",-9.8,8/8,-6.8 on 88,same
-RSI60 > 60 AND two windows up,pair,848,2.6%,"40.0% [36.8, 43.1]",-9.8,8/8,-5.9 on 75,same
+RSI60 > 60 AND two windows up,pair,848,2.6%,"40.0% [36.8, 43.1]",-9.8,8/8,-6.0 on 75,same
 range position > 0.95 AND 4h return > +100 bp,pair,451,1.4%,"39.9% [34.9, 44.4]",-9.8,5/5,fires 26,too few
 15-min move < -1.5 sd AND larger trades than usual (size5 > 1.2),pair,682,2.1%,"59.5% [55.7, 63.3]",+9.8,8/8,+2.7 on 57,same
 4h return > +50 bp AND price > VWAP60 + 50 bp,pair,393,1.2%,"39.9% [34.4, 44.6]",-9.8,4/5,-4.8 on 31,same
@@ -106,10 +106,10 @@ RSI14 > 70 AND range position > 0.95,pair,476,1.5%,"40.1% [35.9, 44.5]",-9.6,5/6
 RSI60 > 55 AND larger trades than usual (size5 > 1.2),pair,1856,5.8%,"40.1% [37.7, 42.4]",-9.6,8/8,-12.1 on 156,same
 RSI60 > 60 AND price > VWAP60 + 15 bp,pair,927,2.9%,"40.1% [36.8, 43.3]",-9.6,8/8,-3.1 on 79,same
 range position < 0.15 AND taker sell share > 0.3 (15 min),pair,1045,3.3%,"59.3% [56.6, 62.3]",+9.6,8/8,+13.0 on 81,same
-5-min move > +1.5 sd AND 4h return > +25 bp,pair,760,2.4%,"40.1% [36.7, 43.6]",-9.6,7/8,+0.1 on 76,flipped
+5-min move > +1.5 sd AND 4h return > +25 bp,pair,760,2.4%,"40.1% [36.7, 43.6]",-9.6,7/8,+0.0 on 76,flipped
 "15-min move < -1.5 sd, US (14-21 UTC)",session,593,1.8%,"59.4% [55.3, 63.5]",+9.6,8/8,+10.8 on 56,same
-RSI14 > 70 AND 5-min move > +1.5 sd,pair,607,1.9%,"40.2% [36.4, 44.1]",-9.5,7/8,+0.1 on 56,flipped
-RSI60 > 60 AND range position > 0.90,pair,812,2.5%,"40.3% [36.9, 43.4]",-9.5,8/8,-4.7 on 73,same
+RSI14 > 70 AND 5-min move > +1.5 sd,pair,607,1.9%,"40.2% [36.4, 44.1]",-9.5,7/8,+0.0 on 56,flipped
+RSI60 > 60 AND range position > 0.90,pair,812,2.5%,"40.3% [36.9, 43.4]",-9.5,8/8,-4.8 on 73,same
 RSI14 > 70 AND 15-min move > +1.5 sd,pair,890,2.8%,"40.3% [37.3, 43.4]",-9.4,8/8,-2.7 on 91,same
 RSI14 > 70 AND 5-min move > +2 sd,pair,377,1.2%,"40.3% [35.6, 44.7]",-9.4,4/4,+3.0 on 34,flipped
 RSI60 > 60 AND 4h return > +25 bp,pair,982,3.1%,"40.3% [37.2, 43.4]",-9.4,8/8,-4.2 on 83,same
@@ -123,28 +123,27 @@ range position < 0.1 AND taker sell share > 0.3 (15 min),pair,729,2.3%,"59.0% [5
 15-min move > +1.5 sd AND taker buy share > 0.1 (15 min),pair,1512,4.7%,"40.5% [38.2, 42.9]",-9.3,8/8,-2.5 on 137,same
 RSI14 < 35 AND taker sell share > 0.3 (15 min),pair,1204,3.8%,"59.0% [56.4, 61.6]",+9.2,8/8,+16.4 on 98,same
 RSI14 > 65 AND range position > 0.85,pair,1529,4.8%,"40.5% [38.1, 42.9]",-9.2,8/8,-6.1 on 146,same
-RSI14 > 65 AND 4h return > +25 bp,pair,1577,4.9%,"40.5% [38.2, 42.8]",-9.2,8/8,-3.9 on 150,same
+RSI14 > 65 AND 4h return > +25 bp,pair,1577,4.9%,"40.5% [38.2, 42.8]",-9.2,8/8,-4.0 on 150,same
 RSI60 > 55 AND taker buy share > 0.3 (15 min),pair,1293,4.0%,"40.5% [38.0, 43.1]",-9.2,8/8,-3.1 on 111,same
-15-min move > +1.5 sd AND price > VWAP60 + 30 bp,pair,725,2.3%,"40.6% [37.1, 44.1]",-9.2,7/8,+0.1 on 50,flipped
-15-min move < -1.5 sd AND price < VWAP60 - 30 bp,pair,805,2.5%,"58.9% [55.7, 62.2]",+9.2,8/8,+12.6 on 48,same
+15-min move > +1.5 sd AND price > VWAP60 + 30 bp,pair,725,2.3%,"40.6% [37.1, 44.1]",-9.2,7/8,+0.0 on 50,flipped
 15-min move < -1.5 sd AND EMA9 < EMA21 - 10 bp,pair,840,2.6%,"58.9% [55.5, 62.3]",+9.2,8/8,+19.1 on 42,same
 15-min move < -2 sd AND more trades than usual (nratio5 > 1.5),pair,368,1.1%,"59.0% [53.7, 64.1]",+9.2,6/6,+12.2 on 37,same
-price > VWAP60 + 50 bp AND two windows up,pair,503,1.6%,"40.6% [36.0, 44.6]",-9.2,5/5,+0.1 on 30,flipped
+price > VWAP60 + 50 bp AND two windows up,pair,503,1.6%,"40.6% [36.0, 44.6]",-9.2,5/5,+0.0 on 30,flipped
 OBV falling AND larger trades than usual (size5 > 1.2),pair,914,2.9%,"59.0% [56.1, 62.0]",+9.2,8/8,+19.2 on 68,same
 RSI14 > 65 AND 15-min move > +2 sd,pair,669,2.1%,"40.7% [37.3, 44.2]",-9.1,7/8,+3.8 on 67,flipped
 RSI60 > 60 AND range position > 0.85,pair,974,3.0%,"40.7% [37.5, 43.7]",-9.1,8/8,-6.1 on 89,same
 range position > 0.95 AND MACD hist > 0,pair,973,3.0%,"40.6% [37.8, 43.5]",-9.1,8/8,-8.6 on 87,same
 range position > 0.85 AND taker buy share > 0.3 (15 min),pair,922,2.9%,"40.7% [37.5, 43.9]",-9.1,7/8,+1.2 on 88,flipped
 range position > 0.85 AND previous window down,pair,706,2.2%,"40.7% [37.3, 43.9]",-9.1,7/8,-5.3 on 47,same
+15-min move < -1.5 sd AND price < VWAP60 - 30 bp,pair,805,2.5%,"58.9% [55.7, 62.2]",+9.1,8/8,+12.5 on 48,same
 15-min move > +2 sd AND price > VWAP60 + 15 bp,pair,596,1.9%,"40.6% [36.7, 44.4]",-9.1,6/8,+1.8 on 58,flipped
-15-min move > +2 sd AND MACD hist > 0,pair,706,2.2%,"40.7% [37.4, 44.1]",-9.1,7/8,+2.8 on 74,flipped
-price > VWAP60 + 50 bp AND more trades than usual (nratio5 > 1.5),pair,428,1.3%,"40.7% [36.1, 45.1]",-9.1,4/5,+0.1 on 30,flipped
+15-min move > +2 sd AND MACD hist > 0,pair,706,2.2%,"40.7% [37.4, 44.1]",-9.1,7/8,+2.7 on 74,flipped
+price > VWAP60 + 50 bp AND more trades than usual (nratio5 > 1.5),pair,428,1.3%,"40.7% [36.1, 45.1]",-9.1,4/5,+0.0 on 30,flipped
 "RSI14 < 35, US (14-21 UTC)",session,969,3.0%,"58.8% [55.9, 62.0]",+9.1,8/8,+13.7 on 77,same
-"RSI14 > 70, Europe (8-13 UTC)",session,352,1.1%,"40.6% [35.8, 45.5]",-9.1,6/6,+10.1 on 35,flipped
+"RSI14 > 70, Europe (8-13 UTC)",session,352,1.1%,"40.6% [35.8, 45.5]",-9.1,6/6,+10.0 on 35,flipped
 "15-min move > +1.5 sd, US (14-21 UTC)",session,613,1.9%,"40.6% [36.5, 44.6]",-9.1,7/8,+2.1 on 48,flipped
 "EMA9 > EMA21 + 10 bp, Asia (0-7 UTC)",session,411,1.3%,"40.6% [36.2, 44.8]",-9.1,3/3,fires 14,too few
-RSI14 < 35 AND OBV falling,pair,869,2.7%,"58.7% [55.7, 61.7]",+9.0,8/8,+8.7 on 58,same
-RSI14 > 65 AND 15-min move > +1.5 sd,pair,1458,4.5%,"40.7% [38.2, 43.2]",-9.0,8/8,-1.0 on 137,same
+RSI14 > 65 AND 15-min move > +1.5 sd,pair,1458,4.5%,"40.7% [38.2, 43.2]",-9.0,8/8,-1.1 on 137,same
 range position > 0.85 AND taker buy share > 0.2 (15 min),pair,1676,5.2%,"40.8% [38.3, 43.0]",-9.0,8/8,-8.2 on 151,same
 15-min move < -2 sd AND taker sell share > 0.1 (15 min),pair,727,2.3%,"58.7% [55.2, 62.5]",+9.0,7/8,+16.7 on 72,same
 4h return < -25 bp AND price < VWAP60 - 50 bp,pair,521,1.6%,"58.7% [54.6, 63.3]",+9.0,4/4,fires 13,too few
@@ -161,44 +160,44 @@ RSI14 > 70 AND 15-min move > +2 sd,pair,485,1.5%,"40.8% [36.6, 44.9]",-8.9,6/7,+
 15-min move < -2 sd AND MACD hist < 0,pair,802,2.5%,"58.6% [55.0, 62.0]",+8.9,8/8,+15.1 on 83,same
 4h return > +25 bp AND price > VWAP60 + 50 bp,pair,446,1.4%,"40.8% [36.4, 45.2]",-8.9,4/5,-4.8 on 31,same
 price < VWAP60 - 50 bp AND EMA9 < EMA21 - 10 bp,pair,631,2.0%,"58.6% [54.9, 62.5]",+8.9,4/4,fires 20,too few
-15-min move > +2 sd,single,718,2.2%,"40.9% [37.7, 44.5]",-8.8,6/8,+2.8 on 74,flipped
-RSI14 > 70 AND larger trades than usual (size5 > 1.2),pair,550,1.7%,"40.9% [37.0, 44.9]",-8.8,7/7,-6.0 on 41,same
+15-min move > +2 sd,single,718,2.2%,"40.9% [37.7, 44.5]",-8.8,6/8,+2.7 on 74,flipped
+RSI14 > 70 AND larger trades than usual (size5 > 1.2),pair,550,1.7%,"40.9% [37.0, 44.9]",-8.8,7/7,-6.1 on 41,same
 RSI60 < 40 AND larger trades than usual (size5 > 1.2),pair,519,1.6%,"58.6% [54.4, 63.0]",+8.8,8/8,fires 26,too few
 range position > 0.95 AND price > VWAP60 + 30 bp,pair,498,1.6%,"41.0% [36.6, 44.9]",-8.8,7/7,-2.3 on 42,same
-range position > 0.90 AND taker buy share > 0.1 (15 min),pair,1723,5.4%,"40.9% [38.8, 43.0]",-8.8,8/8,-4.7 on 146,same
+range position > 0.90 AND taker buy share > 0.1 (15 min),pair,1723,5.4%,"40.9% [38.8, 43.0]",-8.8,8/8,-4.8 on 146,same
 range position > 0.90 AND taker buy share > 0.2 (15 min),pair,1187,3.7%,"40.9% [38.2, 43.6]",-8.8,8/8,-5.6 on 97,same
 5-min move < -1.5 sd AND taker sell share > 0.3 (15 min),pair,468,1.5%,"58.5% [54.3, 62.7]",+8.8,7/8,+11.8 on 34,same
-15-min move > +2 sd AND previous window up,pair,718,2.2%,"40.9% [37.7, 44.5]",-8.8,6/8,+2.8 on 74,flipped
+15-min move > +2 sd AND previous window up,pair,718,2.2%,"40.9% [37.7, 44.5]",-8.8,6/8,+2.7 on 74,flipped
 4h return < -100 bp AND taker sell share > 0.3 (15 min),pair,400,1.2%,"58.5% [53.8, 63.4]",+8.8,4/4,fires 24,too few
-taker buy share > 0.3 (15 min) AND larger trades than usual (size5 > 1.2),pair,1267,4.0%,"40.9% [38.5, 43.4]",-8.8,8/8,-6.6 on 97,same
+taker buy share > 0.3 (15 min) AND larger trades than usual (size5 > 1.2),pair,1267,4.0%,"40.9% [38.5, 43.4]",-8.8,8/8,-6.7 on 97,same
 price < VWAP60 - 50 bp AND MACD hist < 0,pair,526,1.6%,"58.6% [54.3, 62.9]",+8.8,4/4,fires 18,too few
 OBV rising AND larger trades than usual (size5 > 1.2),pair,791,2.5%,"41.0% [37.6, 44.4]",-8.8,7/8,-8.4 on 65,same
-"RSI60 > 60, US (14-21 UTC)",session,393,1.2%,"41.0% [35.1, 46.1]",-8.8,5/5,+1.7 on 31,flipped
+"RSI60 > 60, US (14-21 UTC)",session,393,1.2%,"41.0% [35.1, 46.1]",-8.8,5/5,+1.6 on 31,flipped
 "range position > 0.90, Europe (8-13 UTC)",session,725,2.3%,"41.0% [37.7, 44.2]",-8.8,7/8,-9.6 on 57,same
-RSI14 < 30 AND taker sell share > 0.2 (15 min),pair,924,2.9%,"58.4% [55.3, 61.6]",+8.7,8/8,+10.9 on 74,same
+RSI14 < 30 AND taker sell share > 0.2 (15 min),pair,924,2.9%,"58.4% [55.3, 61.6]",+8.7,8/8,+10.8 on 74,same
 RSI14 < 35 AND EMA9 < EMA21 - 10 bp,pair,1030,3.2%,"58.4% [55.5, 61.4]",+8.7,8/8,+18.2 on 44,same
-RSI14 > 65 AND larger trades than usual (size5 > 1.2),pair,1126,3.5%,"41.0% [38.3, 43.8]",-8.7,7/8,-9.9 on 85,same
+RSI14 > 65 AND larger trades than usual (size5 > 1.2),pair,1126,3.5%,"41.0% [38.3, 43.8]",-8.7,7/8,-10.0 on 85,same
 range position > 0.90 AND EMA9 > EMA21 + 10 bp,pair,614,1.9%,"41.0% [36.9, 44.9]",-8.7,8/8,-2.7 on 36,same
-range position < 0.15 AND EMA9 < EMA21 - 10 bp,pair,920,2.9%,"58.5% [55.2, 61.8]",+8.7,7/7,+10.7 on 33,same
-5-min move > +1.5 sd AND more trades than usual (nratio5 > 1.5),pair,538,1.7%,"41.1% [36.7, 45.4]",-8.7,7/8,+0.1 on 48,flipped
+range position < 0.15 AND EMA9 < EMA21 - 10 bp,pair,920,2.9%,"58.5% [55.2, 61.8]",+8.7,7/7,+10.6 on 33,same
+5-min move > +1.5 sd AND more trades than usual (nratio5 > 1.5),pair,538,1.7%,"41.1% [36.7, 45.4]",-8.7,7/8,+0.0 on 48,flipped
 15-min move > +1.5 sd AND two windows up,pair,869,2.7%,"41.1% [37.8, 44.3]",-8.7,8/8,-6.6 on 83,same
 15-min move < -2 sd AND 4h return < -25 bp,pair,500,1.6%,"58.4% [53.8, 62.9]",+8.7,7/8,+11.3 on 49,same
-taker buy share > 0.2 (15 min) AND OBV rising,pair,993,3.1%,"41.0% [37.8, 44.2]",-8.7,7/8,-9.2 on 86,same
-"RSI60 < 40, Europe (8-13 UTC)",session,363,1.1%,"58.4% [53.5, 63.5]",+8.7,6/6,+2.6 on 40,same
+taker buy share > 0.2 (15 min) AND OBV rising,pair,993,3.1%,"41.0% [37.8, 44.2]",-8.7,7/8,-9.3 on 86,same
+"RSI60 < 40, Europe (8-13 UTC)",session,363,1.1%,"58.4% [53.5, 63.5]",+8.7,6/6,+2.5 on 40,same
 15-min move < -2 sd,single,812,2.5%,"58.4% [54.7, 62.0]",+8.6,8/8,+14.3 on 84,same
 RSI14 < 35 AND more trades than usual (nratio5 > 1.5),pair,872,2.7%,"58.4% [54.9, 61.8]",+8.6,8/8,+12.0 on 71,same
 15-min move < -1.5 sd AND 4h return < -25 bp,pair,1068,3.3%,"58.3% [55.4, 61.3]",+8.6,8/8,+13.8 on 80,same
 15-min move < -2 sd AND taker sell share > 0.2 (15 min),pair,583,1.8%,"58.3% [54.4, 62.3]",+8.6,8/8,+15.6 on 61,same
 15-min move < -2 sd AND previous window down,pair,812,2.5%,"58.4% [54.7, 62.0]",+8.6,8/8,+14.3 on 84,same
 15-min move < -2 sd AND EMA9 < EMA21 - 10 bp,pair,482,1.5%,"58.3% [53.7, 63.0]",+8.6,6/6,+15.7 on 32,same
-taker buy share > 0.2 (15 min) AND price > VWAP60 + 30 bp,pair,865,2.7%,"41.2% [38.0, 44.2]",-8.6,6/8,+0.1 on 52,flipped
+taker buy share > 0.2 (15 min) AND price > VWAP60 + 30 bp,pair,865,2.7%,"41.2% [38.0, 44.2]",-8.6,6/8,+0.0 on 52,flipped
 OBV falling AND more trades than usual (nratio5 > 1.5),pair,725,2.3%,"58.3% [55.3, 61.5]",+8.6,8/8,+4.9 on 62,same
 "5-min move < -1.5 sd, US (14-21 UTC)",session,518,1.6%,"58.3% [53.8, 62.5]",+8.6,7/7,+3.7 on 41,same
 "price < VWAP60 - 50 bp, US (14-21 UTC)",session,386,1.2%,"58.3% [53.8, 63.1]",+8.6,4/4,fires 10,too few
-RSI14 > 70 AND price > VWAP60 + 30 bp,pair,604,1.9%,"41.2% [37.5, 45.2]",-8.5,8/8,+0.1 on 42,flipped
+RSI14 > 70 AND price > VWAP60 + 30 bp,pair,604,1.9%,"41.2% [37.5, 45.2]",-8.5,8/8,+0.0 on 42,flipped
 15-min move < -1.5 sd AND 4h return < -50 bp,pair,775,2.4%,"58.2% [54.6, 61.8]",+8.5,8/8,+17.9 on 56,same
 5-min move > +2 sd AND two windows up,pair,337,1.1%,"41.2% [35.7, 47.0]",-8.5,3/3,fires 29,too few
-taker buy share > 0.2 (15 min) AND larger trades than usual (size5 > 1.2),pair,2077,6.5%,"41.3% [39.4, 43.3]",-8.5,8/8,-5.7 on 181,same
+taker buy share > 0.2 (15 min) AND larger trades than usual (size5 > 1.2),pair,2077,6.5%,"41.3% [39.4, 43.3]",-8.5,8/8,-5.8 on 181,same
 taker buy share > 0.2 (15 min) AND more trades than usual (nratio5 > 1.5),pair,834,2.6%,"41.2% [38.0, 44.5]",-8.5,7/8,+3.9 on 91,flipped
 price < VWAP60 - 30 bp AND EMA9 < EMA21 - 10 bp,pair,1327,4.1%,"58.3% [55.6, 60.8]",+8.5,8/8,+12.3 on 53,same
 price < VWAP60 - 50 bp AND previous window down,pair,661,2.1%,"58.2% [54.5, 62.2]",+8.5,5/5,fires 25,too few
@@ -211,15 +210,15 @@ range position > 0.85 AND taker buy share > 0.1 (15 min),pair,2512,7.8%,"41.3% [
 5-min move > +2 sd AND previous window up,pair,655,2.0%,"41.4% [37.8, 45.1]",-8.4,8/8,+3.2 on 64,flipped
 taker buy share > 0.1 (15 min) AND OBV rising,pair,1395,4.4%,"41.4% [38.8, 44.0]",-8.4,7/8,-1.2 on 119,same
 taker sell share > 0.1 (15 min) AND price < VWAP60 - 50 bp,pair,511,1.6%,"58.1% [54.1, 62.3]",+8.4,4/4,fires 18,too few
-price > VWAP60 + 50 bp AND previous window up,pair,661,2.1%,"41.3% [37.4, 45.2]",-8.4,7/7,+0.1 on 32,flipped
+price > VWAP60 + 50 bp AND previous window up,pair,661,2.1%,"41.3% [37.4, 45.2]",-8.4,7/7,+0.0 on 32,flipped
 price > VWAP60 + 50 bp AND EMA9 > EMA21 + 10 bp,pair,595,1.9%,"41.3% [37.3, 45.5]",-8.4,5/6,fires 29,too few
 "range position < 0.05, Europe (8-13 UTC)",session,325,1.0%,"58.2% [52.8, 63.6]",+8.4,4/4,fires 26,too few
 RSI14 < 35 AND 15-min move < -2 sd,pair,756,2.4%,"58.1% [54.6, 61.6]",+8.3,8/8,+14.5 on 76,same
-RSI60 > 55 AND taker buy share > 0.2 (15 min),pair,2317,7.2%,"41.4% [39.3, 43.3]",-8.3,8/8,-5.9 on 200,same
+RSI60 > 55 AND taker buy share > 0.2 (15 min),pair,2317,7.2%,"41.4% [39.3, 43.3]",-8.3,8/8,-6.0 on 200,same
 range position < 0.15 AND price < VWAP60 - 50 bp,pair,450,1.4%,"58.0% [53.8, 62.7]",+8.3,4/4,fires 15,too few
-5-min move > +1.5 sd AND price > VWAP60 + 30 bp,pair,459,1.4%,"41.4% [37.1, 45.5]",-8.3,5/6,+1.7 on 31,flipped
+5-min move > +1.5 sd AND price > VWAP60 + 30 bp,pair,459,1.4%,"41.4% [37.1, 45.5]",-8.3,5/6,+1.6 on 31,flipped
 15-min move > +1.5 sd AND price > VWAP60 + 15 bp,pair,1362,4.2%,"41.4% [39.0, 44.1]",-8.3,8/8,-2.0 on 121,same
-15-min move > +1.5 sd AND OBV rising,pair,459,1.4%,"41.4% [37.3, 45.7]",-8.3,7/8,-9.9 on 30,same
+15-min move > +1.5 sd AND OBV rising,pair,459,1.4%,"41.4% [37.3, 45.7]",-8.3,7/8,-10.0 on 30,same
 4h return > +50 bp AND taker buy share > 0.3 (15 min),pair,786,2.5%,"41.5% [38.1, 44.8]",-8.3,7/8,-0.8 on 57,same
 price < VWAP60 - 50 bp AND two windows down,pair,546,1.7%,"58.1% [54.0, 62.7]",+8.3,3/3,fires 22,too few
 RSI14 < 35 AND price < VWAP60 - 30 bp,pair,1209,3.8%,"57.9% [55.1, 60.7]",+8.2,7/8,+8.6 on 70,same
@@ -228,25 +227,24 @@ RSI60 < 45 AND 15-min move < -2 sd,pair,708,2.2%,"57.9% [54.1, 61.8]",+8.2,7/8,+
 RSI60 > 60 AND price > VWAP60 + 30 bp,pair,605,1.9%,"41.5% [37.6, 45.2]",-8.2,7/8,+1.1 on 49,flipped
 range position > 0.90 AND taker buy share > 0.3 (15 min),pair,670,2.1%,"41.5% [37.7, 45.1]",-8.2,8/8,+3.3 on 62,flipped
 5-min move > +1.5 sd AND larger trades than usual (size5 > 1.2),pair,568,1.8%,"41.5% [37.4, 45.6]",-8.2,8/8,-10.4 on 48,same
-4h return < -100 bp AND price < VWAP60 - 50 bp,pair,406,1.3%,"57.9% [53.2, 63.0]",+8.2,3/3,fires 12,too few
 EMA9 > EMA21 + 10 bp AND more trades than usual (nratio5 > 1.5),pair,838,2.6%,"41.5% [38.3, 45.0]",-8.2,8/8,-0.9 on 55,same
 "price > VWAP60 + 50 bp, US (14-21 UTC)",session,385,1.2%,"41.6% [36.3, 46.7]",-8.2,3/4,fires 20,too few
-RSI14 < 30 AND OBV falling,pair,527,1.6%,"57.9% [53.6, 62.1]",+8.1,8/8,-3.3 on 30,flipped
 RSI14 < 35 AND taker sell share > 0.1 (15 min),pair,2459,7.7%,"57.8% [55.9, 59.6]",+8.1,8/8,+12.4 on 202,same
 RSI14 > 65 AND RSI60 > 55,pair,2228,6.9%,"41.6% [39.7, 43.6]",-8.1,8/8,-4.9 on 202,same
 RSI14 > 70 AND taker buy share > 0.2 (15 min),pair,797,2.5%,"41.7% [38.4, 44.8]",-8.1,7/8,+1.3 on 82,flipped
 RSI60 < 45 AND taker sell share > 0.3 (15 min),pair,1538,4.8%,"57.8% [55.5, 60.2]",+8.1,8/8,+15.9 on 120,same
 RSI60 > 55 AND taker buy share > 0.1 (15 min),pair,3407,10.6%,"41.6% [39.9, 43.3]",-8.1,8/8,-3.5 on 310,same
-RSI60 > 60 AND OBV rising,pair,529,1.7%,"41.6% [37.2, 45.7]",-8.1,8/8,-2.4 on 40,same
-range position < 0.05 AND EMA9 < EMA21 - 10 bp,pair,424,1.3%,"57.8% [53.1, 62.8]",+8.1,3/3,fires 11,too few
+RSI60 > 60 AND OBV rising,pair,529,1.7%,"41.6% [37.2, 45.7]",-8.1,8/8,-2.5 on 40,same
 5-min move < -1.5 sd AND taker sell share > 0.2 (15 min),pair,724,2.3%,"57.9% [54.4, 61.4]",+8.1,7/8,+11.3 on 62,same
 15-min move > +1.5 sd AND MACD hist > 0,pair,1797,5.6%,"41.7% [39.4, 44.0]",-8.1,8/8,-2.9 on 170,same
 4h return < -25 bp AND taker sell share > 0.3 (15 min),pair,1611,5.0%,"57.8% [55.4, 60.1]",+8.1,8/8,+10.7 on 127,same
-RSI14 > 65 AND taker buy share > 0.3 (15 min),pair,1016,3.2%,"41.7% [38.8, 44.7]",-8.0,8/8,+0.6 on 99,flipped
+4h return < -100 bp AND price < VWAP60 - 50 bp,pair,406,1.3%,"57.9% [53.2, 63.0]",+8.1,3/3,fires 12,too few
+RSI14 > 65 AND taker buy share > 0.3 (15 min),pair,1016,3.2%,"41.7% [38.8, 44.7]",-8.0,8/8,+0.5 on 99,flipped
 RSI14 > 65 AND price > VWAP60 + 30 bp,pair,1133,3.5%,"41.7% [38.8, 44.5]",-8.0,7/8,-4.5 on 77,same
-RSI60 < 40 AND EMA9 < EMA21 - 10 bp,pair,656,2.0%,"57.8% [53.9, 61.6]",+8.0,7/7,+10.1 on 35,same
+RSI60 < 40 AND EMA9 < EMA21 - 10 bp,pair,656,2.0%,"57.8% [53.9, 61.6]",+8.0,7/7,+10.0 on 35,same
 RSI60 > 60 AND 4h return > +100 bp,pair,508,1.6%,"41.7% [36.7, 46.3]",-8.0,6/6,+3.9 on 39,flipped
-range position > 0.90 AND two windows up,pair,1750,5.5%,"41.8% [39.5, 43.9]",-8.0,8/8,-6.5 on 159,same
+range position < 0.05 AND EMA9 < EMA21 - 10 bp,pair,424,1.3%,"57.8% [53.1, 62.8]",+8.0,3/3,fires 11,too few
+range position > 0.90 AND two windows up,pair,1750,5.5%,"41.8% [39.5, 43.9]",-8.0,8/8,-6.6 on 159,same
 range position > 0.85 AND price > VWAP60 + 50 bp,pair,415,1.3%,"41.7% [36.9, 46.3]",-8.0,4/5,fires 25,too few
 5-min move > +1.5 sd AND taker buy share > 0.2 (15 min),pair,656,2.0%,"41.8% [38.1, 45.6]",-8.0,7/8,-2.2 on 67,same
 4h return > +25 bp AND taker buy share > 0.3 (15 min),pair,1294,4.0%,"41.7% [39.1, 44.4]",-8.0,6/8,-4.1 on 96,same
@@ -255,20 +253,21 @@ range position > 0.85 AND price > VWAP60 + 50 bp,pair,415,1.3%,"41.7% [36.9, 46.
 taker sell share > 0.1 (15 min) AND EMA9 < EMA21 - 10 bp,pair,1239,3.9%,"57.7% [54.9, 60.7]",+8.0,8/8,+23.4 on 45,same
 two windows down AND OBV falling,pair,1352,4.2%,"57.8% [55.1, 60.4]",+8.0,8/8,+3.7 on 95,same
 "EMA9 < EMA21 - 10 bp, US (14-21 UTC)",session,774,2.4%,"57.8% [54.1, 61.7]",+8.0,6/6,fires 26,too few
-15-min move > +1.5 sd,single,1871,5.8%,"41.8% [39.6, 43.9]",-7.9,8/8,-1.3 on 179,same
+15-min move > +1.5 sd,single,1871,5.8%,"41.8% [39.6, 43.9]",-7.9,8/8,-1.4 on 179,same
 RSI60 < 40 AND more trades than usual (nratio5 > 1.5),pair,664,2.1%,"57.7% [54.0, 61.4]",+7.9,8/8,+12.1 on 58,same
 RSI60 < 45 AND EMA9 < EMA21 - 10 bp,pair,1302,4.1%,"57.6% [54.6, 60.5]",+7.9,8/8,+16.1 on 53,same
 range position < 0.15 AND 15-min move < -1.5 sd,pair,956,3.0%,"57.6% [54.5, 60.7]",+7.9,8/8,+14.5 on 76,same
-15-min move > +1.5 sd AND previous window up,pair,1871,5.8%,"41.8% [39.6, 43.9]",-7.9,8/8,-1.3 on 179,same
+15-min move > +1.5 sd AND previous window up,pair,1871,5.8%,"41.8% [39.6, 43.9]",-7.9,8/8,-1.4 on 179,same
 15-min move > +2 sd AND two windows up,pair,347,1.1%,"41.8% [36.8, 46.9]",-7.9,4/4,-7.1 on 35,same
 "EMA9 < EMA21 - 10 bp, Asia (0-7 UTC)",session,406,1.3%,"57.6% [53.2, 62.3]",+7.9,3/3,fires 11,too few
 price < VWAP60 - 50 bp,single,690,2.2%,"57.5% [54.1, 61.2]",+7.8,5/5,fires 26,too few
 RSI14 < 30 AND taker sell share > 0.3 (15 min),pair,633,2.0%,"57.5% [53.8, 61.1]",+7.8,8/8,+14.6 on 48,same
 RSI60 > 55 AND range position > 0.90,pair,2437,7.6%,"42.0% [40.1, 43.7]",-7.8,8/8,-6.7 on 215,same
 range position > 0.90 AND 4h return > +25 bp,pair,2216,6.9%,"42.0% [40.2, 43.9]",-7.8,8/8,-7.4 on 174,same
-range position < 0.15 AND larger trades than usual (size5 > 1.2),pair,1297,4.0%,"57.5% [54.9, 60.3]",+7.8,8/8,+11.2 on 90,same
-range position > 0.85 AND MACD hist > 0,pair,2659,8.3%,"41.9% [40.2, 43.7]",-7.8,8/8,-9.2 on 253,same
+range position < 0.15 AND larger trades than usual (size5 > 1.2),pair,1297,4.0%,"57.5% [54.9, 60.3]",+7.8,8/8,+11.1 on 90,same
+range position > 0.85 AND MACD hist > 0,pair,2659,8.3%,"41.9% [40.2, 43.7]",-7.8,8/8,-9.3 on 253,same
 15-min move < -1.5 sd AND taker sell share > 0.3 (15 min),pair,857,2.7%,"57.5% [54.0, 61.0]",+7.8,7/8,+18.1 on 72,same
+5-min move > +2 sd AND MACD hist > 0,pair,686,2.1%,"42.0% [38.3, 45.6]",-7.8,8/8,+0.8 on 69,flipped
 15-min move < -2 sd AND price < VWAP60 - 15 bp,pair,719,2.2%,"57.6% [54.1, 61.2]",+7.8,7/8,+11.7 on 73,same
 RSI14 > 75,single,497,1.6%,"42.1% [37.7, 46.1]",-7.7,6/7,-1.7 on 56,same
 5-min move > +2 sd,single,688,2.1%,"42.0% [38.3, 45.6]",-7.7,8/8,-0.7 on 71,same
@@ -276,11 +275,9 @@ RSI14 < 30 AND more trades than usual (nratio5 > 1.5),pair,500,1.6%,"57.4% [53.2
 RSI14 > 70 AND price > VWAP60 + 15 bp,pair,963,3.0%,"42.1% [39.3, 44.9]",-7.7,8/8,-4.5 on 88,same
 range position > 0.90 AND 4h return > +50 bp,pair,1653,5.2%,"42.0% [39.8, 44.3]",-7.7,8/8,-7.8 on 121,same
 range position > 0.85 AND 4h return > +50 bp,pair,2618,8.2%,"42.1% [40.2, 44.0]",-7.7,8/8,-6.5 on 205,same
-5-min move > +2 sd AND MACD hist > 0,pair,686,2.1%,"42.0% [38.3, 45.6]",-7.7,8/8,+0.8 on 69,flipped
 taker buy share > 0.2 (15 min) AND price > VWAP60 + 15 bp,pair,2227,6.9%,"42.1% [40.0, 44.0]",-7.7,8/8,-1.2 on 160,same
-two windows down AND EMA9 < EMA21 - 10 bp,pair,1172,3.7%,"57.4% [54.4, 60.5]",+7.7,8/8,+18.1 on 50,same
 RSI14 < 30,single,1391,4.3%,"57.3% [54.7, 59.9]",+7.6,8/8,+6.8 on 118,same
-RSI60 < 40 AND taker sell share > 0.3 (15 min),pair,422,1.3%,"57.3% [53.0, 61.6]",+7.6,6/6,+12.0 on 42,same
+RSI60 < 40 AND taker sell share > 0.3 (15 min),pair,422,1.3%,"57.3% [53.0, 61.6]",+7.6,6/6,+11.9 on 42,same
 RSI60 < 45 AND price < VWAP60 - 50 bp,pair,570,1.8%,"57.4% [53.4, 61.4]",+7.6,5/5,fires 23,too few
 range position < 0.1 AND price < VWAP60 - 50 bp,pair,375,1.2%,"57.3% [52.6, 62.6]",+7.6,3/3,fires 10,too few
 range position > 0.90 AND OBV rising,pair,652,2.0%,"42.2% [38.5, 46.0]",-7.6,7/8,-9.1 on 49,same
@@ -294,39 +291,38 @@ taker sell share > 0.2 (15 min) AND EMA9 < EMA21 - 10 bp,pair,861,2.7%,"57.4% [5
 "price < VWAP60 - 30 bp, Asia (0-7 UTC)",session,565,1.8%,"57.3% [53.4, 61.5]",+7.6,5/5,-3.3 on 30,flipped
 RSI14 < 30 AND range position < 0.15,pair,814,2.5%,"57.2% [53.9, 60.7]",+7.5,8/8,+6.0 on 59,same
 RSI14 < 30 AND previous window down,pair,1388,4.3%,"57.2% [54.6, 59.8]",+7.5,8/8,+6.8 on 118,same
-RSI14 < 35 AND 4h return < -25 bp,pair,1614,5.0%,"57.2% [54.7, 59.7]",+7.5,8/8,+11.3 on 116,same
+RSI14 < 35 AND 4h return < -25 bp,pair,1614,5.0%,"57.2% [54.7, 59.7]",+7.5,8/8,+11.2 on 116,same
 RSI60 < 40 AND 15-min move < -1.5 sd,pair,624,1.9%,"57.2% [53.5, 61.0]",+7.5,7/8,+13.2 on 57,same
-range position < 0.1 AND EMA9 < EMA21 - 10 bp,pair,717,2.2%,"57.2% [53.5, 60.6]",+7.5,6/6,fires 23,too few
 range position > 0.90 AND 4h return > +100 bp,pair,932,2.9%,"42.3% [38.8, 45.3]",-7.5,7/8,-2.7 on 55,same
 range position > 0.90 AND price > VWAP60 + 15 bp,pair,1711,5.3%,"42.2% [40.0, 44.4]",-7.5,8/8,-5.6 on 133,same
 range position > 0.85 AND 4h return > +25 bp,pair,3500,10.9%,"42.3% [40.6, 43.9]",-7.5,8/8,-7.9 on 290,same
 taker buy share > 0.3 (15 min) AND price > VWAP60 + 15 bp,pair,1132,3.5%,"42.2% [39.4, 45.0]",-7.5,7/8,+2.4 on 84,flipped
 price < VWAP60 - 50 bp AND more trades than usual (nratio5 > 1.5),pair,470,1.5%,"57.2% [53.0, 62.0]",+7.5,4/4,fires 20,too few
-MACD hist < 0 AND EMA9 < EMA21 - 10 bp,pair,1335,4.2%,"57.2% [54.5, 59.9]",+7.5,8/8,+18.1 on 50,same
+MACD hist < 0 AND EMA9 < EMA21 - 10 bp,pair,1335,4.2%,"57.2% [54.5, 59.9]",+7.5,8/8,+18.0 on 50,same
 EMA9 < EMA21 - 10 bp AND more trades than usual (nratio5 > 1.5),pair,967,3.0%,"57.2% [54.1, 60.3]",+7.5,8/8,+10.5 on 43,same
 "RSI14 < 30, US (14-21 UTC)",session,428,1.3%,"57.2% [52.8, 61.9]",+7.5,6/6,+18.8 on 32,same
 RSI14 < 35 AND range position < 0.15,pair,1594,5.0%,"57.2% [54.8, 59.5]",+7.4,8/8,+11.1 on 118,same
 RSI14 > 70 AND taker buy share > 0.1 (15 min),pair,1060,3.3%,"42.4% [39.5, 45.1]",-7.4,8/8,-1.4 on 105,same
-RSI14 > 70 AND taker buy share > 0.3 (15 min),pair,506,1.6%,"42.3% [38.6, 46.3]",-7.4,5/6,+5.1 on 60,flipped
-RSI60 < 45 AND 15-min move < -1.5 sd,pair,1424,4.4%,"57.2% [54.6, 59.7]",+7.4,8/8,+16.2 on 118,same
+RSI14 > 70 AND taker buy share > 0.3 (15 min),pair,506,1.6%,"42.3% [38.6, 46.3]",-7.4,5/6,+5.0 on 60,flipped
+RSI60 < 45 AND 15-min move < -1.5 sd,pair,1424,4.4%,"57.2% [54.6, 59.7]",+7.4,8/8,+16.1 on 118,same
 RSI60 > 55 AND price > VWAP60 + 50 bp,pair,522,1.6%,"42.3% [38.1, 46.5]",-7.4,4/5,-1.6 on 31,same
 range position > 0.95 AND taker buy share > 0.3 (15 min),pair,338,1.1%,"42.3% [37.3, 47.5]",-7.4,4/5,+5.3 on 38,flipped
-range position < 0.1 AND larger trades than usual (size5 > 1.2),pair,885,2.8%,"57.2% [53.8, 60.9]",+7.4,7/8,+12.0 on 63,same
+range position < 0.1 AND EMA9 < EMA21 - 10 bp,pair,717,2.2%,"57.2% [53.5, 60.6]",+7.4,6/6,fires 23,too few
+range position < 0.1 AND larger trades than usual (size5 > 1.2),pair,885,2.8%,"57.2% [53.8, 60.9]",+7.4,7/8,+11.9 on 63,same
 range position > 0.90 AND MACD hist > 0,pair,1825,5.7%,"42.3% [40.3, 44.3]",-7.4,8/8,-9.3 on 160,same
 5-min move < -1.5 sd AND 15-min move < -2 sd,pair,373,1.2%,"57.1% [51.9, 61.7]",+7.4,5/6,fires 26,too few
 4h return > +100 bp AND taker buy share > 0.2 (15 min),pair,694,2.2%,"42.4% [38.7, 45.8]",-7.4,7/8,-5.2 on 38,same
 taker sell share > 0.1 (15 min) AND price < VWAP60 - 30 bp,pair,1450,4.5%,"57.2% [54.8, 59.7]",+7.4,7/8,+7.8 on 71,same
 taker sell share > 0.2 (15 min) AND price < VWAP60 - 30 bp,pair,967,3.0%,"57.1% [54.2, 60.1]",+7.4,7/8,+11.6 on 52,same
 taker sell share > 0.2 (15 min) AND more trades than usual (nratio5 > 1.5),pair,1048,3.3%,"57.2% [54.2, 60.0]",+7.4,8/8,+9.5 on 106,same
-"15-min move > +1.5 sd, Asia (0-7 UTC)",session,629,2.0%,"42.3% [38.7, 45.8]",-7.4,8/8,-9.9 on 65,same
-range position > 0.90,single,2702,8.4%,"42.5% [40.7, 44.1]",-7.3,8/8,-5.5 on 232,same
+"15-min move > +1.5 sd, Asia (0-7 UTC)",session,629,2.0%,"42.3% [38.7, 45.8]",-7.4,8/8,-10.0 on 65,same
+range position > 0.90,single,2702,8.4%,"42.5% [40.7, 44.1]",-7.3,8/8,-5.6 on 232,same
 RSI14 < 35 AND RSI60 < 45,pair,2284,7.1%,"57.0% [55.0, 59.0]",+7.3,8/8,+11.9 on 186,same
 RSI14 < 35 AND 15-min move < -1.5 sd,pair,1516,4.7%,"57.1% [54.6, 59.5]",+7.3,8/8,+12.2 on 132,same
 RSI14 < 35 AND 4h return < -50 bp,pair,1151,3.6%,"57.1% [54.4, 60.0]",+7.3,8/8,+17.1 on 79,same
 RSI60 > 55 AND range position > 0.85,pair,3468,10.8%,"42.5% [40.8, 44.1]",-7.3,8/8,-5.1 on 328,same
 RSI60 > 55 AND MACD hist > 0,pair,3322,10.4%,"42.4% [40.7, 44.1]",-7.3,8/8,-7.9 on 295,same
 RSI60 > 55 AND OBV rising,pair,1434,4.5%,"42.5% [39.8, 45.1]",-7.3,8/8,-1.0 on 96,same
-range position < 0.05 AND OBV falling,pair,463,1.4%,"57.0% [52.8, 61.5]",+7.3,7/7,fires 28,too few
 range position > 0.90 AND price > VWAP60 + 30 bp,pair,857,2.7%,"42.5% [39.2, 45.8]",-7.3,8/8,-1.7 on 58,same
 range position < 0.15 AND 15-min move < -2 sd,pair,491,1.5%,"57.0% [52.4, 61.3]",+7.3,6/8,+13.9 on 47,same
 15-min move < -1.5 sd AND taker sell share > 0.1 (15 min),pair,1656,5.2%,"57.1% [54.6, 59.5]",+7.3,8/8,+12.0 on 134,same
@@ -335,7 +331,7 @@ range position < 0.15 AND 15-min move < -2 sd,pair,491,1.5%,"57.0% [52.4, 61.3]"
 taker sell share > 0.3 (15 min) AND more trades than usual (nratio5 > 1.5),pair,519,1.6%,"57.0% [52.7, 61.4]",+7.3,7/8,+11.3 on 49,same
 price < VWAP60 - 30 bp AND MACD hist < 0,pair,1538,4.8%,"57.0% [54.6, 59.6]",+7.3,8/8,+4.4 on 81,same
 "OBV rising, Asia (0-7 UTC)",session,844,2.6%,"42.4% [39.2, 45.5]",-7.3,7/8,-11.7 on 68,same
-RSI14 < 30 AND RSI60 < 45,pair,1177,3.7%,"56.9% [54.1, 59.8]",+7.2,8/8,+7.7 on 92,same
+RSI14 < 30 AND RSI60 < 45,pair,1177,3.7%,"56.9% [54.1, 59.8]",+7.2,8/8,+7.6 on 92,same
 RSI14 < 30 AND price < VWAP60 - 50 bp,pair,311,1.0%,"56.9% [51.5, 62.2]",+7.2,3/3,fires 13,too few
 RSI14 < 30 AND two windows down,pair,1007,3.1%,"56.9% [53.6, 60.1]",+7.2,7/8,+1.2 on 86,same
 RSI14 < 30 AND MACD hist < 0,pair,1332,4.2%,"56.9% [54.2, 59.7]",+7.2,8/8,+6.8 on 111,same
@@ -345,15 +341,14 @@ RSI60 < 40 AND price < VWAP60 - 50 bp,pair,346,1.1%,"56.9% [52.1, 62.1]",+7.2,4/
 range position < 0.05 AND taker sell share > 0.3 (15 min),pair,399,1.2%,"56.9% [52.3, 61.6]",+7.2,5/5,+15.7 on 32,same
 range position < 0.15 AND price < VWAP60 - 30 bp,pair,1146,3.6%,"57.0% [54.0, 60.1]",+7.2,7/8,+3.6 on 56,same
 range position > 0.85 AND 4h return > +100 bp,pair,1423,4.4%,"42.5% [39.6, 45.0]",-7.2,8/8,+2.3 on 88,flipped
-range position > 0.85 AND EMA9 > EMA21 + 10 bp,pair,827,2.6%,"42.6% [39.0, 45.8]",-7.2,8/8,-8.6 on 46,same
+range position > 0.85 AND EMA9 > EMA21 + 10 bp,pair,827,2.6%,"42.6% [39.0, 45.8]",-7.2,8/8,-8.7 on 46,same
 5-min move > +1.5 sd AND price > VWAP60 + 15 bp,pair,861,2.7%,"42.5% [39.3, 45.7]",-7.2,7/8,-2.8 on 70,same
 price > VWAP60 + 15 bp AND larger trades than usual (size5 > 1.2),pair,1562,4.9%,"42.5% [39.9, 45.0]",-7.2,8/8,-0.8 on 116,same
 price > VWAP60 + 30 bp AND larger trades than usual (size5 > 1.2),pair,625,1.9%,"42.6% [38.3, 46.8]",-7.2,5/5,+5.3 on 38,flipped
-previous window down AND EMA9 < EMA21 - 10 bp,pair,1587,5.0%,"56.9% [54.5, 59.3]",+7.2,8/8,+16.2 on 59,same
+previous window down AND EMA9 < EMA21 - 10 bp,pair,1587,5.0%,"56.9% [54.5, 59.3]",+7.2,8/8,+16.1 on 59,same
 two windows up AND larger trades than usual (size5 > 1.2),pair,2124,6.6%,"42.6% [40.5, 44.6]",-7.2,8/8,-4.0 on 198,same
 "15-min move < -2 sd, Asia (0-7 UTC)",session,302,0.9%,"57.0% [51.3, 62.8]",+7.2,3/3,fires 26,too few
 price > VWAP60 + 50 bp,single,699,2.2%,"42.6% [38.6, 46.4]",-7.1,6/7,-4.2 on 35,same
-RSI60 < 40 AND OBV falling,pair,693,2.2%,"56.9% [53.5, 60.3]",+7.1,8/8,+8.1 on 50,same
 RSI60 > 55 AND EMA9 > EMA21 + 10 bp,pair,1135,3.5%,"42.6% [39.7, 45.4]",-7.1,8/8,-9.3 on 59,same
 range position < 0.15 AND taker sell share > 0.2 (15 min),pair,1784,5.6%,"56.8% [54.6, 59.1]",+7.1,8/8,+9.8 on 144,same
 range position > 0.85 AND more trades than usual (nratio5 > 1.5),pair,962,3.0%,"42.6% [39.2, 45.9]",-7.1,8/8,+2.4 on 105,flipped
@@ -361,13 +356,13 @@ range position > 0.85 AND more trades than usual (nratio5 > 1.5),pair,962,3.0%,"
 4h return > +25 bp AND taker buy share > 0.2 (15 min),pair,2553,8.0%,"42.7% [40.8, 44.5]",-7.1,7/8,-2.4 on 206,same
 4h return > +50 bp AND EMA9 > EMA21 + 10 bp,pair,890,2.8%,"42.6% [38.9, 45.8]",-7.1,8/8,-9.1 on 49,same
 taker sell share > 0.2 (15 min) AND OBV falling,pair,1333,4.2%,"56.8% [54.2, 59.6]",+7.1,8/8,+12.4 on 93,same
-price < VWAP60 - 15 bp AND EMA9 < EMA21 - 10 bp,pair,1569,4.9%,"56.8% [54.4, 59.3]",+7.1,8/8,+15.1 on 60,same
+price < VWAP60 - 15 bp AND EMA9 < EMA21 - 10 bp,pair,1569,4.9%,"56.8% [54.4, 59.3]",+7.1,8/8,+15.0 on 60,same
 price < VWAP60 - 30 bp AND two windows down,pair,1550,4.8%,"56.8% [54.3, 59.4]",+7.1,6/8,+4.1 on 87,same
 MACD hist > 0 AND OBV rising,pair,1157,3.6%,"42.6% [39.6, 45.8]",-7.1,6/8,-6.4 on 85,same
 MACD hist > 0 AND EMA9 > EMA21 + 10 bp,pair,1221,3.8%,"42.6% [39.7, 45.5]",-7.1,7/8,-9.3 on 59,same
-RSI14 < 35 AND range position < 0.1,pair,1305,4.1%,"56.8% [54.4, 59.4]",+7.0,8/8,+10.3 on 98,same
+RSI14 < 35 AND range position < 0.1,pair,1305,4.1%,"56.8% [54.4, 59.4]",+7.0,8/8,+10.2 on 98,same
 RSI60 > 55 AND 4h return > +25 bp,pair,4004,12.5%,"42.7% [41.2, 44.2]",-7.0,8/8,-6.0 on 339,same
-RSI60 > 55 AND 4h return > +50 bp,pair,2946,9.2%,"42.7% [40.8, 44.5]",-7.0,8/8,-3.5 on 222,same
+RSI60 > 55 AND 4h return > +50 bp,pair,2946,9.2%,"42.7% [40.8, 44.5]",-7.0,8/8,-3.6 on 222,same
 range position > 0.90 AND previous window up,pair,2460,7.7%,"42.8% [40.9, 44.5]",-7.0,8/8,-5.9 on 218,same
 range position > 0.90 AND MACD hist < 0,pair,877,2.7%,"42.8% [39.6, 45.8]",-7.0,8/8,+2.8 on 72,flipped
 range position > 0.85 AND two windows up,pair,2457,7.7%,"42.7% [40.8, 44.6]",-7.0,8/8,-7.5 on 245,same
@@ -379,17 +374,17 @@ taker buy share > 0.1 (15 min) AND larger trades than usual (size5 > 1.2),pair,3
 "range position < 0.15, Europe (8-13 UTC)",session,1024,3.2%,"56.7% [53.6, 60.2]",+7.0,8/8,+11.5 on 83,same
 RSI14 < 35,single,3159,9.9%,"56.6% [54.9, 58.2]",+6.9,8/8,+7.9 on 273,same
 RSI14 > 70,single,1295,4.0%,"42.9% [40.4, 45.3]",-6.9,8/8,-1.9 on 129,same
-EMA9 < EMA21 - 10 bp,single,1610,5.0%,"56.6% [54.3, 59.1]",+6.9,8/8,+15.1 on 60,same
+EMA9 < EMA21 - 10 bp,single,1610,5.0%,"56.6% [54.3, 59.1]",+6.9,8/8,+15.0 on 60,same
 RSI14 < 30 AND range position < 0.1,pair,689,2.1%,"56.6% [53.3, 60.2]",+6.9,7/8,+7.2 on 49,same
 RSI14 < 30 AND price < VWAP60 - 15 bp,pair,1097,3.4%,"56.6% [53.6, 59.6]",+6.9,7/8,+8.2 on 86,same
-RSI14 < 30 AND price < VWAP60 - 30 bp,pair,675,2.1%,"56.6% [52.9, 60.4]",+6.9,7/8,+6.5 on 39,same
+RSI14 < 30 AND price < VWAP60 - 30 bp,pair,675,2.1%,"56.6% [52.9, 60.4]",+6.9,7/8,+6.4 on 39,same
 RSI14 < 35 AND 4h return > +25 bp,pair,470,1.5%,"56.6% [52.2, 60.6]",+6.9,8/8,-8.5 on 41,flipped
 RSI14 < 35 AND previous window down,pair,3149,9.8%,"56.6% [54.9, 58.2]",+6.9,8/8,+7.9 on 273,same
 RSI14 > 65 AND taker buy share > 0.1 (15 min),pair,2287,7.1%,"42.9% [40.8, 44.8]",-6.9,8/8,-5.7 on 217,same
 RSI14 > 65 AND price > VWAP60 + 15 bp,pair,2189,6.8%,"42.9% [40.9, 44.7]",-6.9,8/8,-5.2 on 190,same
 RSI60 < 45 AND taker sell share > 0.2 (15 min),pair,2570,8.0%,"56.7% [54.8, 58.5]",+6.9,8/8,+15.6 on 206,same
 range position < 0.1 AND taker sell share > 0.2 (15 min),pair,1221,3.8%,"56.7% [54.1, 59.5]",+6.9,8/8,+12.0 on 92,same
-range position < 0.15 AND 5-min move < -1.5 sd,pair,644,2.0%,"56.7% [52.7, 60.6]",+6.9,8/8,+16.0 on 44,same
+range position < 0.15 AND 5-min move < -1.5 sd,pair,644,2.0%,"56.7% [52.7, 60.6]",+6.9,8/8,+15.9 on 44,same
 5-min move > +1.5 sd AND taker buy share > 0.1 (15 min),pair,941,2.9%,"42.8% [39.7, 45.8]",-6.9,7/8,-3.3 on 90,same
 4h return < -25 bp AND EMA9 < EMA21 - 10 bp,pair,1165,3.6%,"56.7% [53.8, 59.7]",+6.9,8/8,+9.5 on 37,same
 4h return > +50 bp AND OBV rising,pair,1013,3.2%,"42.8% [39.7, 46.0]",-6.9,6/8,+1.7 on 60,flipped
@@ -397,38 +392,36 @@ range position < 0.15 AND 5-min move < -1.5 sd,pair,644,2.0%,"56.7% [52.7, 60.6]
 "OBV falling, US (14-21 UTC)",session,920,2.9%,"56.6% [53.8, 59.9]",+6.9,8/8,+12.1 on 58,same
 range position > 0.85,single,4339,13.5%,"42.9% [41.5, 44.3]",-6.8,8/8,-6.2 on 398,same
 RSI14 < 30 AND 15-min move < -2 sd,pair,601,1.9%,"56.6% [52.5, 60.5]",+6.8,6/8,+8.2 on 55,same
-RSI14 < 35 AND price < VWAP60 - 15 bp,pair,2330,7.3%,"56.6% [54.8, 58.4]",+6.8,8/8,+8.1 on 181,same
+RSI14 < 35 AND price < VWAP60 - 15 bp,pair,2330,7.3%,"56.6% [54.8, 58.4]",+6.8,8/8,+8.0 on 181,same
 RSI14 > 70 AND previous window up,pair,1293,4.0%,"42.9% [40.5, 45.3]",-6.8,8/8,-1.9 on 129,same
-range position < 0.05 AND larger trades than usual (size5 > 1.2),pair,485,1.5%,"56.5% [51.7, 61.7]",+6.8,6/6,+6.8 on 37,same
+RSI60 > 55 AND more trades than usual (nratio5 > 1.5),pair,1361,4.2%,"43.0% [40.1, 45.7]",-6.8,8/8,-0.7 on 128,same
 range position < 0.1 AND 15-min move < -1.5 sd,pair,734,2.3%,"56.5% [53.2, 60.1]",+6.8,7/8,+15.6 on 58,same
 range position < 0.1 AND price < VWAP60 - 30 bp,pair,909,2.8%,"56.5% [53.3, 59.9]",+6.8,7/8,+7.2 on 42,same
-range position < 0.1 AND MACD hist > 0,pair,704,2.2%,"56.5% [52.8, 60.3]",+6.8,8/8,+6.2 on 57,same
-range position < 0.15 AND taker sell share > 0.1 (15 min),pair,2526,7.9%,"56.5% [54.5, 58.7]",+6.8,8/8,+5.7 on 205,same
-range position < 0.15 AND OBV falling,pair,1129,3.5%,"56.5% [53.7, 59.3]",+6.8,8/8,+9.3 on 76,same
+range position < 0.15 AND taker sell share > 0.1 (15 min),pair,2526,7.9%,"56.5% [54.5, 58.7]",+6.8,8/8,+5.6 on 205,same
+range position < 0.15 AND OBV falling,pair,1129,3.5%,"56.5% [53.7, 59.3]",+6.8,8/8,+9.2 on 76,same
 5-min move < -1.5 sd AND 15-min move < -1.5 sd,pair,633,2.0%,"56.6% [52.9, 60.3]",+6.8,7/8,+12.8 on 51,same
 15-min move < -1.5 sd AND price < VWAP60 - 15 bp,pair,1508,4.7%,"56.6% [54.2, 59.0]",+6.8,8/8,+12.3 on 122,same
 4h return > +25 bp AND EMA9 > EMA21 + 10 bp,pair,1026,3.2%,"42.9% [39.6, 46.1]",-6.8,7/8,-7.6 on 59,same
 4h return < -100 bp AND taker sell share > 0.1 (15 min),pair,1414,4.4%,"56.5% [53.9, 59.3]",+6.8,7/8,+2.7 on 76,same
 OBV rising AND EMA9 > EMA21 + 10 bp,pair,436,1.4%,"42.9% [38.2, 47.4]",-6.8,7/7,fires 25,too few
-"15-min move > +1.5 sd, Europe (8-13 UTC)",session,505,1.6%,"43.0% [38.6, 47.2]",-6.8,7/8,+11.8 on 47,flipped
-"price < VWAP60 - 30 bp, US (14-21 UTC)",session,1003,3.1%,"56.5% [53.3, 60.0]",+6.8,7/8,+17.6 on 40,same
-RSI14 < 30 AND 5-min move < -1.5 sd,pair,649,2.0%,"56.4% [52.6, 60.4]",+6.7,6/8,+11.8 on 47,same
+"15-min move > +1.5 sd, Europe (8-13 UTC)",session,505,1.6%,"43.0% [38.6, 47.2]",-6.8,7/8,+11.7 on 47,flipped
+"price < VWAP60 - 30 bp, US (14-21 UTC)",session,1003,3.1%,"56.5% [53.3, 60.0]",+6.8,7/8,+17.5 on 40,same
+RSI14 < 30 AND 5-min move < -1.5 sd,pair,649,2.0%,"56.4% [52.6, 60.4]",+6.7,6/8,+11.7 on 47,same
 RSI14 < 30 AND 15-min move < -1.5 sd,pair,965,3.0%,"56.5% [53.4, 59.6]",+6.7,8/8,+9.1 on 83,same
 RSI14 < 35 AND range position < 0.05,pair,860,2.7%,"56.4% [53.3, 59.8]",+6.7,8/8,+10.4 on 63,same
 RSI14 > 70 AND MACD hist > 0,pair,1239,3.9%,"43.0% [40.4, 45.6]",-6.7,7/8,-2.9 on 119,same
 RSI60 < 45 AND price < VWAP60 - 30 bp,pair,1575,4.9%,"56.4% [53.7, 58.9]",+6.7,7/8,+7.4 on 82,same
-RSI60 > 55 AND more trades than usual (nratio5 > 1.5),pair,1361,4.2%,"43.0% [40.1, 45.7]",-6.7,8/8,-0.7 on 128,same
 range position < 0.1 AND taker sell share > 0.1 (15 min),pair,1699,5.3%,"56.4% [54.1, 58.9]",+6.7,8/8,+8.7 on 133,same
 4h return < -50 bp AND EMA9 < EMA21 - 10 bp,pair,1033,3.2%,"56.4% [53.2, 59.5]",+6.7,8/8,fires 29,too few
 taker buy share > 0.1 (15 min) AND price > VWAP60 + 30 bp,pair,1402,4.4%,"43.1% [40.4, 45.8]",-6.7,7/8,+0.6 on 87,flipped
-price < VWAP60 - 30 bp AND previous window down,pair,1974,6.2%,"56.4% [54.1, 58.7]",+6.7,7/8,+3.5 on 103,same
+price < VWAP60 - 30 bp AND previous window down,pair,1974,6.2%,"56.4% [54.1, 58.7]",+6.7,7/8,+3.4 on 103,same
 price < VWAP60 - 30 bp AND more trades than usual (nratio5 > 1.5),pair,1018,3.2%,"56.4% [53.2, 59.8]",+6.7,7/8,+6.7 on 60,same
 previous window up AND OBV rising,pair,1631,5.1%,"43.0% [40.7, 45.6]",-6.7,8/8,-5.2 on 123,same
 "RSI60 > 55, US (14-21 UTC)",session,1814,5.7%,"43.1% [40.6, 45.5]",-6.7,8/8,-5.7 on 156,same
 "range position > 0.85, Europe (8-13 UTC)",session,1130,3.5%,"43.0% [40.3, 45.5]",-6.7,7/8,-5.6 on 97,same
 "range position > 0.85, US (14-21 UTC)",session,1502,4.7%,"43.0% [40.2, 45.7]",-6.7,8/8,-6.6 on 150,same
 RSI14 < 35 AND two windows down,pair,2157,6.7%,"56.3% [54.3, 58.2]",+6.6,7/8,+5.8 on 192,same
-RSI14 < 35 AND MACD hist < 0,pair,2916,9.1%,"56.3% [54.6, 58.0]",+6.6,8/8,+9.3 on 250,same
+RSI14 < 35 AND MACD hist < 0,pair,2916,9.1%,"56.3% [54.6, 58.0]",+6.6,8/8,+9.2 on 250,same
 RSI14 > 70 AND two windows up,pair,871,2.7%,"43.2% [40.0, 46.2]",-6.6,7/8,-2.8 on 87,same
 RSI60 < 45 AND range position < 0.1,pair,2315,7.2%,"56.4% [54.3, 58.4]",+6.6,8/8,+6.7 on 187,same
 range position < 0.15 AND price < VWAP60 - 15 bp,pair,2483,7.7%,"56.3% [54.3, 58.4]",+6.6,8/8,+6.3 on 167,same
@@ -439,14 +432,13 @@ price < VWAP60 - 30 bp AND OBV falling,pair,655,2.0%,"56.3% [52.9, 59.9]",+6.6,6
 previous window up AND EMA9 > EMA21 + 10 bp,pair,1486,4.6%,"43.1% [40.5, 45.8]",-6.6,8/8,-3.6 on 69,same
 MACD hist < 0 AND OBV falling,pair,1423,4.4%,"56.4% [53.7, 58.9]",+6.6,8/8,+10.5 on 91,same
 "RSI60 > 55, Asia (0-7 UTC)",session,1838,5.7%,"43.1% [40.9, 45.4]",-6.6,8/8,-4.1 on 170,same
-"range position < 0.15, US (14-21 UTC)",session,1305,4.1%,"56.3% [53.7, 59.1]",+6.6,7/8,+5.1 on 80,same
-15-min move < -1.5 sd,single,1966,6.1%,"56.2% [54.0, 58.4]",+6.5,8/8,+7.5 on 169,same
+"range position < 0.15, US (14-21 UTC)",session,1305,4.1%,"56.3% [53.7, 59.1]",+6.6,7/8,+5.0 on 80,same
+15-min move < -1.5 sd,single,1966,6.1%,"56.2% [54.0, 58.4]",+6.5,8/8,+7.4 on 169,same
 RSI14 < 35 AND RSI60 < 40,pair,898,2.8%,"56.2% [53.4, 59.2]",+6.5,7/8,+7.8 on 71,same
 RSI14 < 35 AND 5-min move < -1.5 sd,pair,985,3.1%,"56.2% [53.3, 59.4]",+6.5,8/8,+7.9 on 83,same
-RSI60 < 40 AND previous window down,pair,1174,3.7%,"56.2% [53.6, 59.1]",+6.5,8/8,+6.1 on 100,same
-RSI60 < 45 AND OBV falling,pair,1723,5.4%,"56.2% [54.0, 58.6]",+6.5,8/8,+7.6 on 120,same
+RSI60 < 40 AND previous window down,pair,1174,3.7%,"56.2% [53.6, 59.1]",+6.5,8/8,+6.0 on 100,same
 RSI60 > 55 AND price > VWAP60 + 15 bp,pair,3295,10.3%,"43.2% [41.6, 44.9]",-6.5,8/8,-6.1 on 267,same
-15-min move < -1.5 sd AND previous window down,pair,1966,6.1%,"56.2% [54.0, 58.4]",+6.5,8/8,+7.5 on 169,same
+15-min move < -1.5 sd AND previous window down,pair,1966,6.1%,"56.2% [54.0, 58.4]",+6.5,8/8,+7.4 on 169,same
 15-min move < -1.5 sd AND MACD hist < 0,pair,1894,5.9%,"56.2% [54.0, 58.4]",+6.5,8/8,+7.4 on 164,same
 4h return > +25 bp AND price < VWAP60 - 30 bp,pair,400,1.2%,"56.2% [52.4, 60.7]",+6.5,3/4,fires 20,too few
 4h return > +100 bp AND taker buy share > 0.1 (15 min),pair,1242,3.9%,"43.2% [40.4, 45.9]",-6.5,8/8,+0.8 on 65,flipped
@@ -458,9 +450,9 @@ EMA9 > EMA21 + 10 bp,single,1515,4.7%,"43.3% [40.7, 46.0]",-6.4,8/8,-5.5 on 72,s
 RSI14 < 30 AND 4h return < -25 bp,pair,761,2.4%,"56.1% [52.8, 59.4]",+6.4,6/8,+5.6 on 54,same
 RSI14 < 30 AND EMA9 < EMA21 - 10 bp,pair,588,1.8%,"56.1% [51.9, 60.5]",+6.4,6/7,fires 26,too few
 RSI60 < 45 AND two windows down,pair,3431,10.7%,"56.1% [54.5, 57.8]",+6.4,8/8,+6.5 on 278,same
-RSI60 > 55 AND 4h return > +100 bp,pair,1557,4.9%,"43.4% [40.7, 45.8]",-6.4,8/8,+0.1 on 92,flipped
+RSI60 > 55 AND 4h return > +100 bp,pair,1557,4.9%,"43.4% [40.7, 45.8]",-6.4,8/8,+0.0 on 92,flipped
 RSI60 > 55 AND previous window up,pair,4721,14.7%,"43.3% [41.9, 44.7]",-6.4,8/8,-5.1 on 437,same
-range position > 0.85 AND price > VWAP60 + 15 bp,pair,2371,7.4%,"43.4% [41.4, 45.3]",-6.4,8/8,-4.5 on 196,same
+range position > 0.85 AND price > VWAP60 + 15 bp,pair,2371,7.4%,"43.4% [41.4, 45.3]",-6.4,8/8,-4.6 on 196,same
 range position > 0.85 AND previous window up,pair,3633,11.3%,"43.4% [41.8, 44.9]",-6.4,8/8,-6.4 on 351,same
 5-min move < -1.5 sd AND EMA9 < EMA21 - 10 bp,pair,376,1.2%,"56.1% [51.0, 61.5]",+6.4,4/4,fires 14,too few
 15-min move < -2 sd AND two windows down,pair,454,1.4%,"56.2% [51.6, 60.5]",+6.4,6/8,+13.1 on 46,same
@@ -473,44 +465,42 @@ RSI60 > 55 AND two windows up,pair,3308,10.3%,"43.4% [41.9, 44.9]",-6.3,8/8,-6.3
 range position < 0.05 AND taker sell share > 0.1 (15 min),pair,903,2.8%,"56.0% [52.8, 59.4]",+6.3,8/8,+11.7 on 73,same
 range position < 0.15 AND two windows down,pair,2434,7.6%,"56.1% [54.0, 58.2]",+6.3,8/8,+7.6 on 186,same
 range position < 0.15 AND more trades than usual (nratio5 > 1.5),pair,1125,3.5%,"56.0% [53.1, 59.2]",+6.3,7/8,+6.7 on 90,same
-4h return > +50 bp AND taker buy share > 0.1 (15 min),pair,2766,8.6%,"43.5% [41.7, 45.2]",-6.3,8/8,-0.9 on 200,same
-RSI60 > 55,single,5639,17.6%,"43.6% [42.3, 44.8]",-6.2,8/8,-5.3 on 491,same
+4h return > +50 bp AND taker buy share > 0.1 (15 min),pair,2766,8.6%,"43.5% [41.7, 45.2]",-6.3,8/8,-1.0 on 200,same
+RSI60 > 55,single,5639,17.6%,"43.6% [42.3, 44.8]",-6.2,8/8,-5.4 on 491,same
 price < VWAP60 - 30 bp,single,2105,6.6%,"56.0% [53.7, 58.2]",+6.2,7/8,+4.2 on 109,same
 RSI60 < 40 AND range position < 0.15,pair,1063,3.3%,"56.0% [53.1, 59.0]",+6.2,8/8,+5.2 on 87,same
 RSI60 < 45 AND range position < 0.15,pair,3363,10.5%,"56.0% [54.3, 57.8]",+6.2,8/8,+7.1 on 263,same
-RSI60 < 45 AND larger trades than usual (size5 > 1.2),pair,1746,5.4%,"56.0% [53.6, 58.3]",+6.2,8/8,+15.2 on 132,same
+RSI60 < 45 AND larger trades than usual (size5 > 1.2),pair,1747,5.4%,"56.0% [53.6, 58.4]",+6.2,8/8,+15.2 on 132,same
 range position < 0.05 AND 15-min move < -1.5 sd,pair,467,1.5%,"55.9% [51.6, 60.3]",+6.2,7/8,+11.8 on 34,same
 range position < 0.05 AND price < VWAP60 - 30 bp,pair,560,1.7%,"55.9% [51.8, 60.3]",+6.2,4/5,fires 24,too few
 range position < 0.1 AND previous window down,pair,2311,7.2%,"55.9% [53.9, 58.0]",+6.2,8/8,+5.5 on 184,same
 range position < 0.1 AND MACD hist < 0,pair,1777,5.5%,"55.9% [53.7, 58.4]",+6.2,8/8,+7.0 on 144,same
-5-min move > +1.5 sd AND two windows up,pair,756,2.4%,"43.5% [40.1, 46.9]",-6.2,6/8,-0.7 on 63,same
+5-min move > +1.5 sd AND two windows up,pair,756,2.4%,"43.5% [40.1, 46.9]",-6.2,6/8,-0.8 on 63,same
 5-min move < -2 sd AND taker sell share > 0.1 (15 min),pair,470,1.5%,"56.0% [51.7, 60.2]",+6.2,6/8,+7.2 on 35,same
 taker buy share > 0.1 (15 min) AND more trades than usual (nratio5 > 1.5),pair,1484,4.6%,"43.5% [41.3, 45.9]",-6.2,8/8,+4.5 on 145,flipped
 taker sell share > 0.1 (15 min) AND more trades than usual (nratio5 > 1.5),pair,1708,5.3%,"55.9% [53.7, 58.3]",+6.2,8/8,+6.1 on 166,same
 price < VWAP60 - 15 bp AND OBV falling,pair,1288,4.0%,"56.0% [53.5, 58.4]",+6.2,8/8,+2.7 on 76,same
 two windows up AND EMA9 > EMA21 + 10 bp,pair,1046,3.3%,"43.5% [40.5, 46.6]",-6.2,8/8,-4.7 on 53,same
-"RSI14 < 30, Europe (8-13 UTC)",session,386,1.2%,"56.0% [50.8, 60.7]",+6.2,6/7,+0.1 on 36,same
+"RSI14 < 30, Europe (8-13 UTC)",session,386,1.2%,"56.0% [50.8, 60.7]",+6.2,6/7,+0.0 on 36,same
 "taker sell share > 0.3 (15 min), US (14-21 UTC)",session,1167,3.6%,"56.0% [53.4, 58.4]",+6.2,7/8,+7.6 on 113,same
 RSI60 < 40 AND MACD hist < 0,pair,881,2.7%,"55.8% [52.6, 59.2]",+6.1,8/8,+7.9 on 76,same
-RSI60 < 45 AND MACD hist < 0,pair,3429,10.7%,"55.8% [54.2, 57.5]",+6.1,8/8,+9.3 on 277,same
-range position < 0.1 AND 4h return < -25 bp,pair,2074,6.5%,"55.8% [53.7, 58.2]",+6.1,8/8,+7.5 on 162,same
-range position < 0.1 AND 4h return < -50 bp,pair,1669,5.2%,"55.8% [53.5, 58.3]",+6.1,8/8,+10.7 on 117,same
-range position < 0.1 AND OBV falling,pair,781,2.4%,"55.8% [52.2, 59.4]",+6.1,8/8,+13.2 on 57,same
-range position < 0.15 AND 4h return < -25 bp,pair,3252,10.1%,"55.9% [54.0, 57.8]",+6.1,8/8,+6.5 on 250,same
+RSI60 < 45 AND MACD hist < 0,pair,3429,10.7%,"55.8% [54.2, 57.5]",+6.1,8/8,+9.2 on 277,same
+range position < 0.1 AND 4h return < -25 bp,pair,2074,6.5%,"55.8% [53.7, 58.2]",+6.1,8/8,+7.4 on 162,same
+range position < 0.15 AND 4h return < -25 bp,pair,3252,10.1%,"55.9% [54.0, 57.8]",+6.1,8/8,+6.4 on 250,same
 5-min move < -1.5 sd AND price < VWAP60 - 15 bp,pair,924,2.9%,"55.8% [52.8, 58.8]",+6.1,6/8,+9.4 on 64,same
-5-min move < -1.5 sd AND more trades than usual (nratio5 > 1.5),pair,527,1.6%,"55.8% [51.6, 59.8]",+6.1,8/8,+0.1 on 46,same
+5-min move < -1.5 sd AND more trades than usual (nratio5 > 1.5),pair,527,1.6%,"55.8% [51.6, 59.8]",+6.1,8/8,+0.0 on 46,same
 4h return < -25 bp AND price < VWAP60 - 30 bp,pair,1403,4.4%,"55.8% [53.2, 58.7]",+6.1,7/8,+0.9 on 59,same
 4h return > +50 bp AND two windows up,pair,2233,7.0%,"43.7% [41.6, 45.6]",-6.1,8/8,-6.4 on 170,same
 taker buy share > 0.1 (15 min) AND price > VWAP60 + 15 bp,pair,3534,11.0%,"43.7% [42.0, 45.4]",-6.1,8/8,-2.2 on 264,same
 "RSI14 < 35, Europe (8-13 UTC)",session,828,2.6%,"55.8% [52.4, 59.1]",+6.1,8/8,+2.9 on 70,same
 "RSI60 < 45, US (14-21 UTC)",session,1775,5.5%,"55.8% [53.5, 58.2]",+6.1,8/8,+9.6 on 131,same
-RSI60 < 40 AND range position < 0.05,pair,572,1.8%,"55.8% [52.1, 59.7]",+6.0,8/8,+2.4 on 42,same
-RSI60 < 40 AND 15-min move < -2 sd,pair,407,1.3%,"55.8% [50.9, 60.4]",+6.0,7/7,+10.1 on 45,same
+RSI60 < 40 AND 15-min move < -2 sd,pair,407,1.3%,"55.8% [50.9, 60.4]",+6.0,7/7,+10.0 on 45,same
 RSI60 < 45 AND 5-min move < -1.5 sd,pair,863,2.7%,"55.7% [52.5, 59.1]",+6.0,8/8,+10.3 on 68,same
 RSI60 > 55 AND price > VWAP60 + 30 bp,pair,1476,4.6%,"43.8% [41.1, 46.4]",-6.0,8/8,-5.4 on 92,same
-range position < 0.1 AND 5-min move < -1.5 sd,pair,519,1.6%,"55.7% [51.5, 59.8]",+6.0,7/8,+14.2 on 39,same
+range position < 0.1 AND 5-min move < -1.5 sd,pair,519,1.6%,"55.7% [51.5, 59.8]",+6.0,7/8,+14.1 on 39,same
+range position < 0.1 AND 4h return < -50 bp,pair,1669,5.2%,"55.8% [53.5, 58.3]",+6.0,8/8,+10.7 on 117,same
 range position < 0.15 AND previous window down,pair,3470,10.8%,"55.7% [54.0, 57.4]",+6.0,8/8,+5.7 on 264,same
-range position < 0.15 AND MACD hist < 0,pair,2568,8.0%,"55.7% [53.8, 57.6]",+6.0,7/8,+7.6 on 200,same
+range position < 0.15 AND MACD hist < 0,pair,2568,8.0%,"55.7% [53.8, 57.6]",+6.0,7/8,+7.5 on 200,same
 4h return < -25 bp AND taker sell share > 0.2 (15 min),pair,2946,9.2%,"55.8% [54.0, 57.6]",+6.0,8/8,+8.6 on 239,same
 previous window down AND OBV falling,pair,1979,6.2%,"55.7% [53.5, 57.9]",+6.0,8/8,+6.7 on 136,same
 "RSI14 < 35, Asia (0-7 UTC)",session,1099,3.4%,"55.8% [53.1, 58.6]",+6.0,8/8,+8.6 on 99,same
@@ -519,8 +509,8 @@ previous window down AND OBV falling,pair,1979,6.2%,"55.7% [53.5, 57.9]",+6.0,8/
 "price < VWAP60 - 30 bp, Europe (8-13 UTC)",session,400,1.2%,"55.8% [51.6, 60.2]",+6.0,3/3,-5.8 on 34,flipped
 "EMA9 < EMA21 - 10 bp, Europe (8-13 UTC)",session,312,1.0%,"55.8% [50.8, 60.8]",+6.0,3/3,fires 19,too few
 range position < 0.15,single,3993,12.5%,"55.6% [53.9, 57.3]",+5.9,8/8,+5.4 on 309,same
-RSI14 < 30 AND RSI60 < 40,pair,611,1.9%,"55.6% [52.0, 59.4]",+5.9,7/8,+5.2 on 49,same
-RSI60 < 45 AND previous window down,pair,4804,15.0%,"55.6% [54.3, 57.0]",+5.9,8/8,+6.8 on 384,same
+RSI14 < 30 AND RSI60 < 40,pair,611,1.9%,"55.6% [52.0, 59.4]",+5.9,7/8,+5.1 on 49,same
+RSI60 < 45 AND previous window down,pair,4805,15.0%,"55.7% [54.3, 57.0]",+5.9,8/8,+6.8 on 384,same
 range position < 0.1 AND price < VWAP60 - 15 bp,pair,1815,5.7%,"55.6% [53.3, 57.9]",+5.9,8/8,+7.3 on 124,same
 range position < 0.1 AND two windows down,pair,1718,5.4%,"55.6% [53.4, 57.9]",+5.9,8/8,+3.6 on 127,same
 4h return < -50 bp AND taker sell share > 0.2 (15 min),pair,1898,5.9%,"55.6% [53.5, 57.7]",+5.9,8/8,+6.9 on 139,same
@@ -529,63 +519,55 @@ range position < 0.1 AND two windows down,pair,1718,5.4%,"55.6% [53.4, 57.9]",+5
 taker buy share > 0.3 (15 min) AND MACD hist > 0,pair,2354,7.3%,"43.8% [41.9, 45.7]",-5.9,8/8,-2.0 on 198,same
 taker sell share > 0.3 (15 min) AND price < VWAP60 - 15 bp,pair,1408,4.4%,"55.6% [53.1, 58.1]",+5.9,7/8,+16.0 on 97,same
 taker sell share > 0.3 (15 min) AND larger trades than usual (size5 > 1.2),pair,1541,4.8%,"55.7% [53.3, 58.0]",+5.9,8/8,+9.1 on 122,same
+price > VWAP60 + 30 bp AND MACD hist > 0,pair,1504,4.7%,"43.9% [41.3, 46.6]",-5.9,7/8,-5.0 on 80,same
 two windows up AND OBV rising,pair,1082,3.4%,"43.8% [41.0, 46.6]",-5.9,7/8,-2.5 on 78,same
 "range position < 0.1, Asia (0-7 UTC)",session,885,2.8%,"55.6% [52.3, 59.1]",+5.9,8/8,+0.7 on 79,same
 "taker buy share > 0.2 (15 min), Asia (0-7 UTC)",session,2247,7.0%,"43.8% [41.9, 45.7]",-5.9,8/8,-7.8 on 216,same
 RSI60 < 40,single,1238,3.9%,"55.6% [53.0, 58.3]",+5.8,8/8,+6.8 on 104,same
 OBV rising,single,2366,7.4%,"44.0% [42.1, 45.9]",-5.8,7/8,-4.1 on 170,same
 RSI14 > 65 AND two windows up,pair,1999,6.2%,"44.0% [41.9, 46.0]",-5.8,8/8,-6.1 on 196,same
-range position < 0.05 AND 4h return < -100 bp,pair,499,1.6%,"55.5% [50.8, 60.4]",+5.8,4/4,fires 21,too few
 range position < 0.05 AND MACD hist < 0,pair,982,3.1%,"55.5% [52.3, 58.8]",+5.8,8/8,+4.4 on 81,same
-range position < 0.1 AND 4h return < -100 bp,pair,1005,3.1%,"55.5% [52.5, 58.7]",+5.8,8/8,+10.5 on 48,same
 5-min move > +1.5 sd AND previous window up,pair,1540,4.8%,"44.0% [41.6, 46.2]",-5.8,7/8,+0.8 on 140,flipped
 4h return > +25 bp AND taker buy share > 0.1 (15 min),pair,4181,13.0%,"43.9% [42.4, 45.4]",-5.8,8/8,-1.1 on 340,same
 4h return > +50 bp AND MACD hist > 0,pair,3274,10.2%,"44.0% [42.3, 45.7]",-5.8,8/8,-6.3 on 229,same
 taker sell share > 0.1 (15 min) AND OBV falling,pair,1774,5.5%,"55.5% [53.2, 57.7]",+5.8,8/8,+7.4 on 122,same
 price < VWAP60 - 15 bp AND more trades than usual (nratio5 > 1.5),pair,1688,5.3%,"55.5% [53.2, 58.1]",+5.8,8/8,+9.9 on 122,same
-price > VWAP60 + 30 bp AND MACD hist > 0,pair,1504,4.7%,"43.9% [41.3, 46.6]",-5.8,7/8,-4.9 on 80,same
 RSI60 < 40 AND price < VWAP60 - 15 bp,pair,1080,3.4%,"55.5% [52.8, 58.6]",+5.7,8/8,+6.7 on 90,same
-RSI60 < 40 AND two windows down,pair,975,3.0%,"55.4% [52.5, 58.4]",+5.7,8/8,+4.7 on 86,same
 RSI60 < 45 AND more trades than usual (nratio5 > 1.5),pair,1620,5.1%,"55.4% [52.8, 58.1]",+5.7,8/8,+10.2 on 143,same
 range position < 0.05 AND price < VWAP60 - 15 bp,pair,988,3.1%,"55.5% [52.3, 58.8]",+5.7,8/8,+4.1 on 74,same
-5-min move < -1.5 sd AND OBV falling,pair,361,1.1%,"55.4% [50.6, 60.3]",+5.7,4/5,fires 25,too few
 5-min move < -2 sd AND taker sell share > 0.2 (15 min),pair,350,1.1%,"55.4% [50.7, 60.6]",+5.7,3/4,fires 24,too few
 15-min move < -2 sd AND OBV falling,pair,332,1.0%,"55.4% [50.0, 60.1]",+5.7,4/5,fires 28,too few
-4h return < -25 bp AND OBV falling,pair,1705,5.3%,"55.4% [53.2, 57.7]",+5.7,8/8,+12.5 on 125,same
-4h return > +100 bp AND MACD hist > 0,pair,1427,4.5%,"44.1% [41.4, 46.6]",-5.7,8/8,-11.1 on 67,same
+4h return < -25 bp AND OBV falling,pair,1705,5.3%,"55.4% [53.2, 57.7]",+5.7,8/8,+12.4 on 125,same
+4h return > +100 bp AND MACD hist > 0,pair,1427,4.5%,"44.1% [41.4, 46.6]",-5.7,8/8,-11.2 on 67,same
 4h return < -100 bp AND MACD hist < 0,pair,1590,5.0%,"55.4% [52.8, 58.2]",+5.7,8/8,+6.8 on 74,same
 taker buy share > 0.3 (15 min),single,3330,10.4%,"44.2% [42.6, 45.8]",-5.6,7/8,-2.1 on 276,same
-RSI60 < 45 AND 4h return < -25 bp,pair,4094,12.8%,"55.3% [53.7, 57.1]",+5.6,8/8,+6.6 on 315,same
+RSI60 < 45 AND 4h return < -25 bp,pair,4095,12.8%,"55.3% [53.7, 57.1]",+5.6,8/8,+6.5 on 315,same
 range position < 0.15 AND 4h return < -50 bp,pair,2560,8.0%,"55.4% [53.3, 57.4]",+5.6,8/8,+9.9 on 182,same
 range position < 0.15 AND MACD hist > 0,pair,1425,4.4%,"55.4% [52.9, 58.0]",+5.6,8/8,+1.4 on 109,same
 range position > 0.85 AND price > VWAP60 + 30 bp,pair,1103,3.4%,"44.2% [41.1, 47.0]",-5.6,8/8,-5.5 on 72,same
 4h return > +25 bp AND two windows up,pair,3270,10.2%,"44.2% [42.5, 45.8]",-5.6,8/8,-7.5 on 292,same
-4h return > +25 bp AND OBV rising,pair,1385,4.3%,"44.1% [41.4, 46.7]",-5.6,6/8,+0.1 on 88,flipped
+4h return > +25 bp AND OBV rising,pair,1385,4.3%,"44.1% [41.4, 46.7]",-5.6,6/8,+0.0 on 88,flipped
 4h return < -100 bp AND price < VWAP60 - 30 bp,pair,886,2.8%,"55.3% [52.0, 58.9]",+5.6,5/5,fires 26,too few
-4h return < -100 bp AND OBV falling,pair,672,2.1%,"55.4% [51.5, 59.2]",+5.6,6/6,+5.1 on 40,same
 taker buy share > 0.2 (15 min) AND two windows up,pair,2780,8.7%,"44.2% [42.2, 45.9]",-5.6,8/8,-5.5 on 243,same
 "15-min move < -1.5 sd, Asia (0-7 UTC)",session,709,2.2%,"55.3% [51.4, 58.9]",+5.6,6/8,+4.2 on 48,same
-RSI14 > 65 AND previous window up,pair,3062,9.6%,"44.3% [42.7, 45.8]",-5.5,8/8,-3.3 on 294,same
-RSI60 < 40 AND 4h return < -50 bp,pair,895,2.8%,"55.2% [52.3, 58.6]",+5.5,8/8,+7.6 on 66,same
-RSI60 < 40 AND 4h return < -100 bp,pair,598,1.9%,"55.2% [51.4, 59.3]",+5.5,7/7,+12.6 on 32,same
+RSI14 > 65 AND previous window up,pair,3062,9.6%,"44.3% [42.7, 45.8]",-5.5,8/8,-3.4 on 294,same
 4h return < -100 bp AND price < VWAP60 - 15 bp,pair,1480,4.6%,"55.2% [52.7, 57.9]",+5.5,7/8,+8.7 on 58,same
 taker buy share > 0.2 (15 min) AND previous window down,pair,1127,3.5%,"44.2% [41.7, 46.8]",-5.5,6/8,-2.9 on 119,same
 "4h return > +50 bp, Asia (0-7 UTC)",session,2124,6.6%,"44.3% [42.0, 46.4]",-5.5,8/8,-4.1 on 120,same
 RSI14 > 65,single,3073,9.6%,"44.3% [42.8, 45.9]",-5.4,8/8,-3.2 on 295,same
 RSI14 > 65 AND MACD hist > 0,pair,2824,8.8%,"44.3% [42.7, 46.0]",-5.4,8/8,-4.3 on 263,same
-RSI60 < 45 AND 4h return < -50 bp,pair,3136,9.8%,"55.1% [53.3, 57.0]",+5.4,8/8,+8.2 on 232,same
-RSI60 < 45 AND price < VWAP60 - 15 bp,pair,3552,11.1%,"55.2% [53.6, 56.8]",+5.4,8/8,+6.3 on 258,same
+RSI60 < 45 AND 4h return < -50 bp,pair,3137,9.8%,"55.1% [53.3, 57.0]",+5.4,8/8,+8.2 on 232,same
+RSI60 < 45 AND price < VWAP60 - 15 bp,pair,3552,11.1%,"55.2% [53.6, 56.8]",+5.4,8/8,+6.2 on 258,same
 range position < 0.05 AND 4h return < -50 bp,pair,825,2.6%,"55.2% [51.4, 59.1]",+5.4,8/8,+6.5 on 62,same
-range position < 0.05 AND taker sell share > 0.2 (15 min),pair,659,2.1%,"55.1% [51.6, 58.6]",+5.4,7/8,+14.1 on 50,same
-range position < 0.15 AND 4h return < -100 bp,pair,1512,4.7%,"55.2% [52.6, 58.2]",+5.4,8/8,+11.2 on 67,same
-4h return > +50 bp AND price > VWAP60 + 15 bp,pair,2397,7.5%,"44.3% [42.3, 46.5]",-5.4,8/8,-5.9 on 175,same
+range position < 0.05 AND taker sell share > 0.2 (15 min),pair,659,2.1%,"55.1% [51.6, 58.6]",+5.4,7/8,+14.0 on 50,same
+4h return > +50 bp AND price > VWAP60 + 15 bp,pair,2397,7.5%,"44.3% [42.3, 46.5]",-5.4,8/8,-6.0 on 175,same
 4h return > +50 bp AND previous window up,pair,3992,12.5%,"44.3% [42.8, 45.8]",-5.4,8/8,-4.4 on 290,same
 4h return < -50 bp AND price < VWAP60 - 15 bp,pair,2579,8.0%,"55.1% [53.2, 57.1]",+5.4,8/8,+10.7 on 145,same
 4h return > +100 bp AND two windows up,pair,1110,3.5%,"44.3% [41.2, 47.3]",-5.4,8/8,+3.4 on 60,flipped
 4h return > +100 bp AND OBV rising,pair,532,1.7%,"44.4% [39.6, 48.9]",-5.4,6/7,fires 26,too few
 taker buy share > 0.2 (15 min) AND MACD hist > 0,pair,4291,13.4%,"44.3% [43.0, 45.6]",-5.4,8/8,-4.3 on 359,same
 taker buy share > 0.3 (15 min) AND two windows up,pair,1522,4.7%,"44.3% [41.6, 46.8]",-5.4,8/8,-1.4 on 140,same
-RSI60 < 45,single,5676,17.7%,"55.1% [53.7, 56.4]",+5.3,8/8,+7.4 on 453,same
+RSI60 < 45,single,5677,17.7%,"55.1% [53.7, 56.4]",+5.3,8/8,+7.4 on 453,same
 range position < 0.05,single,1213,3.8%,"55.1% [52.2, 58.1]",+5.3,8/8,+4.4 on 103,same
 15-min move < -2.5 sd,single,309,1.0%,"55.0% [49.3, 60.2]",+5.3,1/1,fires 27,too few
 RSI60 < 40 AND 4h return < -25 bp,pair,1071,3.3%,"55.0% [52.2, 58.0]",+5.3,8/8,+8.6 on 82,same
@@ -593,30 +575,27 @@ RSI60 < 45 AND range position < 0.05,pair,1193,3.7%,"55.1% [52.0, 58.1]",+5.3,8/
 range position < 0.05 AND 4h return < -25 bp,pair,1019,3.2%,"55.1% [51.7, 58.5]",+5.3,8/8,+4.2 on 85,same
 4h return < -25 bp AND price < VWAP60 - 15 bp,pair,3288,10.3%,"55.0% [53.4, 56.8]",+5.3,8/8,+6.5 on 202,same
 4h return < -50 bp AND taker sell share > 0.1 (15 min),pair,3048,9.5%,"55.0% [53.3, 56.8]",+5.3,8/8,+6.2 on 212,same
-4h return < -50 bp AND OBV falling,pair,1283,4.0%,"55.0% [52.3, 57.7]",+5.3,8/8,+9.4 on 96,same
 4h return < -100 bp AND taker buy share > 0.2 (15 min),pair,326,1.0%,"44.5% [39.1, 50.2]",-5.3,3/4,fires 18,too few
 taker buy share > 0.3 (15 min) AND previous window up,pair,2823,8.8%,"44.5% [42.7, 46.1]",-5.3,8/8,-1.5 on 227,same
 two windows down AND more trades than usual (nratio5 > 1.5),pair,1382,4.3%,"55.0% [52.2, 57.8]",+5.3,8/8,+8.1 on 112,same
 "RSI60 < 45, Europe (8-13 UTC)",session,1503,4.7%,"55.0% [52.6, 57.8]",+5.3,7/8,+3.4 on 118,same
-"range position < 0.05, US (14-21 UTC)",session,365,1.1%,"55.1% [49.6, 61.0]",+5.3,4/5,fires 15,too few
 "taker sell share > 0.2 (15 min), US (14-21 UTC)",session,2267,7.1%,"55.0% [53.0, 57.0]",+5.3,7/8,+6.3 on 215,same
 RSI60 < 40 AND range position < 0.1,pair,881,2.7%,"54.9% [52.1, 57.9]",+5.2,8/8,+5.4 on 65,same
-range position < 0.05 AND previous window down,pair,1193,3.7%,"54.9% [52.0, 57.9]",+5.2,8/8,+5.0 on 102,same
+range position < 0.05 AND previous window down,pair,1193,3.7%,"54.9% [52.0, 57.9]",+5.2,8/8,+4.9 on 102,same
 range position > 0.85 AND MACD hist < 0,pair,1680,5.2%,"44.5% [42.2, 46.8]",-5.2,7/8,-1.0 on 145,same
 5-min move < -1.5 sd AND previous window down,pair,1475,4.6%,"54.9% [52.1, 57.5]",+5.2,7/8,+3.3 on 139,same
 5-min move < -1.5 sd AND MACD hist < 0,pair,1542,4.8%,"54.9% [52.5, 57.3]",+5.2,7/8,+3.8 on 145,same
-4h return > +25 bp AND OBV falling,pair,306,1.0%,"54.9% [49.7, 59.9]",+5.2,4/4,fires 13,too few
 taker buy share > 0.1 (15 min) AND two windows up,pair,4252,13.3%,"44.6% [43.1, 46.0]",-5.2,8/8,-3.9 on 378,same
 taker sell share > 0.1 (15 min) AND larger trades than usual (size5 > 1.2),pair,3360,10.5%,"54.9% [53.2, 56.7]",+5.2,8/8,+2.5 on 303,same
 "RSI14 > 70, Asia (0-7 UTC)",session,429,1.3%,"44.5% [39.9, 49.0]",-5.2,7/8,-9.5 on 47,same
 "RSI60 > 55, Europe (8-13 UTC)",session,1568,4.9%,"44.6% [42.3, 46.8]",-5.2,6/8,-4.4 on 136,same
-"price < VWAP60 - 15 bp, US (14-21 UTC)",session,2245,7.0%,"54.9% [52.9, 57.1]",+5.2,8/8,+12.5 on 141,same
+"price < VWAP60 - 15 bp, US (14-21 UTC)",session,2245,7.0%,"54.9% [52.9, 57.1]",+5.2,8/8,+12.4 on 141,same
 RSI60 > 55 AND previous window down,pair,918,2.9%,"44.7% [41.4, 47.7]",-5.1,6/8,-7.4 on 54,same
 range position < 0.05 AND 5-min move < -1.5 sd,pair,350,1.1%,"54.9% [49.7, 60.4]",+5.1,5/5,fires 24,too few
 range position < 0.15 AND previous window up,pair,523,1.6%,"54.9% [51.0, 58.8]",+5.1,7/8,+3.4 on 45,same
 4h return > +25 bp AND price > VWAP60 + 15 bp,pair,3110,9.7%,"44.6% [42.9, 46.4]",-5.1,7/8,-4.7 on 252,same
 taker sell share > 0.2 (15 min) AND larger trades than usual (size5 > 1.2),pair,2349,7.3%,"54.8% [52.9, 56.8]",+5.1,8/8,+5.0 on 202,same
-"range position > 0.90, Asia (0-7 UTC)",session,824,2.6%,"44.7% [41.6, 47.8]",-5.1,8/8,-1.1 on 84,same
+"range position > 0.90, Asia (0-7 UTC)",session,824,2.6%,"44.7% [41.6, 47.8]",-5.1,8/8,-1.2 on 84,same
 "15-min move < -1.5 sd, Europe (8-13 UTC)",session,503,1.6%,"54.9% [50.2, 59.7]",+5.1,6/8,+9.1 on 44,same
 "taker buy share > 0.3 (15 min), Europe (8-13 UTC)",session,880,2.7%,"44.7% [41.4, 48.0]",-5.1,7/8,-5.5 on 72,same
 "two windows down, US (14-21 UTC)",session,2442,7.6%,"54.8% [52.8, 56.8]",+5.1,8/8,+6.5 on 202,same
@@ -629,24 +608,22 @@ taker sell share > 0.2 (15 min) AND price < VWAP60 - 15 bp,pair,2533,7.9%,"54.8%
 taker sell share > 0.3 (15 min) AND two windows down,pair,1897,5.9%,"54.7% [52.6, 56.8]",+5.0,7/8,+9.2 on 147,same
 taker buy share > 0.2 (15 min),single,6289,19.6%,"44.8% [43.8, 46.0]",-4.9,8/8,-3.1 on 553,same
 5-min move > +1.5 sd AND MACD hist > 0,pair,1633,5.1%,"44.8% [42.5, 47.0]",-4.9,8/8,-0.3 on 153,same
-4h return < -50 bp AND two windows down,pair,2377,7.4%,"54.6% [52.6, 56.8]",+4.9,8/8,+6.3 on 169,same
-price > VWAP60 + 15 bp AND MACD hist > 0,pair,3904,12.2%,"44.9% [43.3, 46.5]",-4.9,7/8,-7.4 on 280,same
+price > VWAP60 + 15 bp AND MACD hist > 0,pair,3904,12.2%,"44.9% [43.3, 46.5]",-4.9,7/8,-7.5 on 280,same
 two windows down AND larger trades than usual (size5 > 1.2),pair,2178,6.8%,"54.6% [52.6, 56.6]",+4.9,8/8,+6.1 on 191,same
 "range position > 0.95, Asia (0-7 UTC)",session,388,1.2%,"44.8% [39.8, 49.6]",-4.9,5/5,-4.7 on 42,same
 "price < VWAP60 - 15 bp, Europe (8-13 UTC)",session,1301,4.1%,"54.7% [52.2, 57.3]",+4.9,8/8,+3.5 on 101,same
+taker buy share > 0.2 (15 min) AND previous window up,pair,5162,16.1%,"45.0% [43.7, 46.2]",-4.8,8/8,-3.2 on 434,same
 taker buy share > 0.3 (15 min) AND MACD hist < 0,pair,976,3.0%,"45.0% [42.1, 47.7]",-4.8,6/8,-2.5 on 78,same
 "taker buy share > 0.2 (15 min), US (14-21 UTC)",session,1893,5.9%,"44.9% [42.7, 47.1]",-4.8,6/8,-2.2 on 155,same
 "price > VWAP60 + 30 bp, Europe (8-13 UTC)",session,374,1.2%,"44.9% [40.2, 49.0]",-4.8,4/4,fires 29,too few
 5-min move > +1.5 sd,single,1674,5.2%,"45.0% [42.7, 47.2]",-4.7,8/8,-1.2 on 158,same
-taker buy share > 0.2 (15 min) AND previous window up,pair,5162,16.1%,"45.0% [43.7, 46.2]",-4.7,8/8,-3.2 on 434,same
 price < VWAP60 - 15 bp AND MACD hist < 0,pair,3977,12.4%,"54.4% [53.1, 55.8]",+4.7,8/8,+7.2 on 278,same
 price > VWAP60 + 30 bp AND previous window up,pair,2026,6.3%,"45.1% [42.8, 47.3]",-4.7,7/8,-0.4 on 113,same
 5-min move < -2 sd,single,688,2.1%,"54.4% [50.6, 58.2]",+4.6,6/8,+9.0 on 56,same
-RSI60 < 45 AND 4h return < -100 bp,pair,1766,5.5%,"54.3% [52.0, 56.9]",+4.6,7/8,+7.4 on 89,same
 4h return > +25 bp AND previous window up,pair,6058,18.9%,"45.1% [43.9, 46.3]",-4.6,8/8,-4.7 on 513,same
 4h return < -25 bp AND two windows down,pair,3430,10.7%,"54.4% [52.9, 56.1]",+4.6,8/8,+4.7 on 267,same
-4h return > +50 bp AND larger trades than usual (size5 > 1.2),pair,1849,5.8%,"45.2% [42.8, 47.4]",-4.6,7/8,-5.0 on 147,same
-taker sell share > 0.2 (15 min) AND two windows down,pair,3268,10.2%,"54.3% [52.7, 56.0]",+4.6,8/8,+7.6 on 290,same
+4h return > +50 bp AND larger trades than usual (size5 > 1.2),pair,1849,5.8%,"45.2% [42.8, 47.4]",-4.6,7/8,-5.1 on 147,same
+taker sell share > 0.2 (15 min) AND two windows down,pair,3268,10.2%,"54.3% [52.7, 56.0]",+4.6,8/8,+7.8 on 291,same
 "RSI14 > 65, Asia (0-7 UTC)",session,1033,3.2%,"45.1% [42.2, 48.0]",-4.6,8/8,-4.7 on 95,same
 "taker sell share > 0.1 (15 min), US (14-21 UTC)",session,3742,11.7%,"54.3% [52.9, 55.8]",+4.6,8/8,+1.4 on 360,same
 OBV falling,single,2884,9.0%,"54.2% [52.6, 56.0]",+4.5,8/8,+8.9 on 204,same
@@ -657,8 +634,7 @@ RSI60 > 55 AND MACD hist < 0,pair,2317,7.2%,"45.2% [43.2, 47.1]",-4.5,7/8,-1.5 o
 4h return > +100 bp AND price > VWAP60 + 15 bp,pair,1377,4.3%,"45.2% [42.4, 47.9]",-4.5,7/8,+1.4 on 74,flipped
 price < VWAP60 - 15 bp AND previous window down,pair,5230,16.3%,"54.2% [53.0, 55.5]",+4.5,8/8,+4.9 on 372,same
 price < VWAP60 - 15 bp AND two windows down,pair,3804,11.9%,"54.3% [52.8, 55.8]",+4.5,8/8,+4.4 on 287,same
-previous window down AND more trades than usual (nratio5 > 1.5),pair,2395,7.5%,"54.2% [52.2, 56.2]",+4.5,8/8,+3.1 on 200,same
-MACD hist < 0 AND OBV rising,pair,1209,3.8%,"45.2% [42.6, 47.7]",-4.5,7/8,-1.7 on 85,same
+previous window down AND more trades than usual (nratio5 > 1.5),pair,2395,7.5%,"54.2% [52.2, 56.2]",+4.5,8/8,+3.0 on 200,same
 OBV rising AND more trades than usual (nratio5 > 1.5),pair,555,1.7%,"45.2% [40.1, 49.8]",-4.5,6/8,+8.6 on 41,flipped
 "RSI60 < 45, Asia (0-7 UTC)",session,1986,6.2%,"54.3% [52.3, 56.5]",+4.5,8/8,+6.8 on 155,same
 4h return > +100 bp AND previous window up,pair,1833,5.7%,"45.3% [43.0, 47.5]",-4.4,8/8,-2.0 on 96,same
@@ -666,115 +642,105 @@ taker buy share > 0.1 (15 min) AND MACD hist > 0,pair,6763,21.1%,"45.3% [44.2, 4
 5-min move < -1.5 sd AND two windows down,pair,807,2.5%,"54.0% [50.9, 57.2]",+4.3,7/8,+0.7 on 73,same
 4h return > +25 bp AND price > VWAP60 + 30 bp,pair,1302,4.1%,"45.4% [42.7, 47.8]",-4.3,7/8,-4.4 on 90,same
 4h return > +25 bp AND MACD hist > 0,pair,5153,16.1%,"45.4% [44.1, 46.8]",-4.3,8/8,-5.7 on 425,same
-4h return < -50 bp AND previous window down,pair,4154,13.0%,"54.0% [52.5, 55.6]",+4.3,8/8,+5.5 on 294,same
-taker sell share > 0.1 (15 min) AND two windows down,pair,4775,14.9%,"54.1% [52.7, 55.5]",+4.3,8/8,+6.1 on 407,same
+4h return < -50 bp AND previous window down,pair,4155,13.0%,"54.0% [52.6, 55.6]",+4.3,8/8,+5.5 on 294,same
+taker sell share > 0.1 (15 min) AND two windows down,pair,4775,14.9%,"54.1% [52.7, 55.5]",+4.3,8/8,+6.2 on 408,same
 "range position < 0.15, Asia (0-7 UTC)",session,1410,4.4%,"54.0% [51.4, 56.9]",+4.3,8/8,+1.8 on 112,same
-"OBV rising, US (14-21 UTC)",session,742,2.3%,"45.4% [42.0, 48.9]",-4.3,6/8,+8.9 on 51,flipped
 4h return > +50 bp AND price > VWAP60 + 30 bp,pair,1103,3.4%,"45.5% [42.6, 48.4]",-4.2,6/8,-6.3 on 71,same
-4h return < -100 bp AND more trades than usual (nratio5 > 1.5),pair,1118,3.5%,"53.9% [50.9, 57.2]",+4.2,8/8,+17.4 on 52,same
 taker sell share > 0.3 (15 min) AND MACD hist < 0,pair,2931,9.1%,"54.0% [52.2, 55.6]",+4.2,6/8,+10.9 on 225,same
 MACD hist < 0 AND more trades than usual (nratio5 > 1.5),pair,2349,7.3%,"54.0% [52.0, 55.9]",+4.2,8/8,+6.0 on 211,same
 "4h return > +25 bp, Asia (0-7 UTC)",session,3329,10.4%,"45.5% [44.0, 47.1]",-4.2,8/8,-3.6 on 233,same
 "taker sell share > 0.2 (15 min), Europe (8-13 UTC)",session,1796,5.6%,"53.9% [51.6, 56.3]",+4.2,7/8,+7.2 on 154,same
 RSI14 < 25,single,572,1.8%,"53.8% [49.8, 57.9]",+4.1,6/8,+9.0 on 39,same
 price < VWAP60 - 15 bp,single,5820,18.2%,"53.9% [52.7, 55.1]",+4.1,8/8,+5.7 on 404,same
-RSI60 < 45 AND MACD hist > 0,pair,2247,7.0%,"53.8% [51.9, 55.8]",+4.1,8/8,+4.6 on 176,same
+RSI60 < 45 AND MACD hist > 0,pair,2248,7.0%,"53.9% [52.0, 55.8]",+4.1,8/8,+4.6 on 176,same
 range position < 0.05 AND more trades than usual (nratio5 > 1.5),pair,427,1.3%,"53.9% [49.3, 58.8]",+4.1,5/6,fires 29,too few
 4h return > +25 bp AND larger trades than usual (size5 > 1.2),pair,2761,8.6%,"45.6% [43.7, 47.6]",-4.1,8/8,-7.4 on 235,same
 4h return < -50 bp AND MACD hist < 0,pair,3437,10.7%,"53.9% [52.2, 55.5]",+4.1,8/8,+5.0 on 244,same
 taker buy share > 0.1 (15 min) AND previous window up,pair,8086,25.2%,"45.6% [44.6, 46.7]",-4.1,8/8,-2.4 on 694,same
 taker sell share > 0.3 (15 min) AND previous window down,pair,3538,11.0%,"53.8% [52.3, 55.2]",+4.1,7/8,+10.4 on 260,same
 price > VWAP60 + 15 bp AND previous window up,pair,5304,16.5%,"45.6% [44.4, 46.8]",-4.1,7/8,-4.5 on 385,same
-price > VWAP60 + 15 bp AND more trades than usual (nratio5 > 1.5),pair,1495,4.7%,"45.6% [43.0, 48.3]",-4.1,8/8,-0.3 on 129,same
+price > VWAP60 + 15 bp AND more trades than usual (nratio5 > 1.5),pair,1495,4.7%,"45.6% [43.0, 48.3]",-4.1,8/8,-0.4 on 129,same
 price > VWAP60 + 30 bp AND two windows up,pair,1536,4.8%,"45.6% [43.2, 48.0]",-4.1,7/8,-1.0 on 94,same
 two windows up AND MACD hist > 0,pair,4748,14.8%,"45.6% [44.3, 46.9]",-4.1,8/8,-9.1 on 414,same
 "4h return < -100 bp, US (14-21 UTC)",session,1539,4.8%,"53.8% [51.3, 56.6]",+4.1,8/8,+7.2 on 70,same
-price > VWAP60 + 30 bp,single,2190,6.8%,"45.7% [43.6, 47.9]",-4.0,7/8,-0.3 on 125,same
+price > VWAP60 + 30 bp,single,2190,6.8%,"45.7% [43.6, 47.9]",-4.0,7/8,-0.4 on 125,same
 range position < 0.05 AND two windows down,pair,908,2.8%,"53.7% [50.9, 56.9]",+4.0,8/8,+5.3 on 76,same
-"4h return < -100 bp, Europe (8-13 UTC)",session,629,2.0%,"53.7% [50.4, 57.7]",+4.0,6/7,+12.8 on 43,same
+4h return < -25 bp AND previous window down,pair,6175,19.3%,"53.7% [52.4, 55.0]",+4.0,7/8,+4.0 on 467,same
 "previous window down, US (14-21 UTC)",session,5250,16.4%,"53.8% [52.5, 55.0]",+4.0,8/8,+3.1 on 447,same
-4h return < -25 bp AND previous window down,pair,6174,19.3%,"53.7% [52.4, 55.0]",+3.9,7/8,+4.0 on 467,same
-two windows down AND MACD hist < 0,pair,5031,15.7%,"53.7% [52.4, 55.0]",+3.9,8/8,+3.6 on 456,same
+two windows down AND MACD hist < 0,pair,5031,15.7%,"53.7% [52.4, 55.0]",+3.9,8/8,+3.6 on 457,same
 "taker buy share > 0.2 (15 min), Europe (8-13 UTC)",session,1667,5.2%,"45.8% [43.5, 48.1]",-3.9,7/8,-0.7 on 138,same
 "taker buy share > 0.3 (15 min), US (14-21 UTC)",session,955,3.0%,"45.9% [42.9, 48.8]",-3.9,6/8,+5.3 on 67,flipped
-price > VWAP60 + 15 bp,single,5984,18.7%,"45.9% [44.7, 47.1]",-3.8,8/8,-2.8 on 431,same
+price > VWAP60 + 15 bp,single,5984,18.7%,"45.9% [44.7, 47.1]",-3.8,8/8,-2.9 on 431,same
 4h return > +50 bp AND more trades than usual (nratio5 > 1.5),pair,1437,4.5%,"45.9% [43.2, 48.5]",-3.8,6/8,-1.5 on 130,same
 taker buy share > 0.2 (15 min) AND MACD hist < 0,pair,1998,6.2%,"45.9% [43.8, 47.9]",-3.8,6/8,-1.0 on 194,same
-taker sell share > 0.2 (15 min) AND previous window down,pair,6088,19.0%,"53.5% [52.3, 54.6]",+3.8,8/8,+5.3 on 492,same
-"taker buy share > 0.1 (15 min), Asia (0-7 UTC)",session,3578,11.2%,"45.9% [44.4, 47.4]",-3.8,8/8,-5.3 on 343,same
-"OBV falling, Europe (8-13 UTC)",session,648,2.0%,"53.5% [50.1, 57.0]",+3.8,8/8,+5.2 on 58,same
+"taker buy share > 0.1 (15 min), Asia (0-7 UTC)",session,3578,11.2%,"45.9% [44.4, 47.4]",-3.8,8/8,-5.4 on 343,same
 taker sell share > 0.3 (15 min),single,4204,13.1%,"53.4% [52.1, 54.8]",+3.7,8/8,+8.3 on 326,same
-4h return < -50 bp AND larger trades than usual (size5 > 1.2),pair,1742,5.4%,"53.4% [51.2, 55.9]",+3.7,7/8,+10.2 on 123,same
+taker sell share > 0.2 (15 min) AND previous window down,pair,6088,19.0%,"53.5% [52.3, 54.6]",+3.7,8/8,+5.4 on 493,same
 previous window up AND more trades than usual (nratio5 > 1.5),pair,2230,7.0%,"46.1% [43.9, 48.3]",-3.7,7/8,+3.1 on 228,flipped
 two windows up AND more trades than usual (nratio5 > 1.5),pair,1188,3.7%,"46.0% [43.2, 49.1]",-3.7,6/8,+3.2 on 128,flipped
 "taker sell share > 0.1 (15 min), Europe (8-13 UTC)",session,2855,8.9%,"53.4% [51.6, 55.3]",+3.7,8/8,-1.0 on 247,flipped
-"two windows up, Asia (0-7 UTC)",session,2422,7.6%,"46.0% [44.2, 47.9]",-3.7,8/8,-10.1 on 188,same
-two windows down,single,7770,24.2%,"53.3% [52.4, 54.4]",+3.6,8/8,+3.2 on 679,same
+two windows down,single,7770,24.2%,"53.3% [52.4, 54.4]",+3.6,8/8,+3.3 on 680,same
 4h return < -50 bp AND more trades than usual (nratio5 > 1.5),pair,1724,5.4%,"53.4% [51.2, 55.8]",+3.6,8/8,+10.2 on 128,same
-previous window up AND larger trades than usual (size5 > 1.2),pair,4108,12.8%,"46.2% [44.8, 47.6]",-3.6,8/8,-2.9 on 383,same
-previous window down AND two windows down,pair,7770,24.2%,"53.3% [52.4, 54.4]",+3.6,8/8,+3.2 on 679,same
+previous window up AND larger trades than usual (size5 > 1.2),pair,4108,12.8%,"46.2% [44.8, 47.6]",-3.6,8/8,-3.0 on 383,same
+previous window down AND two windows down,pair,7770,24.2%,"53.3% [52.4, 54.4]",+3.6,8/8,+3.3 on 680,same
 4h return > +100 bp,single,3001,9.4%,"46.3% [44.4, 48.0]",-3.5,8/8,-0.3 on 141,same
 4h return < -100 bp,single,3196,10.0%,"53.2% [51.5, 55.1]",+3.5,7/8,+7.5 on 155,same
-taker buy share > 0.1 (15 min),single,10435,32.6%,"46.2% [45.4, 47.1]",-3.5,8/8,-1.1 on 913,same
-taker sell share > 0.2 (15 min),single,7496,23.4%,"53.2% [52.1, 54.3]",+3.5,7/8,+5.4 on 631,same
+taker buy share > 0.1 (15 min),single,10435,32.5%,"46.2% [45.4, 47.1]",-3.5,8/8,-1.1 on 913,same
+taker sell share > 0.2 (15 min),single,7496,23.4%,"53.2% [52.1, 54.3]",+3.5,7/8,+5.4 on 632,same
 4h return < -25 bp AND MACD hist < 0,pair,5253,16.4%,"53.2% [51.9, 54.5]",+3.5,7/8,+3.3 on 404,same
-taker sell share > 0.2 (15 min) AND MACD hist < 0,pair,5067,15.8%,"53.2% [51.9, 54.4]",+3.5,7/8,+6.0 on 418,same
+taker sell share > 0.2 (15 min) AND MACD hist < 0,pair,5067,15.8%,"53.2% [51.9, 54.4]",+3.5,7/8,+6.1 on 419,same
 price > VWAP60 + 15 bp AND two windows up,pair,3767,11.8%,"46.2% [44.8, 47.5]",-3.5,7/8,-5.8 on 281,same
 "taker buy share > 0.1 (15 min), US (14-21 UTC)",session,3357,10.5%,"46.2% [44.7, 47.8]",-3.5,7/8,-0.5 on 283,same
-"price > VWAP60 + 15 bp, Asia (0-7 UTC)",session,1818,5.7%,"46.3% [44.4, 48.1]",-3.5,8/8,-1.7 on 112,same
-4h return < -25 bp AND larger trades than usual (size5 > 1.2),pair,2643,8.2%,"53.2% [51.3, 55.0]",+3.4,8/8,+7.1 on 205,same
-taker sell share > 0.1 (15 min) AND previous window down,pair,9057,28.3%,"53.2% [52.1, 54.2]",+3.4,8/8,+2.1 on 741,same
+4h return < -25 bp AND larger trades than usual (size5 > 1.2),pair,2644,8.2%,"53.2% [51.3, 55.1]",+3.4,8/8,+7.1 on 205,same
+taker sell share > 0.1 (15 min) AND previous window down,pair,9057,28.3%,"53.2% [52.1, 54.2]",+3.4,8/8,+2.2 on 742,same
 taker sell share > 0.2 (15 min) AND MACD hist > 0,pair,2429,7.6%,"53.1% [51.2, 55.1]",+3.4,8/8,+4.0 on 213,same
 two windows up,single,7555,23.6%,"46.4% [45.4, 47.4]",-3.3,8/8,-4.8 on 676,same
 previous window up AND two windows up,pair,7555,23.6%,"46.4% [45.4, 47.4]",-3.3,8/8,-4.8 on 676,same
 MACD hist > 0 AND more trades than usual (nratio5 > 1.5),pair,2276,7.1%,"46.4% [44.5, 48.6]",-3.3,8/8,+0.3 on 217,flipped
 "4h return > +50 bp, Europe (8-13 UTC)",session,1506,4.7%,"46.4% [43.9, 48.8]",-3.3,7/8,-0.4 on 117,same
 4h return > +50 bp,single,6792,21.2%,"46.6% [45.4, 47.6]",-3.2,7/8,-2.1 on 481,same
-taker sell share > 0.1 (15 min) AND MACD hist < 0,pair,7607,23.7%,"52.9% [51.8, 54.0]",+3.2,8/8,+2.0 on 651,same
+taker sell share > 0.1 (15 min) AND MACD hist < 0,pair,7607,23.7%,"52.9% [51.8, 54.0]",+3.2,8/8,+2.0 on 652,same
 "4h return < -50 bp, US (14-21 UTC)",session,2840,8.9%,"52.9% [51.2, 54.9]",+3.2,8/8,+6.1 on 173,same
 "taker buy share > 0.1 (15 min), Europe (8-13 UTC)",session,2691,8.4%,"46.6% [44.8, 48.3]",-3.2,6/8,+2.8 on 220,flipped
 "price > VWAP60 + 15 bp, US (14-21 UTC)",session,2426,7.6%,"46.5% [44.5, 48.5]",-3.2,6/8,-5.6 on 176,same
-"price < VWAP60 - 15 bp, Asia (0-7 UTC)",session,1821,5.7%,"52.9% [50.7, 55.1]",+3.2,8/8,-0.3 on 129,flipped
-"two windows up, US (14-21 UTC)",session,2611,8.1%,"46.6% [44.7, 48.3]",-3.2,7/8,-4.0 on 244,same
+"price < VWAP60 - 15 bp, Asia (0-7 UTC)",session,1821,5.7%,"52.9% [50.7, 55.1]",+3.2,8/8,-0.4 on 129,flipped
+"two windows up, US (14-21 UTC)",session,2611,8.1%,"46.6% [44.7, 48.3]",-3.2,7/8,-4.1 on 244,same
 "taker sell share > 0.3 (15 min), Asia (0-7 UTC)",session,1656,5.2%,"52.8% [50.3, 55.1]",+3.1,7/8,+4.7 on 97,same
 "two windows down, Europe (8-13 UTC)",session,1984,6.2%,"52.9% [50.7, 55.3]",+3.1,6/8,+1.7 on 178,same
 two windows down AND MACD hist > 0,pair,2739,8.5%,"52.7% [50.9, 54.5]",+3.0,7/8,+2.5 on 223,same
-"4h return < -25 bp, US (14-21 UTC)",session,3881,12.1%,"52.7% [51.2, 54.3]",+3.0,7/8,+3.1 on 266,same
+"4h return < -25 bp, US (14-21 UTC)",session,3881,12.1%,"52.7% [51.2, 54.3]",+3.0,7/8,+3.0 on 266,same
 "price > VWAP60 + 30 bp, Asia (0-7 UTC)",session,584,1.8%,"46.7% [43.2, 50.0]",-3.0,5/6,fires 23,too few
-taker sell share > 0.1 (15 min),single,11845,36.9%,"52.6% [51.8, 53.5]",+2.9,8/8,+1.1 on 1031,same
+taker sell share > 0.1 (15 min),single,11845,36.9%,"52.6% [51.8, 53.5]",+2.9,8/8,+1.1 on 1032,same
 price < VWAP60 - 15 bp AND MACD hist > 0,pair,1843,5.7%,"52.6% [50.3, 55.0]",+2.9,6/8,+2.4 on 126,same
-previous window down AND larger trades than usual (size5 > 1.2),pair,4263,13.3%,"52.7% [51.2, 54.2]",+2.9,8/8,+1.6 on 388,same
+previous window down AND larger trades than usual (size5 > 1.2),pair,4264,13.3%,"52.7% [51.3, 54.2]",+2.9,8/8,+1.6 on 388,same
 "previous window up, Asia (0-7 UTC)",session,5193,16.2%,"46.8% [45.6, 48.0]",-2.9,8/8,-6.6 on 438,same
-"two windows up, Europe (8-13 UTC)",session,1906,5.9%,"46.9% [44.7, 49.0]",-2.9,7/8,+0.1 on 190,flipped
+"two windows up, Europe (8-13 UTC)",session,1906,5.9%,"46.9% [44.7, 49.0]",-2.9,7/8,+0.0 on 190,flipped
 "two windows down, Asia (0-7 UTC)",session,2695,8.4%,"52.7% [50.9, 54.4]",+2.9,6/8,+2.3 on 241,same
 "MACD hist < 0, US (14-21 UTC)",session,5390,16.8%,"52.6% [51.4, 53.8]",+2.9,8/8,+4.0 on 454,same
-4h return > +25 bp AND more trades than usual (nratio5 > 1.5),pair,1796,5.6%,"46.9% [44.7, 49.2]",-2.8,7/8,+1.6 on 167,flipped
-4h return < -50 bp,single,6940,21.6%,"52.4% [51.2, 53.6]",+2.7,8/8,+3.3 on 494,same
+4h return > +25 bp AND more trades than usual (nratio5 > 1.5),pair,1796,5.6%,"46.9% [44.7, 49.2]",-2.8,7/8,+1.5 on 167,flipped
+4h return < -50 bp,single,6941,21.7%,"52.4% [51.2, 53.7]",+2.7,8/8,+3.3 on 494,same
 4h return < -25 bp AND more trades than usual (nratio5 > 1.5),pair,2080,6.5%,"52.4% [50.3, 54.6]",+2.7,7/8,+6.5 on 163,same
-"4h return < -25 bp, Asia (0-7 UTC)",session,3438,10.7%,"52.4% [50.7, 54.2]",+2.7,7/8,-2.6 on 260,flipped
+"4h return < -25 bp, Asia (0-7 UTC)",session,3438,10.7%,"52.4% [50.7, 54.2]",+2.7,7/8,-2.7 on 260,flipped
 "4h return < -50 bp, Asia (0-7 UTC)",session,2079,6.5%,"52.4% [50.2, 54.9]",+2.7,7/8,-2.4 on 162,flipped
-4h return > +25 bp,single,10515,32.8%,"47.2% [46.3, 48.0]",-2.6,8/8,-3.4 on 844,same
-4h return < -25 bp,single,10594,33.0%,"52.3% [51.4, 53.2]",+2.6,8/8,+2.2 on 800,same
-previous window up AND MACD hist > 0,pair,12165,37.9%,"47.2% [46.3, 48.0]",-2.6,8/8,-2.6 on 1055,same
+4h return > +25 bp,single,10515,32.8%,"47.2% [46.3, 48.0]",-2.6,8/8,-3.3 on 845,same
+4h return < -25 bp,single,10595,33.0%,"52.3% [51.4, 53.2]",+2.6,8/8,+2.2 on 800,same
+previous window up AND MACD hist > 0,pair,12165,37.9%,"47.2% [46.3, 48.0]",-2.6,8/8,-2.7 on 1055,same
 taker sell share > 0.3 (15 min) AND MACD hist > 0,pair,1273,4.0%,"52.2% [49.6, 55.0]",+2.5,6/8,+2.5 on 101,same
 taker sell share > 0.1 (15 min) AND MACD hist > 0,pair,4238,13.2%,"52.1% [50.8, 53.7]",+2.4,8/8,-0.5 on 380,flipped
 MACD hist > 0 AND OBV falling,pair,1461,4.6%,"52.2% [49.9, 54.3]",+2.4,8/8,+7.6 on 113,same
-MACD hist > 0 AND larger trades than usual (size5 > 1.2),pair,4077,12.7%,"47.4% [45.8, 48.9]",-2.4,6/8,-0.1 on 359,same
-previous window down AND MACD hist < 0,pair,12377,38.6%,"52.0% [51.2, 52.8]",+2.3,8/8,+1.0 on 1066,same
+MACD hist > 0 AND larger trades than usual (size5 > 1.2),pair,4078,12.7%,"47.4% [45.8, 48.9]",-2.4,6/8,-0.1 on 359,same
+previous window down AND MACD hist < 0,pair,12377,38.6%,"52.0% [51.2, 52.8]",+2.3,8/8,+1.0 on 1067,same
 "MACD hist > 0, Asia (0-7 UTC)",session,5286,16.5%,"47.4% [46.2, 48.7]",-2.3,7/8,-5.0 on 445,same
 previous window up,single,15922,49.7%,"47.5% [46.8, 48.2]",-2.2,8/8,-1.3 on 1390,same
-previous window down,single,16136,50.3%,"51.9% [51.2, 52.6]",+2.2,8/8,+1.3 on 1393,same
-"4h return > +25 bp, Europe (8-13 UTC)",session,2493,7.8%,"47.6% [45.8, 49.4]",-2.1,6/8,-4.1 on 203,same
-two windows up AND MACD hist < 0,pair,2807,8.8%,"47.7% [46.0, 49.3]",-2.0,8/8,+2.0 on 262,flipped
-"previous window down, Europe (8-13 UTC)",session,4042,12.6%,"51.7% [50.1, 53.2]",+2.0,6/8,-1.4 on 338,flipped
-taker buy share > 0.1 (15 min) AND MACD hist < 0,pair,3672,11.5%,"47.9% [46.3, 49.4]",-1.9,6/8,+3.8 on 348,flipped
-previous window down AND MACD hist > 0,pair,3759,11.7%,"51.6% [50.2, 53.1]",+1.9,7/8,+2.3 on 327,same
-"4h return < -25 bp, Europe (8-13 UTC)",session,2458,7.7%,"51.7% [49.7, 53.6]",+1.9,6/8,+4.6 on 200,same
+previous window down,single,16137,50.3%,"51.9% [51.2, 52.6]",+2.2,8/8,+1.3 on 1394,same
+"4h return > +25 bp, Europe (8-13 UTC)",session,2493,7.8%,"47.6% [45.8, 49.4]",-2.1,6/8,-4.2 on 203,same
+previous window down AND MACD hist > 0,pair,3760,11.7%,"51.6% [50.2, 53.1]",+1.9,7/8,+2.3 on 327,same
+"4h return < -25 bp, Europe (8-13 UTC)",session,2458,7.7%,"51.7% [49.7, 53.6]",+1.9,6/8,+4.5 on 200,same
+"previous window down, Europe (8-13 UTC)",session,4042,12.6%,"51.7% [50.1, 53.2]",+1.9,6/8,-1.4 on 338,flipped
 price > VWAP60 + 15 bp AND MACD hist < 0,pair,2080,6.5%,"47.9% [46.0, 49.7]",-1.8,6/8,+5.7 on 151,flipped
-4h return < -25 bp AND MACD hist > 0,pair,5341,16.7%,"51.4% [50.1, 52.7]",+1.7,8/8,+1.1 on 396,same
 "previous window up, US (14-21 UTC)",session,5438,17.0%,"48.1% [46.8, 49.3]",-1.6,8/8,-1.3 on 481,same
 "MACD hist < 0, Europe (8-13 UTC)",session,4037,12.6%,"51.3% [49.7, 52.9]",+1.6,7/8,-0.4 on 347,flipped
-MACD hist > 0,single,15924,49.7%,"48.2% [47.6, 48.9]",-1.5,7/8,-1.5 on 1382,same
-MACD hist < 0,single,16134,50.3%,"51.2% [50.5, 51.9]",+1.5,7/8,+1.4 on 1401,same
+MACD hist > 0,single,15925,49.7%,"48.2% [47.6, 48.9]",-1.5,7/8,-1.5 on 1382,same
+MACD hist < 0,single,16134,50.3%,"51.2% [50.5, 51.9]",+1.5,7/8,+1.5 on 1402,same
 "MACD hist > 0, Europe (8-13 UTC)",session,3979,12.4%,"48.3% [46.9, 49.7]",-1.5,6/8,+4.5 on 349,flipped
 "taker sell share > 0.1 (15 min), Asia (0-7 UTC)",session,4215,13.1%,"51.1% [49.7, 52.6]",+1.4,6/8,+0.8 on 325,same
