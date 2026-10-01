@@ -245,6 +245,77 @@ By horizon, over all cells: the median share of the last-print deviation retaine
 
 The cells are not a last-print effect. Under the VWAP label the deviations are slightly larger than under the last print (the median cell retains 103 to 110% of its deviation) and the sign is unchanged in 99 to 100% of cells at 3 to 30 minutes and 93% at one minute, where the VWAP label asks a shorter question (the second half of the minute against the first). The reversals from extremes are moves in the price itself, as the 15-minute reversal was in the main report's study 21.
 
+## Direction with magnitude
+
+"It will go up for the next five minutes" means, honestly, "it will touch +X before -X within h minutes". For every decision minute and pattern, barriers of 5, 10 and 20 basis points and horizons of 5, 15 and 30 minutes: how often either barrier is reached in time, and how often the upper one comes first, against the same shares for all minutes.
+
+<!-- table:horizons_barrier:start -->
+Direction with magnitude from any minute, 2018 to 2026-08: given a pattern, the probability that the price touches +X basis points before -X within h minutes. 'Touched' is the share of firings in which either barrier was reached in time (against the share for all minutes); 'up first' is the share of those touches that hit the upper barrier first, against the same share for all touched minutes; deviation is the difference in points. Years held: years in which the sign of the deviation matched the pooled sign. Adjusted p is search-wide (single-step max-T over rotated outcomes). Top 40 cells by absolute deviation that held in every year.
+
+| pattern | barrier (bp) | horizon (min) | fires on | touched (pattern) | touched (all) | up first (pattern) | up first (all) | deviation (points) | years held | min adjusted p |
+|---|---|---|---|---|---|---|---|---|---|---|
+| sweep: 5-min move < -3 sd | 5 | 30 | 23,148 | 99% | 99% | 56.5% | 49.8% | +6.7 | 9/9 | 0.0061 |
+| sweep: 5-min move < -3 sd | 5 | 5 | 23,148 | 96% | 88% | 56.5% | 49.8% | +6.7 | 9/9 | 0.0061 |
+| sweep: 5-min move < -3 sd | 5 | 15 | 23,148 | 98% | 97% | 56.5% | 49.8% | +6.7 | 9/9 | 0.0061 |
+| sweep: 5-min move < -2.5 sd | 5 | 30 | 50,984 | 99% | 99% | 55.6% | 49.8% | +5.8 | 9/9 | 0.0061 |
+| sweep: 5-min move < -2.5 sd | 5 | 5 | 50,986 | 94% | 88% | 55.6% | 49.8% | +5.8 | 9/9 | 0.0061 |
+| sweep: 5-min move < -3 sd | 10 | 30 | 23,148 | 97% | 95% | 55.3% | 49.6% | +5.8 | 9/9 | 0.0061 |
+| sweep: 5-min move < -2.5 sd | 5 | 15 | 50,985 | 98% | 97% | 55.5% | 49.8% | +5.8 | 9/9 | 0.0061 |
+| sweep: RSI14 < 25 | 5 | 5 | 64,233 | 88% | 86% | 55.5% | 49.8% | +5.7 | 9/9 | 0.0061 |
+| sweep: RSI14 < 25 | 5 | 15 | 64,233 | 94% | 97% | 55.5% | 49.8% | +5.7 | 9/9 | 0.0061 |
+| sweep: RSI14 < 25 | 5 | 30 | 64,233 | 97% | 99% | 55.5% | 49.8% | +5.7 | 9/9 | 0.0061 |
+| sweep: RSI14 < 20 | 5 | 5 | 22,141 | 84% | 86% | 55.4% | 49.8% | +5.6 | 9/9 | 0.0061 |
+| sweep: 5-min move < -3 sd | 10 | 15 | 23,148 | 94% | 87% | 55.2% | 49.6% | +5.6 | 9/9 | 0.0061 |
+| sweep: 5-min move < -3 sd | 10 | 5 | 23,148 | 86% | 64% | 55.1% | 49.5% | +5.6 | 9/9 | 0.0061 |
+| sweep: RSI14 < 20 | 5 | 30 | 22,141 | 95% | 99% | 55.4% | 49.8% | +5.6 | 9/9 | 0.0061 |
+| sweep: RSI14 < 20 | 5 | 15 | 22,141 | 91% | 97% | 55.3% | 49.8% | +5.6 | 9/9 | 0.0061 |
+| sweep: 15-min move < -3 sd | 5 | 30 | 12,180 | 99% | 99% | 55.3% | 49.8% | +5.5 | 9/9 | 0.0061 |
+| sweep: 15-min move < -3 sd | 5 | 5 | 12,180 | 96% | 88% | 55.2% | 49.8% | +5.4 | 9/9 | 0.0061 |
+| sweep: RSI14 < 20 | 10 | 30 | 22,141 | 87% | 93% | 55.0% | 49.6% | +5.4 | 9/9 | 0.0061 |
+| sweep: 15-min move < -3 sd | 5 | 15 | 12,180 | 98% | 97% | 55.2% | 49.8% | +5.4 | 9/9 | 0.0061 |
+| sweep: RSI14 < 25 | 10 | 30 | 64,233 | 91% | 94% | 55.0% | 49.6% | +5.4 | 9/9 | 0.0061 |
+| sweep: 15-min move < -2.5 sd | 5 | 15 | 34,916 | 98% | 97% | 55.0% | 49.8% | +5.2 | 9/9 | 0.0061 |
+| sweep: 15-min move < -2.5 sd | 5 | 30 | 34,916 | 99% | 99% | 55.0% | 49.8% | +5.2 | 9/9 | 0.0061 |
+| sweep: 15-min move < -2.5 sd | 5 | 5 | 34,916 | 95% | 88% | 55.0% | 49.8% | +5.2 | 9/9 | 0.0061 |
+| sweep: RSI14 < 25 | 10 | 15 | 64,233 | 86% | 85% | 54.5% | 49.6% | +4.9 | 9/9 | 0.0061 |
+| sweep: 15-min move < -3 sd | 10 | 30 | 12,180 | 97% | 94% | 54.5% | 49.6% | +4.9 | 9/9 | 0.0061 |
+| sweep: RSI14 < 20 | 10 | 15 | 22,141 | 82% | 84% | 54.4% | 49.6% | +4.8 | 9/9 | 0.0061 |
+| sweep: 5-min move > +3 sd | 5 | 5 | 23,845 | 95% | 88% | 45.0% | 49.8% | -4.8 | 9/9 | 0.0061 |
+| sweep: RSI14 < 30 | 5 | 30 | 169,063 | 98% | 99% | 54.6% | 49.8% | +4.8 | 9/9 | 0.0061 |
+| RSI14 below 30 | 5 | 30 | 169,063 | 98% | 99% | 54.6% | 49.8% | +4.8 | 9/9 | 0.0061 |
+| RSI14 below 30 | 5 | 15 | 169,064 | 96% | 97% | 54.6% | 49.8% | +4.8 | 9/9 | 0.0061 |
+| sweep: RSI14 < 30 | 5 | 15 | 169,064 | 96% | 97% | 54.6% | 49.8% | +4.8 | 9/9 | 0.0061 |
+| sweep: 5-min move < -2 sd | 5 | 30 | 115,171 | 99% | 99% | 54.6% | 49.8% | +4.8 | 9/9 | 0.0061 |
+| last 5 min down more than 2 sd | 5 | 30 | 115,171 | 99% | 99% | 54.6% | 49.8% | +4.8 | 9/9 | 0.0061 |
+| sweep: RSI14 < 20 | 10 | 5 | 22,141 | 73% | 60% | 54.4% | 49.6% | +4.8 | 9/9 | 0.0061 |
+| sweep: RSI14 < 25 | 10 | 5 | 64,233 | 75% | 61% | 54.3% | 49.6% | +4.8 | 9/9 | 0.0061 |
+| sweep: 5-min move < -2 sd | 5 | 15 | 115,173 | 98% | 97% | 54.5% | 49.8% | +4.8 | 9/9 | 0.0061 |
+| last 5 min down more than 2 sd | 5 | 15 | 115,173 | 98% | 97% | 54.5% | 49.8% | +4.8 | 9/9 | 0.0061 |
+| last 5 min down more than 2 sd | 5 | 5 | 115,174 | 93% | 88% | 54.5% | 49.8% | +4.7 | 9/9 | 0.0061 |
+| sweep: 5-min move < -2 sd | 5 | 5 | 115,174 | 93% | 88% | 54.5% | 49.8% | +4.7 | 9/9 | 0.0061 |
+| sweep: 5-min move > +3 sd | 5 | 15 | 23,845 | 99% | 97% | 45.1% | 49.8% | -4.7 | 9/9 | 0.0061 |
+
+By barrier and horizon: the unconditional share of minutes with a touch and of touches that were up, the number of cells that held every year, and the largest deviation among them.
+
+| barrier (bp) | horizon (min) | touched (all) | up first (all) | cells held every year | largest deviation (points) |
+|---|---|---|---|---|---|
+| 5 | 5 | 88% | 49.8% | 68 | 6.7 |
+| 5 | 15 | 97% | 49.8% | 75 | 6.7 |
+| 5 | 30 | 99% | 49.8% | 77 | 6.7 |
+| 10 | 5 | 64% | 49.5% | 27 | 5.6 |
+| 10 | 15 | 87% | 49.6% | 37 | 5.6 |
+| 10 | 30 | 95% | 49.6% | 60 | 5.8 |
+| 20 | 5 | 32% | 49.1% | 0 | nan |
+| 20 | 15 | 59% | 49.2% | 4 | 2.8 |
+| 20 | 30 | 76% | 49.3% | 6 | 2.7 |
+
+Null: the largest |z| across cells on rotated outcomes has median 2.57 and 95th percentile 3.84; the real search's largest |z| is 24.10.
+<!-- table:horizons_barrier:end -->
+
+- **The edge is in small moves.** After a 3-standard-deviation drop in the last five minutes, the price touches +5 basis points before -5 in 56.5% of cases against 49.8% unconditionally, in every year. At 10 basis points the same patterns are at 55%; at 20 basis points no cell holds every year and the best deviations are under 3 points. The reversals from extremes are bounces of a few basis points, which is also what the minute-by-minute decomposition in the main report found for the boundary effect.
+- **Touch rates are high at small barriers.** Within 15 minutes, 97% of all minutes reach +5 or -5 basis points, so the 5-point question is nearly always decided; within 5 minutes only 64% reach +10 or -10, and 32% reach 20, so at larger barriers "neither" is the common outcome and the direction question only applies to the minority that moved.
+- **The search is far outside its null** (largest |z| 24 against a null 95th percentile of 3.8), and the cells that hold are the same families as in the direction tables: sharp drops, oversold RSI, and the 4-hour extremes.
+
 ## Each cell as a small meta-analysis
 
 Nine yearly estimates of a cell are nine noisy readings of an effect that may differ by year. A random-effects pooling (DerSimonian-Laird) separates the two: tau is how much the true effect moves from year to year, I-squared is the share of the yearly variation that is real change rather than noise, and the shrunken latest-year value pulls 2026's reading toward the pool by an amount set by the cell's own consistency.
@@ -458,4 +529,3 @@ The 24 strongest conditional cells (from horizons.md) within each HMM state, 201
 
 ## What is not yet done
 
-- Direction with magnitude from any minute: the probability of touching +X before -X within h minutes given a pattern.
