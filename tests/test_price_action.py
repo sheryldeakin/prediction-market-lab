@@ -44,3 +44,23 @@ def test_engulfing_and_time_flags():
     k = int(np.where((hour == 8) & (minute == 3))[0][0])
     assert E["10 minutes after funding settlement (08:00 UTC)"][1][k]
     assert not E["10 minutes after funding settlement (08:00 UTC)"][1][k + 10]
+
+
+def test_repeated_rejection_needs_two_touches_and_no_close_through():
+    s = flat(); i = HISTORY + 300
+    lvl = 100.0                                                             # the flat series' 4h high
+    s.h[i - 20] = s.h[i - 5] = 100.015                                      # two touches within 2 bp, closes stay at 100
+    E = minute_events(s)
+    assert E["repeated rejection at the 4h high (2+ touches in 30 minutes, no close above)"][1][i]
+    s.c[i - 3] = 100.2                                                      # a close above the level breaks the pattern
+    assert not minute_events(s)["repeated rejection at the 4h high (2+ touches in 30 minutes, no close above)"][1][i]
+
+
+def test_rejecting_the_ups_counts_undone_up_minutes():
+    s = flat(); i = HISTORY + 300
+    for k in (3, 6, 9):                                                     # three up-minutes each undone by the next
+        s.o[i - k - 1], s.c[i - k - 1] = 100.0, 100.2
+        s.c[i - k] = 99.9
+    E = minute_events(s)
+    assert E["rejecting the ups (3+ up-minutes undone by the next minute in the last 15)"][1][i]
+    assert not E["rejecting the ups (3+ up-minutes undone by the next minute in the last 15)"][1][i - 8]

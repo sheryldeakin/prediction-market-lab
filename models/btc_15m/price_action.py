@@ -20,6 +20,10 @@ closed before the ones that test them):
               last 5 minutes
               range breakout: the previous hour's range (excluding the last 5 minutes) was
               under 15 bp and the last close is outside it
+              repeated rejection: the 4h high touched within 2 bp by two or more separate
+              minutes in the last 30 with no close above it; mirror. Rejecting the ups:
+              three or more up-minutes in the last 15 each undone by the next minute;
+              mirror. Lower highs: three successive 10-minute highs declining; mirror.
               VWAP reclaim: the session VWAP (from the UTC day's open) crossed upward in
               the last 5 minutes after at least 30 minutes below it; mirror
   round       the next $1000 level above is within 10 bp and the last 5 minutes rose
@@ -124,6 +128,32 @@ def minute_events(s: Series) -> dict[str, tuple[str, np.ndarray]]:
     lo240_hour_ago = _roll_min_before(l, 240, lag=61)
     crossed_dn_last_hour = _roll_min_before(c, 60, lag=1) < lo240_hour_ago
     add("retest from below of a 4h low broken in the last hour", "levels", crossed_dn_last_hour & (p <= lo240_hour_ago) & (_bp(lo240_hour_ago, p) <= 5))
+    # repeated rejection: the 4h high (from candles before the last 30 minutes) touched within 2 bp by
+    # at least two separate minutes in the last 30, with no close above it
+    hi240_30 = _roll_max_before(h, 240, lag=31)
+    lo240_30 = _roll_min_before(l, 240, lag=31)
+    touches_hi = np.zeros(n); touches_lo = np.zeros(n); closed_above = np.zeros(n); closed_below = np.zeros(n)
+    for k in range(1, 31):
+        hk, lk, ck = _lagged(h, k), _lagged(l, k), _lagged(c, k)
+        touches_hi += (np.abs(_bp(hk, hi240_30)) <= 2).astype(float)
+        touches_lo += (np.abs(_bp(lk, lo240_30)) <= 2).astype(float)
+        closed_above += (ck > hi240_30).astype(float)
+        closed_below += (ck < lo240_30).astype(float)
+    add("repeated rejection at the 4h high (2+ touches in 30 minutes, no close above)", "levels", (touches_hi >= 2) & (closed_above == 0))
+    add("repeated rejection at the 4h low (2+ touches in 30 minutes, no close below)", "levels", (touches_lo >= 2) & (closed_below == 0))
+    # rejecting the ups: up-minutes undone by the next minute, at least three in the last 15
+    undone_up = np.zeros(n); undone_dn = np.zeros(n)
+    for k in range(1, 15):
+        ok_, ck, ck_next = _lagged(o, k + 1), _lagged(c, k + 1), _lagged(c, k)
+        undone_up += ((ck > ok_) & (ck_next < ok_)).astype(float)
+        undone_dn += ((ck < ok_) & (ck_next > ok_)).astype(float)
+    add("rejecting the ups (3+ up-minutes undone by the next minute in the last 15)", "levels", undone_up >= 3)
+    add("rejecting the downs (3+ down-minutes undone by the next minute in the last 15)", "levels", undone_dn >= 3)
+    # lower highs: three successive 10-minute block highs, each below the previous; mirror
+    b1 = _roll_max_before(h, 10, lag=1); b2 = _roll_max_before(h, 10, lag=11); b3 = _roll_max_before(h, 10, lag=21)
+    add("lower highs (three successive 10-minute highs declining)", "levels", (b1 < b2) & (b2 < b3))
+    m1 = _roll_min_before(l, 10, lag=1); m2 = _roll_min_before(l, 10, lag=11); m3 = _roll_min_before(l, 10, lag=21)
+    add("higher lows (three successive 10-minute lows rising)", "levels", (m1 > m2) & (m2 > m3))
     # previous UTC day's high, low, and today's open
     day = t // 86400
     df = pd.DataFrame({"day": day, "h": h, "l": l, "o": o, "i": i})
