@@ -34,7 +34,7 @@ from models.btc_15m.evaluate import make_model
 from models.btc_15m.features import FLOW_FEATURES, PRICE_FEATURES, Series, dataset
 from models.btc_15m.indicators import INDICATOR_FEATURES
 from models.btc_15m.patterns import leaf_rules, rule_mask, simplify
-from models.btc_15m.rules import events
+from models.btc_15m.rules import events, vol_cutoffs
 from models.btc_15m.stats import block_bootstrap_ci, paired_difference_ci
 
 warnings.filterwarnings("ignore")
@@ -58,7 +58,8 @@ def rule_columns(Dtr: pd.DataFrame, Dte: pd.DataFrame, k: int, seed=0):
         names.append("rule: " + simplify(conds))
         tr_cols.append(rule_mask(conds, Dtr).astype(float))
         te_cols.append(rule_mask(conds, Dte).astype(float))
-    Etr, Ete = events(Dtr, k), events(Dte, k)
+    cut = vol_cutoffs(Dtr)                                  # deciles from the training rows only
+    Etr, Ete = events(Dtr, k, cut), events(Dte, k, cut)
     for name in Etr:
         if Etr[name].sum() >= 100:
             names.append("event: " + name)

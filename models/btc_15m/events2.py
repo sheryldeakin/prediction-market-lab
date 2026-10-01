@@ -29,7 +29,7 @@ import pandas as pd
 
 from models.btc_15m.data import load, load_days
 from models.btc_15m.features import Series, dataset
-from models.btc_15m.rules import bh, day_pvalue
+from models.btc_15m.rules import REF_MONTHS, bh, day_pvalue, is_stable, month_agreement, reference_rows, reference_sign
 from models.btc_15m.stats import block_bootstrap_ci
 
 warnings.filterwarnings("ignore")
@@ -134,17 +134,13 @@ def main():
     keep = bh(np.array(pvals))
     print(f"{len(names)} tested, {keep.sum()} survive FDR", flush=True)
     rows = []
+    ref = reference_rows(D)
     for name, m, dev, p, kp in zip(names, masks, devs, pvals, keep):
         if not kp:
             continue
-        agree = tot = 0
-        for mm in months[3:]:
-            mo = (month == mm).values
-            if (m & mo).sum() < 30:
-                continue
-            tot += 1; agree += int(np.sign(y[m & mo].mean() - y[mo].mean()) == np.sign(dev))
-        stable = tot and agree >= 0.75 * tot
-        if not stable:
+        sign = reference_sign(m, y, ref)
+        agree, tot, _ = month_agreement(m, y, month, months[REF_MONTHS:], sign)
+        if not (is_stable(agree, tot, sign) and np.sign(dev) == sign):
             continue
         mu, lo, hi = block_bootstrap_ci(y[m].astype(float), t[m])
         mf = CF[name]

@@ -11,7 +11,7 @@ def frame(n=1000, seed=0):
 
 def test_strongest_event_decides_direction(monkeypatch):
     D = frame()
-    fake_events = lambda D, k: {"e_up": D.a.values > 1.0, "e_down": D.a.values > 1.5}     # e_down is a subset of e_up
+    fake_events = lambda D, k, cutoffs=None: {"e_up": D.a.values > 1.0, "e_down": D.a.values > 1.5}     # e_down is a subset of e_up
     monkeypatch.setattr(EP, "events", fake_events)
     act, up = EP.decide(D, 0, {"e_up": +0.03, "e_down": -0.10}, mode="strongest")
     assert act.sum() == (D.a.values > 1.0).sum()
@@ -21,14 +21,14 @@ def test_strongest_event_decides_direction(monkeypatch):
 
 def test_min_dev_filters_weak_events(monkeypatch):
     D = frame()
-    monkeypatch.setattr(EP, "events", lambda D, k: {"weak": D.a.values > 0, "strong": D.b.values > 1.5})
+    monkeypatch.setattr(EP, "events", lambda D, k, cutoffs=None: {"weak": D.a.values > 0, "strong": D.b.values > 1.5})
     act, _ = EP.decide(D, 0, {"weak": +0.02, "strong": -0.08}, min_dev=0.05, mode="strongest")
     assert act.sum() == (D.b.values > 1.5).sum()
 
 
 def test_votes_mode_abstains_on_disagreement(monkeypatch):
     D = frame()
-    monkeypatch.setattr(EP, "events", lambda D, k: {"e1": D.a.values > 0, "e2": D.b.values > 0})
+    monkeypatch.setattr(EP, "events", lambda D, k, cutoffs=None: {"e1": D.a.values > 0, "e2": D.b.values > 0})
     act, up = EP.decide(D, 0, {"e1": +0.05, "e2": -0.05}, mode="votes")
     both = (D.a.values > 0) & (D.b.values > 0)
     assert not act[both].any()

@@ -33,7 +33,7 @@ from sklearn.ensemble import RandomForestClassifier
 from models.btc_15m.data import load
 from models.btc_15m.features import FLOW_FEATURES, HISTORY, PRICE_FEATURES, Series, dataset
 from models.btc_15m.indicators import INDICATOR_FEATURES
-from models.btc_15m.rules import bh, day_pvalue
+from models.btc_15m.rules import bh, day_pvalue, is_stable, month_agreement
 from models.btc_15m.stats import block_bootstrap_ci
 
 warnings.filterwarnings("ignore")
@@ -120,32 +120,29 @@ def describe_shape(center: np.ndarray) -> str:
 
 # ---------------- scoring shared with the event library ----------------
 
-def score_masks(named_masks, D: pd.DataFrame, min_fires=100):
+def score_masks(named_masks, D: pd.DataFrame, mined_signs, min_fires=100):
+    """Score each (name, mask) on the scoring frame D. Stability compares each scoring
+    month with the direction the rule or shape had on the mining half (mined_signs, one
+    +1/-1 per mask), not with its pooled direction on D, which those months helped set."""
     y, t = D.y.values, D.t.values
+    named_masks = [(name, m, sg) for (name, m), sg in zip(named_masks, mined_signs)]
     month = pd.to_datetime(D.t, unit="s").dt.to_period("M")
     months = sorted(month.unique())
     base = y.mean()
-    names, masks, devs, pvals, cis = [], [], [], [], []
-    for name, m in named_masks:
+    names, masks, devs, pvals, cis, signs = [], [], [], [], [], []
+    for name, m, sg in named_masks:
         if m.sum() < min_fires:
             continue
-        names.append(name); masks.append(m)
+        names.append(name); masks.append(m); signs.append(int(np.sign(sg)))
         mu, lo, hi = block_bootstrap_ci(y[m].astype(float), t[m])
         devs.append(mu - base); cis.append((mu, lo, hi))
         pvals.append(day_pvalue(y[m].astype(float), t[m], base))
     keep = bh(np.array(pvals)) if names else np.array([], bool)
     rows = []
-    for name, m, dev, p, (mu, lo, hi), kp in zip(names, masks, devs, pvals, cis, keep):
-        agree = tot = 0
-        per = []
-        for mm in months:
-            mo = (month == mm).values
-            if (m & mo).sum() < 30:
-                per.append("-"); continue
-            d = y[m & mo].mean() - y[mo].mean()
-            per.append(f"{d*100:+.1f}"); tot += 1; agree += int(np.sign(d) == np.sign(dev))
+    for name, m, dev, p, (mu, lo, hi), kp, sg in zip(names, masks, devs, pvals, cis, keep, signs):
+        agree, tot, per = month_agreement(m, y, month, months, sg)
         rows.append([name, int(m.sum()), f"{100*m.mean():.1f}%", f"{mu*100:.1f}% [{lo*100:.1f}, {hi*100:.1f}]", f"{dev*100:+.1f}", f"{p:.3f}",
-                     "yes" if kp else "", f"{agree}/{tot}", " ".join(per), "stable" if kp and tot and agree >= 0.75 * tot else ""])
+                     "yes" if kp else "", f"{agree}/{tot}", " ".join(per), "stable" if kp and is_stable(agree, tot, sg) else ""])
     rows.sort(key=lambda r: float(r[5]))
     return rows
 
@@ -179,7 +176,7 @@ def main():
             seen[key] = (conds, dev, n, m)
     print(f"{len(cands)} leaf rules, {len(seen)} distinct firing sets", flush=True)
     named = [(simplify(c), m) for c, dev, n, m in seen.values()]
-    rule_rows = score_masks(named, Dte)
+    rule_rows = score_masks(named, Dte, [dev for c, dev, n, m in seen.values()])
     for r in rule_rows[:10]:
         print("rule", r[:7], flush=True)
 
@@ -188,7 +185,9 @@ def main():
     km = KMeans(n_clusters=a.shapes, n_init=4, random_state=0).fit(Ptr)
     lab = km.predict(Pte)
     named = [(f"shape {c}: {describe_shape(km.cluster_centers_[c])}", lab == c) for c in range(a.shapes)]
-    shape_rows = score_masks(named, Dte)
+    ytr = Dtr.y.values
+    shape_signs = [np.sign(ytr[km.labels_ == c].mean() - ytr.mean()) if (km.labels_ == c).any() else 0 for c in range(a.shapes)]
+    shape_rows = score_masks(named, Dte, shape_signs)
     for r in shape_rows[:8]:
         print("shape", r[:7], flush=True)
 

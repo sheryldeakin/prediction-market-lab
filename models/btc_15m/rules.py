@@ -6,7 +6,11 @@ the up-rate when it fires, a day-block 95% interval, and the two-sided p-value o
 up-rate against the unconditional rate. With dozens of events tested at once, chance
 alone produces a few "significant" ones, so p-values are corrected (Benjamini-Hochberg,
 false discovery rate 10%) and the survivors are re-checked month by month: an event
-counts as stable only if its direction holds in at least six of eight test months.
+counts as stable only if the direction it had in the first three months (the reference
+months, which every walk-forward uses for training only) holds in at least three quarters
+of the later months. The reference direction is fixed before the later months are seen;
+comparing months against the pooled direction would count each month against a sign it
+helped set. Volatility deciles are cut on the reference months for the same reason.
 
 Part 2, learned rules. A depth-2 decision tree per test month, trained on earlier
 months, printed as readable rules. A rule is reported when the same split appears in
@@ -36,8 +40,24 @@ OUT = Path("results/btc_15m")
 COLS = PRICE_FEATURES + FLOW_FEATURES + INDICATOR_FEATURES
 
 
-def events(D: pd.DataFrame, k: int) -> dict[str, np.ndarray]:
-    """Boolean conditions on the feature frame. Names are the rule text."""
+REF_MONTHS = 3
+
+
+def vol_cutoffs(D: pd.DataFrame) -> tuple[float, float]:
+    """10th and 90th percentiles of vol60 on the frame given (pass training rows only)."""
+    return float(np.quantile(D.vol60.values, 0.1)), float(np.quantile(D.vol60.values, 0.9))
+
+
+def reference_rows(D: pd.DataFrame) -> np.ndarray:
+    """Rows in the first REF_MONTHS calendar months of D."""
+    month = pd.to_datetime(D.t, unit="s").dt.to_period("M")
+    return (month < sorted(month.unique())[0] + REF_MONTHS).values
+
+
+def events(D: pd.DataFrame, k: int, cutoffs: tuple[float, float] | None = None) -> dict[str, np.ndarray]:
+    """Boolean conditions on the feature frame. Names are the rule text. cutoffs are the
+    vol60 decile cutoffs, computed on training rows (default: D's reference months)."""
+    lo10, hi90 = cutoffs if cutoffs is not None else vol_cutoffs(D[reference_rows(D)])
     e = {}
     v = D.vol60.values + 1e-9
     e["price at 4h high (rangepos >= 0.98)"] = D.rangepos.values >= 0.98
@@ -76,8 +96,8 @@ def events(D: pd.DataFrame, k: int) -> dict[str, np.ndarray]:
     e["OBV falling over 60 min"] = D.obv_slope60.values < -0.3
     e["price 30 bp+ above 60-min VWAP"] = D.vwap_dev60.values > 30
     e["price 30 bp+ below 60-min VWAP"] = D.vwap_dev60.values < -30
-    e["high volatility (vol60 in top decile)"] = D.vol60.values > np.quantile(D.vol60.values, 0.9)
-    e["low volatility (vol60 in bottom decile)"] = D.vol60.values < np.quantile(D.vol60.values, 0.1)
+    e["high volatility (vol60 in top decile)"] = D.vol60.values > hi90
+    e["low volatility (vol60 in bottom decile)"] = D.vol60.values < lo10
     e["weekend"] = D.wday.values >= 5
     e["US afternoon (14-17 UTC)"] = (D.hour.values >= 14) & (D.hour.values <= 17)
     e["Asia early (0-3 UTC)"] = D.hour.values <= 3
@@ -88,6 +108,35 @@ def events(D: pd.DataFrame, k: int) -> dict[str, np.ndarray]:
         e["led early, now back below the open"] = (D.lead1.values > 3) & (D.lead.values < 0) if "lead1" in D else np.zeros(len(D), bool)
         e["trailed early, now back above the open"] = (D.lead1.values < -3) & (D.lead.values > 0) if "lead1" in D else np.zeros(len(D), bool)
     return e
+
+
+def reference_sign(mask: np.ndarray, y: np.ndarray, ref: np.ndarray, min_fires: int = 30) -> int:
+    """Direction of the event's deviation from the base rate on the reference rows: +1 up,
+    -1 down, 0 when it fires fewer than min_fires times there (no direction to hold)."""
+    if (mask & ref).sum() < min_fires:
+        return 0
+    return int(np.sign(y[mask & ref].mean() - y[ref].mean()))
+
+
+def month_agreement(mask: np.ndarray, y: np.ndarray, month: pd.Series, months, sign: int, min_fires: int = 30):
+    """(agreeing months, months with enough firings, per-month deviations as text) for the
+    months given, each compared with sign."""
+    agree = tot = 0
+    per = []
+    for mm in months:
+        mo = (month == mm).values
+        if (mask & mo).sum() < min_fires:
+            per.append("-")
+            continue
+        dev = y[mask & mo].mean() - y[mo].mean()
+        per.append(f"{dev*100:+.1f}")
+        tot += 1
+        agree += int(sign != 0 and np.sign(dev) == sign)
+    return agree, tot, per
+
+
+def is_stable(agree: int, tot: int, sign: int, share: float = 0.75) -> bool:
+    return bool(sign != 0 and tot and agree >= share * tot)
 
 
 def bh(pvals: np.ndarray, q: float = 0.10) -> np.ndarray:
@@ -116,7 +165,7 @@ def day_pvalue(hits: np.ndarray, t: np.ndarray, base: float) -> float:
     resid = sums - mu * counts
     se = np.sqrt((resid ** 2).sum()) / counts.sum()
     if se == 0:
-        return 1.0
+        return 1.0 if mu == 0 else 0.0          # identical deviation every day: no spread, not no effect
     return float(2 * (1 - norm.cdf(abs(mu) / se)))
 
 
@@ -161,22 +210,15 @@ def main():
         keep = bh(pvals) if len(pvals) else np.array([], bool)
         for name, (mask, m_, lo, hi, p), kp in sorted(zip(names, stats, keep), key=lambda x: x[1][4]):
             ev_rows.append([k, name, int(mask.sum()), f"{100*mask.mean():.1f}%", f"{m_*100:.1f}% [{lo*100:.1f}, {hi*100:.1f}]", f"{(m_-base)*100:+.1f}", f"{p:.3f}", "yes" if kp else ""])
-        # stability of survivors, month by month (direction of the deviation from that month's base rate)
+        # stability of survivors: later months against the direction in the reference months
+        ref = reference_rows(D)
         for name, (mask, m_, lo, hi, p), kp in zip(names, stats, keep):
             if not kp:
                 continue
-            sign = np.sign(m_ - base)
-            agree, tot, per = 0, 0, []
-            for mm in months[3:]:
-                mo = (month == mm).values
-                if (mask & mo).sum() < 30:
-                    per.append("-")
-                    continue
-                dev = y[mask & mo].mean() - y[mo].mean()
-                per.append(f"{dev*100:+.1f}")
-                tot += 1
-                agree += int(np.sign(dev) == sign)
-            stable_rows.append([k, name, f"{'up' if sign > 0 else 'down'} by {abs(m_-base)*100:.1f} points overall", f"{agree}/{tot}", " ".join(per), "stable" if tot and agree >= 0.75 * tot else "not stable"])
+            sign = reference_sign(mask, y, ref)
+            agree, tot, per = month_agreement(mask, y, month, months[REF_MONTHS:], sign)
+            ref_dir = {1: "up", -1: "down", 0: "too few firings"}[sign]
+            stable_rows.append([k, name, f"{'up' if m_ > base else 'down'} by {abs(m_-base)*100:.1f} points overall", ref_dir, f"{agree}/{tot}", " ".join(per), "stable" if is_stable(agree, tot, sign) else "not stable"])
             print(stable_rows[-1], flush=True)
         rules, accs = tree_rules(D, COLS)
         roots = Counter(r.split("\n")[0].strip().lstrip("|-").strip().split(" ")[0] for _, r in rules)
@@ -188,8 +230,8 @@ def main():
         f.write("| minute | if | fires | share | up-rate [95% CI] | vs base (points) | p | survives FDR |\n|---|---|---|---|---|---|---|---|\n")
         for r in ev_rows:
             f.write("| " + " | ".join(str(x) for x in r) + " |\n")
-        f.write("\nStability of the survivors: the deviation of the up-rate from that month's base rate, month by month, and how many months agree with the overall direction. Stable means at least three quarters of the months agree.\n\n")
-        f.write("| minute | if | overall | months agreeing | deviation by month (points) | verdict |\n|---|---|---|---|---|---|\n")
+        f.write("\nStability of the survivors: the deviation of the up-rate from that month's base rate, month by month after the three reference months, and how many of those months agree with the direction the event had in the reference months. Stable means at least three quarters agree.\n\n")
+        f.write("| minute | if | overall | direction in reference months | months agreeing | deviation by month (points) | verdict |\n|---|---|---|---|---|---|---|\n")
         for r in stable_rows:
             f.write("| " + " | ".join(str(x) for x in r) + " |\n")
         f.write("\nLearned rules: a depth-2 decision tree per test month (leaves of at least 500 windows), trained on earlier months, and its accuracy on the test month. The same root split in most months is a stable rule; a different root each month means there is none.\n\n")

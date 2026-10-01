@@ -29,7 +29,7 @@ import pandas as pd
 
 from models.btc_15m.data import load, load_days
 from models.btc_15m.features import Series, dataset
-from models.btc_15m.rules import bh, day_pvalue, events
+from models.btc_15m.rules import REF_MONTHS, bh, day_pvalue, events, is_stable, month_agreement, reference_rows, reference_sign, vol_cutoffs
 from models.btc_15m.stats import block_bootstrap_ci
 
 warnings.filterwarnings("ignore")
@@ -38,7 +38,8 @@ SPREAD, FEE = 0.01, 0.0175
 
 
 def stable_events(D: pd.DataFrame, k: int, min_fires=300, agree=0.75):
-    """Events surviving FDR whose direction holds in >= agree of the test months.
+    """Events surviving FDR whose direction in the reference months holds in >= agree of
+    the later months (and matches the pooled direction).
     Returns {name: signed deviation} where sign > 0 means 'up when it fires'."""
     y, t = D.y.values, D.t.values
     month = pd.to_datetime(D.t, unit="s").dt.to_period("M")
@@ -54,24 +55,20 @@ def stable_events(D: pd.DataFrame, k: int, min_fires=300, agree=0.75):
         pvals.append(day_pvalue(y[mask].astype(float), t[mask], base))
     keep = bh(np.array(pvals)) if names else np.array([], bool)
     out = {}
+    ref = reference_rows(D)
     for name, mask, dev, kp in zip(names, masks, devs, keep):
         if not kp:
             continue
-        ok = tot = 0
-        for mm in months[3:]:
-            mo = (month == mm).values
-            if (mask & mo).sum() < 30:
-                continue
-            tot += 1
-            ok += int(np.sign(y[mask & mo].mean() - y[mo].mean()) == np.sign(dev))
-        if tot and ok >= agree * tot:
+        sign = reference_sign(mask, y, ref)
+        ok, tot, _ = month_agreement(mask, y, month, months[REF_MONTHS:], sign)
+        if is_stable(ok, tot, sign, agree) and np.sign(dev) == sign:
             out[name] = dev
     return out
 
 
-def decide(D: pd.DataFrame, k: int, stable: dict, min_dev=0.0, mode="strongest"):
-    """Returns (act mask, predicted up mask)."""
-    E = events(D, k)
+def decide(D: pd.DataFrame, k: int, stable: dict, min_dev=0.0, mode="strongest", cutoffs=None):
+    """Returns (act mask, predicted up mask). cutoffs: vol60 deciles from training rows."""
+    E = events(D, k, cutoffs)
     n = len(D)
     score = np.zeros(n)
     best = np.zeros(n)
@@ -126,7 +123,8 @@ def main():
         stable = stable_events(D, k)
         print(f"minute {k}: {len(stable)} stable events", flush=True)
         # each stable event on its own, backtest vs forward
-        Eb, Ef = events(D, k), events(F, k)
+        cut = vol_cutoffs(D[reference_rows(D)])          # deciles from training months, used for the forward rows too
+        Eb, Ef = events(D, k, cut), events(F, k, cut)
         base_f = F.y.mean()
         for name, dev in sorted(stable.items(), key=lambda x: -abs(x[1])):
             mb, mf = Eb[name], Ef[name]
@@ -134,7 +132,7 @@ def main():
             ev_rows.append([k, name, "up" if dev > 0 else "down", f"{dev*100:+.1f}", int(mf.sum()), f"{fdev*100:+.1f}" if not np.isnan(fdev) else "too few", "" if np.isnan(fdev) else ("same" if np.sign(fdev) == np.sign(dev) else "flipped")])
         for label, min_dev, mode in (("any stable event, strongest wins", 0.0, "strongest"), ("events with 5+ point deviation, strongest wins", 0.05, "strongest"), ("all firing stable events agree", 0.0, "votes")):
             for period, X in (("backtest (in-sample)", D), ("forward", F)):
-                act, up = decide(X, k, stable, min_dev, mode)
+                act, up = decide(X, k, stable, min_dev, mode, cut)
                 rows.append([k, label, period] + score(act, up, X.y.values, X.t.values))
                 print(rows[-1], flush=True)
     with open(OUT / "event_portfolio.md", "w") as f:
