@@ -12,5 +12,6 @@ def test_vwap_horizon_label_compares_the_decision_minute_with_the_horizons_last_
     L = vwap_labels(Vwap(r), np.array([1200, 1800, 3000]))
     assert L[10][1] == 1.0                                   # minute 30 onward is flat at 101: equal counts as up
     assert L[10][0] == 1.0                                   # minute 20 -> minute 29 crosses the step: up
-    assert L[1][1] == 1.0 and L[1][2] == 1.0                 # flat minute: equal VWAPs count as up, like the main label
+    assert L[1][1] == 1.0 and L[1][2] == 1.0                 # flat minute: equal half-minute VWAPs count as up, like the main label
+    assert L[1][0] == 1.0 or L[1][0] == 0.0                   # horizon 1 is defined (first half against second half of the minute)
     assert np.isnan(vwap_labels(Vwap(r[r.sec < 1000]), np.array([1200]))[1][0])     # no trades: no label

@@ -30,10 +30,16 @@ OUT = Path("results/btc_15m")
 
 
 def vwap_labels(vw: Vwap, t: np.ndarray) -> dict[int, np.ndarray]:
-    """label_h = VWAP of minute i+h-1 >= VWAP of minute i; NaN where either minute has no trades."""
+    """label_h = VWAP of minute i+h-1 >= VWAP of minute i; NaN where either minute has no
+    trades. At horizon 1 both references would be the same minute, so that horizon uses the
+    minute's first and second halves (30-second VWAPs)."""
     open_ref = vw(t, t + 60)
     out = {}
     for h in HORIZONS:
+        if h == 1:
+            o1, c1 = vw(t, t + 30), vw(t + 30, t + 60)
+            out[h] = np.where(np.isnan(o1) | np.isnan(c1), np.nan, (c1 >= o1).astype(float))
+            continue
         close_ref = vw(t + 60 * (h - 1), t + 60 * h)
         lab = np.where(np.isnan(open_ref) | np.isnan(close_ref), np.nan, (close_ref >= open_ref).astype(float))
         out[h] = lab
@@ -86,12 +92,13 @@ def main():
     g = A.groupby(["pattern", "horizon"]).apply(lambda x: pd.Series({
         "dev_print": (x.diff_print * x.fires_print).sum() / x.fires_print.sum(),
         "dev_vwap": (x.diff_vwap * x.fires_vwap).sum() / x.fires_vwap.sum(),
-        "years": len(x), "years_same_sign_vwap": int((np.sign(x.diff_vwap) == np.sign(x.diff_print.sum())).sum())})).reset_index()
+        "years": int(len(x)), "years_same_sign_vwap": int((np.sign(x.diff_vwap) == np.sign(x.diff_print.sum())).sum())})).reset_index()
+    g["years"] = g.years.astype(int); g["years_same_sign_vwap"] = g.years_same_sign_vwap.astype(int)
     g["retained"] = g.dev_vwap / g.dev_print
     g.to_csv(OUT / "horizons_vwap_summary.csv", index=False)
     top = g.sort_values("dev_print", key=np.abs, ascending=False).head(30)
     with open(OUT / "horizons_vwap.md", "w") as f:
-        f.write(f"The conditional cells under two labels, {years[0]} to {a.end}, every minute as a decision time: the last print (close of the horizon's last minute against the open of the decision minute) and 60-second VWAPs (the decision minute's VWAP against the last minute's VWAP). Deviation from the unconditional up-rate in points, firing-weighted over the years; 'retained' is the VWAP deviation as a share of the last-print one; the last column is the number of years in which the VWAP deviation had the pooled last-print sign. The 30 cells with the largest last-print deviation.\n\n")
+        f.write(f"The conditional cells under two labels, {years[0]} to {a.end}, every minute as a decision time: the last print (close of the horizon's last minute against the open of the decision minute) and 60-second VWAPs (the decision minute's VWAP against the last minute's VWAP). Deviation from the unconditional up-rate in points, firing-weighted over the years; 'retained' is the VWAP deviation as a share of the last-print one; the last column is the number of years in which the VWAP deviation had the pooled last-print sign. At horizon 1 the VWAP label compares the decision minute's first and second 30 seconds, so it is a different (shorter) question from the last-print label there. The 30 cells with the largest last-print deviation.\n\n")
         f.write("| pattern | horizon (min) | deviation, last print | deviation, VWAP | retained | years same sign under VWAP |\n|---|---|---|---|---|---|\n")
         for r in top.itertuples():
             f.write(f"| {r.pattern} | {r.horizon} | {r.dev_print*100:+.1f} | {r.dev_vwap*100:+.1f} | {r.retained*100:.0f}% | {r.years_same_sign_vwap}/{r.years} |\n")
