@@ -26,7 +26,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss, roc_auc_score
 
 from models.btc_15m.data import load
-from models.btc_15m.evaluate import make_model
+from models.btc_15m.evaluate import baseline_name, baseline_walk_forward, make_model
 from models.btc_15m.features import FLOW_FEATURES, PRICE_FEATURES, Series, dataset
 from models.btc_15m.indicators import INDICATOR_FEATURES
 from models.btc_15m.stats import block_bootstrap_ci, paired_difference_ci
@@ -78,6 +78,9 @@ def main():
         preds = {name: P[:, i] for i, (name, _) in enumerate(BASES)}
         preds["average"] = P.mean(axis=1)
         preds["stacking"] = stack(P, y, t)
+        bname = baseline_name(k)
+        bp, _, _, bt = baseline_walk_forward(D, k)
+        preds[bname] = pd.Series(bp, index=bt).reindex(t).values
         keep = ~np.isnan(preds["stacking"])                      # common scoring set: months where every variant exists
         hits = {n: ((p[keep] > 0.5) == y[keep]).astype(float) for n, p in preds.items()}
         best = max((n for n, _ in BASES), key=lambda n: hits[n].mean())
@@ -88,12 +91,17 @@ def main():
             else:
                 d, dlo, dhi = paired_difference_ci(hits[n], hits[best], t[keep])
                 vs = f"{d*100:+.2f} [{dlo*100:+.2f}, {dhi*100:+.2f}] vs {best}"
+            if n == bname:
+                vb = "baseline"
+            else:
+                d, dlo, dhi = paired_difference_ci(hits[n], hits[bname], t[keep])
+                vb = f"{d*100:+.2f} [{dlo*100:+.2f}, {dhi*100:+.2f}]"
             rows.append([k, n, int(keep.sum()), f"{m*100:.2f}% [{lo*100:.2f}, {hi*100:.2f}]", f"{roc_auc_score(y[keep], p[keep]):.3f}",
-                         f"{log_loss(y[keep], np.clip(p[keep], 1e-6, 1-1e-6)):.4f}", vs])
+                         f"{log_loss(y[keep], np.clip(p[keep], 1e-6, 1-1e-6)):.4f}", vs, vb])
             print(rows[-1], flush=True)
     with open(OUT / "ensemble.md", "w") as f:
-        f.write("Ensembles: the mean of four base models' out-of-fold probabilities, and a logistic stacker fit on earlier months' out-of-fold probabilities only. Scored on the months where every variant exists (the stacker needs one month of base predictions to start). Last column: accuracy minus the best single base model on the same windows, day-block 95% interval.\n\n")
-        f.write("| minute | model | n | accuracy [95% CI] | AUC | log loss | vs best single |\n|---|---|---|---|---|---|---|\n")
+        f.write("Ensembles: the mean of four base models' out-of-fold probabilities, and a logistic stacker fit on earlier months' out-of-fold probabilities only. Scored on the months where every variant exists (the stacker needs one month of base predictions to start). The last two columns are accuracy minus the best single base model and minus the one-feature baseline (the previous window at the open, the lead z-score after), on the same windows, day-block 95% intervals.\n\n")
+        f.write("| minute | model | n | accuracy [95% CI] | AUC | log loss | vs best single | vs one-feature baseline |\n|---|---|---|---|---|---|---|---|\n")
         for r in rows:
             f.write("| " + " | ".join(str(x) for x in r) + " |\n")
     print("wrote ensemble.md")

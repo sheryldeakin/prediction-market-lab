@@ -25,7 +25,7 @@ import pandas as pd
 from sklearn.metrics import log_loss, roc_auc_score
 
 from models.btc_15m.data import load
-from models.btc_15m.evaluate import make_model
+from models.btc_15m.evaluate import baseline_name, baseline_walk_forward, make_model
 from models.btc_15m.features import FLOW_FEATURES, PRICE_FEATURES, Series, dataset
 from models.btc_15m.stats import block_bootstrap_ci, paired_difference_ci
 
@@ -98,6 +98,13 @@ def main():
         for s in SYMBOLS:
             pred, y, t = walk_forward_single(frames[s], BASE, a.kind)
             row, own_hits[s] = report(f"{s[:-4]} own", pred, y, t)
+            rows.append([k] + row)
+            print(k, row, flush=True)
+        for s in SYMBOLS:
+            pred, _, _, t = baseline_walk_forward(frames[s], k)
+            y = frames[s].set_index("t").y.reindex(t).values
+            base = own_hits[s]
+            row, _ = report(f"{s[:-4]} one-feature baseline ({baseline_name(k)})", pred, y, t, base if len(base) == len(y) else None)
             rows.append([k] + row)
             print(k, row, flush=True)
         for s in SYMBOLS:

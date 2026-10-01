@@ -52,7 +52,7 @@ def test_upsert_is_idempotent_and_never_changes_a_logged_probability():
 
 def test_model_doc_carries_backtest_levels_and_baselines():
     L = log([(900, "x", 0, "forest", "2026-08", 0.6, 1), (900, "x", 3, "xgb-all", "2026-08", 0.7, 1)])
-    walk = pd.DataFrame({"minute": [0, 0, 3, 3], "model": ["majority", "forest", "lead-only", "xgb-all"], "accuracy": [0.501, 0.530, 0.663, 0.662]})
+    walk = pd.DataFrame({"minute": [0, 0, 3, 3], "model": ["prev-window", "forest", "lead-z", "xgb-all"], "accuracy": [0.522, 0.530, 0.663, 0.662]})
     d = model_doc(L, walk)
-    assert d["backtest"]["0"] == {"model": "forest", "accuracy": 0.530, "baseline": 0.501, "baseline_name": "majority"}
-    assert d["backtest"]["3"]["baseline_name"] == "lead-only" and d["minutes"] == [0, 3]
+    assert d["backtest"]["0"] == {"model": "forest", "accuracy": 0.530, "baseline": 0.522, "baseline_name": "prev-window"}
+    assert d["backtest"]["3"]["baseline_name"] == "lead-z" and d["minutes"] == [0, 3]

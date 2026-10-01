@@ -29,7 +29,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 from models.btc_15m.data import load
-from models.btc_15m.evaluate import make_model, walk_forward
+from models.btc_15m.evaluate import baseline_name, baseline_walk_forward, make_model, walk_forward
 from models.btc_15m.features import FLOW_FEATURES, HISTORY, PRICE_FEATURES, WINDOW, Series, dataset
 from models.btc_15m.indicators import INDICATOR_FEATURES
 from models.btc_15m.stats import block_bootstrap_ci, paired_difference_ci
@@ -58,6 +58,8 @@ def ablation(s: Series, minutes, has_ticks: bool):
     for k in minutes:
         D = dataset(s, k)
         base_hits = None
+        bp, by, _, bt = baseline_walk_forward(D, k)
+        bhits = ((bp > 0.5) == by).astype(float)
         for name, cols in sets.items():
             for kind in ("forest", "xgb"):
                 pred, y, _, t = walk_forward(D, cols, kind)
@@ -65,11 +67,16 @@ def ablation(s: Series, minutes, has_ticks: bool):
                 if name == "price" and kind == "forest":
                     base_hits = hits
                 d, lo, hi = paired_difference_ci(hits, base_hits, t) if base_hits is not None else (0, 0, 0)
+                assert np.array_equal(t, bt)
+                db, blo, bhi = paired_difference_ci(hits, bhits, t)
                 rows.append([k, name, kind, len(y), f"{hits.mean()*100:.2f}%", f"{roc_auc_score(y, pred):.3f}",
-                             f"{log_loss(y, np.clip(pred, 1e-6, 1-1e-6)):.4f}", f"{d*100:+.2f} [{lo*100:+.2f}, {hi*100:+.2f}]"])
+                             f"{log_loss(y, np.clip(pred, 1e-6, 1-1e-6)):.4f}", f"{d*100:+.2f} [{lo*100:+.2f}, {hi*100:+.2f}]",
+                             f"{db*100:+.2f} [{blo*100:+.2f}, {bhi*100:+.2f}]"])
                 print("ablation", rows[-1], flush=True)
-    md_table(OUT / "ablation.md", "Feature-set ablation, walk-forward by month. Last column: accuracy minus the price-only forest on the same windows, day-block 95% interval.",
-             ["minute", "features", "model", "n", "accuracy", "AUC", "log loss", "vs price-only forest"], rows)
+        rows.append([k, f"one-feature baseline ({baseline_name(k)})", "", len(by), f"{bhits.mean()*100:.2f}%", f"{roc_auc_score(by, bp):.3f}",
+                     f"{log_loss(by, np.clip(bp, 1e-6, 1-1e-6)):.4f}", "", "baseline"])
+    md_table(OUT / "ablation.md", "Feature-set ablation, walk-forward by month. The last two columns are accuracy minus the price-only forest and minus the one-feature baseline (the previous window at the open, the lead z-score after), on the same windows, day-block 95% intervals.",
+             ["minute", "features", "model", "n", "accuracy", "AUC", "log loss", "vs price-only forest", "vs one-feature baseline"], rows)
 
 
 def magnitude_label(s: Series, D: pd.DataFrame, k: int, tau_bp: float) -> np.ndarray:

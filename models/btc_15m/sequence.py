@@ -1,5 +1,5 @@
 """A small sequence model on the raw minute series, evaluated the same way as the
-feature models: walk-forward by month, against the majority and lead-only baselines.
+feature models: walk-forward by month, against the one-feature baseline (previous window at the open, lead z-score after).
 
 Input for a window at entry minute k: the last L one-minute steps up to minute k, each
 step = (log return in bp, log volume ratio to the 24-hour mean, taker-buy share minus
@@ -22,6 +22,7 @@ import torch.nn as nn
 from sklearn.metrics import log_loss, roc_auc_score
 
 from models.btc_15m.data import load
+from models.btc_15m.evaluate import baseline_name, baseline_walk_forward
 from models.btc_15m.features import HISTORY, Series, dataset
 from models.btc_15m.stats import block_bootstrap_ci, paired_difference_ci
 
@@ -122,21 +123,10 @@ def main():
         p, yy, tt = pred[keep], y[keep], t[keep]
         hits = ((p > 0.5) == yy).astype(float)
         m_, lo, hi = block_bootstrap_ci(hits, tt)
-        # baseline on the same windows from the feature table (lead-only at k>0, majority at k=0)
-        D = dataset(s, k)
-        base = D.set_index("t").reindex(tt)
-        if k > 0:
-            from sklearn.linear_model import LogisticRegression
-            bm = pd.to_datetime(D.t, unit="s").dt.to_period("M")
-            bp = np.full(len(D), np.nan)
-            for mm in sorted(bm.unique())[3:]:
-                trm, tem = (bm < mm).values, (bm == mm).values
-                bp[tem] = LogisticRegression(max_iter=500).fit(D.loc[trm, ["lead"]], D.y[trm]).predict_proba(D.loc[tem, ["lead"]])[:, 1]
-            bpred = pd.Series(bp, index=D.t.values).reindex(tt).values
-            bname = "lead-only"
-        else:
-            bpred = np.full(len(tt), D.y.mean())
-            bname = "majority"
+        # the minute's one-feature baseline on the same windows (evaluate.baseline_name)
+        bp, _, _, bt = baseline_walk_forward(dataset(s, k), k)
+        bpred = pd.Series(bp, index=bt).reindex(tt).values
+        bname = baseline_name(k)
         bhits = ((bpred > 0.5) == yy).astype(float)
         d, dlo, dhi = paired_difference_ci(hits, bhits, tt)
         rows.append([k, "gru-sequence", len(yy), f"{m_*100:.2f}% [{lo*100:.2f}, {hi*100:.2f}]", f"{roc_auc_score(yy, p):.3f}",

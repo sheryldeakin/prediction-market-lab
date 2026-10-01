@@ -26,6 +26,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from models.btc_15m.evaluate import baseline_name
+
 LOG = Path("results/btc_15m/predictions.csv")
 WALK = Path("results/btc_15m/walk_forward.csv")
 MODEL_ID = "btc_15m"
@@ -64,9 +66,9 @@ def model_doc(log: pd.DataFrame, walk: pd.DataFrame | None) -> dict:
         for k, g in log.groupby("minute"):
             name = g.model.iloc[0]
             row = walk[(walk.minute == k) & (walk.model == name)]
-            base = walk[(walk.minute == k) & (walk.model == ("majority" if k == 0 else "lead-only"))]
+            base = walk[(walk.minute == k) & (walk.model == baseline_name(int(k)))]
             d["backtest"][str(int(k))] = {"model": name, "accuracy": float(row.accuracy.iloc[0]) if len(row) else None,
-                                          "baseline": float(base.accuracy.iloc[0]) if len(base) else None, "baseline_name": "majority" if k == 0 else "lead-only"}
+                                          "baseline": float(base.accuracy.iloc[0]) if len(base) else None, "baseline_name": baseline_name(int(k))}
     return d
 
 

@@ -11,7 +11,7 @@ Honest tuning: for each test month, (h, learning rate) are chosen from a small g
 log loss on the month before the test month, using a model trained on the months
 before that; the winner is refit on all earlier months and scored on the test month.
 Early stopping on the last 10% of the training rows. Every result is compared with the
-lead-only logistic model (or majority at the open) on the same windows.
+one-feature baseline (the previous window at the open, the lead z-score after) on the same windows.
 
     python -m models.btc_15m.sequence2 --start 2025-10 --end 2026-08 --minutes 0,3
 """
@@ -31,6 +31,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import log_loss, roc_auc_score
 
 from models.btc_15m.data import load
+from models.btc_15m.evaluate import baseline_name, baseline_walk_forward
 from models.btc_15m.features import HISTORY, Series, dataset
 from models.btc_15m.stats import block_bootstrap_ci, paired_difference_ci
 
@@ -171,15 +172,9 @@ def honest_walk_forward(arch, L, X, E, y, t, log=print):
 
 
 def baseline(D: pd.DataFrame, k: int, t_keep):
-    month = pd.to_datetime(D.t, unit="s").dt.to_period("M")
-    bp = np.full(len(D), np.nan)
-    for m in sorted(month.unique())[3:]:
-        tr, te = (month < m).values, (month == m).values
-        if k > 0:
-            bp[te] = LogisticRegression(max_iter=500).fit(D.loc[tr, ["lead"]], D.y[tr]).predict_proba(D.loc[te, ["lead"]])[:, 1]
-        else:
-            bp[te] = D.y[tr].mean()
-    return pd.Series(bp, index=D.t.values).reindex(t_keep).values, "lead-only" if k > 0 else "majority"
+    """The minute's one-feature baseline (evaluate.baseline_name) on the given windows."""
+    bp, _, _, bt = baseline_walk_forward(D, k)
+    return pd.Series(bp, index=bt).reindex(t_keep).values, baseline_name(k)
 
 
 def main():

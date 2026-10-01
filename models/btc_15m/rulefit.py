@@ -11,7 +11,7 @@ For each test month m (walk-forward, from the fourth month on):
 
 Nothing about month m is used before it is scored: the rules are mined, the events
 are fixed in advance, and the weights are fit, all on earlier months. Compared with the
-forest and the lead-only/majority baseline on the same windows, with day-block
+forest and the one-feature baseline (evaluate.baseline_name) on the same windows, with day-block
 intervals. Also reports how many rules the regularisation kept per month.
 
     python -m models.btc_15m.rulefit --start 2025-10 --end 2026-08 --minutes 0,3
@@ -30,7 +30,7 @@ from sklearn.metrics import log_loss, roc_auc_score
 from sklearn.preprocessing import StandardScaler
 
 from models.btc_15m.data import load
-from models.btc_15m.evaluate import make_model
+from models.btc_15m.evaluate import baseline_name, baseline_walk_forward, make_model
 from models.btc_15m.features import FLOW_FEATURES, PRICE_FEATURES, Series, dataset
 from models.btc_15m.indicators import INDICATOR_FEATURES
 from models.btc_15m.patterns import leaf_rules, rule_mask, simplify
@@ -89,7 +89,9 @@ def main():
         y, t = D.y.values, D.t.values
         month = pd.to_datetime(D.t, unit="s").dt.to_period("M")
         months = sorted(month.unique())
-        preds = {"rulefit": np.full(len(D), np.nan), "forest": np.full(len(D), np.nan), "baseline": np.full(len(D), np.nan)}
+        bp, _, _, bt = baseline_walk_forward(D, k)
+        preds = {"rulefit": np.full(len(D), np.nan), "forest": np.full(len(D), np.nan),
+                 "baseline": pd.Series(bp, index=bt).reindex(t).values}
         for m in months[3:]:
             tr, te = (month < m).values, (month == m).values
             Dtr, Dte = D[tr].reset_index(drop=True), D[te].reset_index(drop=True)
@@ -97,17 +99,13 @@ def main():
             model, sc = fit_rulefit(Rtr, Dtr[COLS].values, Dtr.y.values, a.C)
             preds["rulefit"][te] = model.predict_proba(np.hstack([Rte, sc.transform(Dte[COLS].values)]))[:, 1]
             preds["forest"][te] = make_model("forest").fit(Dtr[COLS], Dtr.y).predict_proba(Dte[COLS])[:, 1]
-            if k > 0:
-                preds["baseline"][te] = LogisticRegression(max_iter=500).fit(Dtr[["lead"]], Dtr.y).predict_proba(Dte[["lead"]])[:, 1]
-            else:
-                preds["baseline"][te] = Dtr.y.mean()
             coef = model.coef_[0][:len(names)]
             kept = [(names[i], coef[i]) for i in np.argsort(-np.abs(coef))[:5] if coef[i] != 0]
             kept_rows.append([k, str(m), len(names), int((coef != 0).sum()), "; ".join(f"{n} ({c:+.2f})" for n, c in kept)])
             print(f"k={k} {m}: {len(names)} candidate columns, {int((coef != 0).sum())} kept, acc rulefit {((preds['rulefit'][te] > .5) == y[te]).mean()*100:.2f}% forest {((preds['forest'][te] > .5) == y[te]).mean()*100:.2f}%", flush=True)
         keep = ~np.isnan(preds["rulefit"])
         hits = {n: ((p[keep] > 0.5) == y[keep]).astype(float) for n, p in preds.items()}
-        bname = "lead-only" if k > 0 else "majority"
+        bname = baseline_name(k)
         for n in ("baseline", "forest", "rulefit"):
             mu, lo, hi = block_bootstrap_ci(hits[n], t[keep])
             if n == "forest":

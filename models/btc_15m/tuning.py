@@ -27,7 +27,7 @@ from sklearn.metrics import log_loss, roc_auc_score
 from xgboost import XGBClassifier
 
 from models.btc_15m.data import load
-from models.btc_15m.evaluate import N_JOBS, XGB_DEVICE, make_model
+from models.btc_15m.evaluate import N_JOBS, XGB_DEVICE, baseline_name, baseline_walk_forward, make_model
 from models.btc_15m.features import FLOW_FEATURES, PRICE_FEATURES, Series, dataset
 from models.btc_15m.indicators import INDICATOR_FEATURES
 from models.btc_15m.stats import block_bootstrap_ci, paired_difference_ci
@@ -112,6 +112,15 @@ def main():
                 vs = f"{d*100:+.2f} [{dlo*100:+.2f}, {dhi*100:+.2f}]"
             rows.append([k, v, len(y), f"{m*100:.2f}% [{lo*100:.2f}, {hi*100:.2f}]", f"{roc_auc_score(y, pred):.3f}",
                          f"{log_loss(y, np.clip(pred, 1e-6, 1-1e-6)):.4f}", vs])
+        # the one-feature baseline on the same windows, for scale
+        pred_d, y_d, t_d = res["default"]
+        bp, _, _, bt = baseline_walk_forward(D, k)
+        bp = pd.Series(bp, index=bt).reindex(t_d).values
+        bh = ((bp > 0.5) == y_d).astype(float)
+        m, lo, hi = block_bootstrap_ci(bh, t_d)
+        d, dlo, dhi = paired_difference_ci(bh, base_hits, t_d)
+        rows.append([k, f"one-feature baseline ({baseline_name(k)})", len(y_d), f"{m*100:.2f}% [{lo*100:.2f}, {hi*100:.2f}]", f"{roc_auc_score(y_d, bp):.3f}",
+                     f"{log_loss(y_d, np.clip(bp, 1e-6, 1-1e-6)):.4f}", f"{d*100:+.2f} [{dlo*100:+.2f}, {dhi*100:+.2f}]"])
         chosen.insert(0, "minute", k)
         params.append(chosen)
     with open(OUT / "tuning.md", "w") as f:

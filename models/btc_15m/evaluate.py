@@ -4,7 +4,13 @@ For each entry minute k, every calendar month after the first three is a test mo
 and the model is trained on all earlier months only. Predictors compared:
 
     majority       always predicts the more common class in the training data
+    prev-window    the previous window's direction as one bit (k = 0): the up-rate in the
+                   training months after an up window and after a down window. With a
+                   reversal effect it calls the opposite of the previous window.
+    win1-logistic  logistic regression on the previous window's move in bp (k = 0)
     lead-only      logistic regression on the current lead alone (k > 0)
+    lead-z         logistic regression on the lead divided by the volatility expected over
+                   the remaining minutes, vol60 * sqrt(15 - k) (k > 0)
     logistic-all   logistic regression on all features (standardised)
     forest         random forest on all features
     hgb-all        histogram gradient boosting (scikit-learn) on all features
@@ -13,8 +19,8 @@ and the model is trained on all earlier months only. Predictors compared:
 
 Checks, all resampling or permuting whole days (models/btc_15m/stats.py):
     ci             95% block-bootstrap interval on each accuracy
-    vs baseline    interval on accuracy minus the strongest simple baseline
-                   (majority at k = 0, lead-only after)
+    vs baseline    interval on accuracy minus the one-feature baseline for that minute
+                   (prev-window at k = 0, lead-z after; see baseline_name)
     permutation    p-value for accuracy above chance, labels permuted within days
     boundary       k = 0 scored on a label measured from one minute after the open,
                    because back-to-back windows share one boundary price
@@ -42,7 +48,7 @@ from threadpoolctl import threadpool_limits
 from xgboost import XGBClassifier
 
 from models.btc_15m.data import load
-from models.btc_15m.features import FLOW_FEATURES, PRICE_FEATURES, Series, dataset
+from models.btc_15m.features import FLOW_FEATURES, PRICE_FEATURES, WINDOW, Series, dataset
 from models.btc_15m.stats import block_bootstrap_ci, paired_difference_ci, permutation_pvalue
 
 warnings.filterwarnings("ignore")
@@ -77,10 +83,31 @@ def make_model(kind: str):
                          tree_method="hist", device=XGB_DEVICE, n_jobs=N_JOBS)
 
 
+def add_baseline_columns(D: pd.DataFrame, k: int) -> pd.DataFrame:
+    """prev_up: the previous window closed at or above its open (the label's own rule).
+    lead_z: the lead in units of the volatility expected over the remaining minutes."""
+    D = D.copy()
+    D["prev_up"] = (D.win1.values >= 0).astype(int)
+    D["lead_z"] = D.lead.values / (D.vol60.values * np.sqrt(WINDOW - k) + 1e-9)
+    return D
+
+
+def baseline_name(k: int) -> str:
+    return "prev-window" if k == 0 else "lead-z"
+
+
+def baseline_walk_forward(D: pd.DataFrame, k: int, label: str = "y"):
+    """Walk-forward predictions of the minute's one-feature baseline on D's windows."""
+    name, cols, kind = next(r for r in runs_for(k) if r[0] == baseline_name(k))
+    return walk_forward(add_baseline_columns(D, k), cols, kind, label)
+
+
 def runs_for(k: int):
     r = [("majority", [], "majority")]
-    if k > 0:
-        r.append(("lead-only", ["lead"], "logistic"))
+    if k == 0:
+        r += [("prev-window", ["prev_up"], "bitrate"), ("win1-logistic", ["win1"], "logistic")]
+    else:
+        r += [("lead-only", ["lead"], "logistic"), ("lead-z", ["lead_z"], "logistic")]
     r += [("logistic-all", ALL, "logistic"), ("forest", ALL, "forest"), ("hgb-all", ALL, "hgb"),
           ("xgb-price", PRICE_FEATURES, "xgb"), ("xgb-all", ALL, "xgb")]
     return r
@@ -94,6 +121,10 @@ def walk_forward(D: pd.DataFrame, cols: list[str], kind: str, label: str = "y"):
         tr, te = (month < m).values, (month == m).values
         if kind == "majority":
             pred[te] = y[tr].mean()
+        elif kind == "bitrate":                      # training up-rate for each value of one binary column
+            x = D[cols[0]].values
+            rates = {v: y[tr & (x == v)].mean() for v in (0, 1)}
+            pred[te] = np.where(x[te] == 1, rates[1], rates[0])
         else:
             pred[te] = make_model(kind).fit(D.loc[tr, cols], y[tr]).predict_proba(D.loc[te, cols])[:, 1]
     keep = ~np.isnan(pred)
@@ -124,7 +155,7 @@ def main():
 
     rows, monthly, checks = [], [], []
     for k in [int(x) for x in a.minutes.split(",")]:
-        D = dataset(s, k)
+        D = add_baseline_columns(dataset(s, k), k)
         preds = {}
         for name, cols, kind in runs_for(k):
             pred, y, month, t = walk_forward(D, cols, kind)
@@ -136,7 +167,7 @@ def main():
                 monthly.append({"minute": k, "model": name, "month": str(m), "n": int(mm.sum()),
                                 "accuracy": float(((pred[mm] > 0.5) == y[mm]).mean())})
             print(f"k={k:2d} {name:13s} n={len(y):6d} acc={r['accuracy']*100:6.2f}% auc={r['auc']:.3f} logloss={r['log_loss']:.4f}")
-        base = "majority" if k == 0 else "lead-only"
+        base = baseline_name(k)
         for name in preds:
             hits = ((preds[name] > 0.5) == y).astype(float)
             m_, lo, hi = block_bootstrap_ci(hits, t)
