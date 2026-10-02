@@ -91,6 +91,7 @@ def ratios(table: dict) -> tuple[float, float, int]:
 
 def fmt(c) -> str:
     dev, lo, hi, n = c
+    n = int(n)
     return f"{dev*100:+.1f} [{lo*100:+.1f}, {hi*100:+.1f}] n={n:,}" if np.isfinite(dev) else (f"n={n}" if n else "")
 
 

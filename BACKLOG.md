@@ -4,7 +4,6 @@ Deferred work, each with a size and the trigger that makes it worth doing. Finis
 
 ## Studies
 
-- **Era against volatility in the regime doubling.** The daily HMM's high-volatility state doubles the 4-hour-extreme cells; the trailing-hour tercile does not scale them at all. Score the cells by HMM state within each era (2018-19, 2020-21, 2022-23, 2024-26) to see whether the doubling survives inside an era. Size: two hours (the regime and profile code have every piece). Trigger: before anything claims a volatility adjustment.
 - **HMM variants not yet tried.** An HMM observing order-flow imbalance rather than returns; a non-homogeneous transition matrix driven by time of day; a hidden semi-Markov model with explicit durations. Size: a day. Trigger: a reason to believe the states would be anything but volatility states (studies 29 and 30 say they are).
 - **Derivatives and tick events for the library.** Funding extremes, open-interest spikes, liquidation signatures, large-trade bursts, as events in the price-action library. Size: half a day plus a nine-year run. Trigger: the tick-data mechanism study below, which needs the same plumbing.
 - **The mechanism of the reversal.** Order-book replenishment and inventory after a sharp move, from the tick history (2017-08 to 2026-08 is downloaded). Size: one to two days. Trigger: the live view exists, so the result has somewhere to go.
