@@ -34,6 +34,8 @@ The question was whether machine learning on free Binance candles predicts the d
 | event rules: stable survivors of the wide search | 745 real | null median 0, null maximum 147 |  |  |  | labels rotated within months, 200 runs |
 | event rules: kept their direction in September 2026 | 562 of 666 | null median 330, 95th percentile 492 |  |  |  |  |
 | event rules: kept their direction in 2025 | 737 of 745 |  |  |  |  | scored once |
+
+What the backtest could have detected: the forest's day-block interval at the open is 1.43 points wide, so an increment over the rule smaller than about 0.7 points could not have been told from zero with these windows, and a one-point increment could. A null here is a bound, not a verdict.
 <!-- table:headline:end -->
 
 Every row above is read from a table a study wrote. The full tables, the 30 studies and what each one found: [docs/btc_15m.md](docs/btc_15m.md). Bugs found on the way, including fifteen from the review, and the decisions behind each study: [docs/process.md](docs/process.md).

@@ -63,7 +63,7 @@ Spans: cells selected on earlier years only (adjusted p at or below 0.05 and the
 | 2026 | previous 3 years | 159 | 159 | 52.9% | 9,789,234 |
 | 2026 | all earlier years | 120 | 120 | 53.0% | 7,314,120 |
 
-Across all test years and spans, 8,195 of 8,212 selected cell-years kept their sign in the test year.
+Across all test years and spans, 8,195 of 8,212 selected cell-years kept their sign in the test year. These cell-years are not independent observations: the events overlap heavily (the clusters table in the cells section reduces them to a few effects), so the count says the sign of those effects is reliable, not that there are thousands of separate confirmations.
 
 By span, averaged over test years:
 

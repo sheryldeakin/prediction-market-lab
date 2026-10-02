@@ -103,6 +103,8 @@ def main():
         f.write("| where | one-bit rule | its accuracy | fitted model | its accuracy | model minus rule, points [day CI] | more |\n|---|---|---|---|---|---|---|\n")
         for r in rows:
             f.write("| " + " | ".join(r) + " |\n")
+        half = (fo.diff_high - fo.diff_low) / 2 * 100
+        f.write(f"\nWhat the backtest could have detected: the forest's day-block interval at the open is {half*2:.2f} points wide, so an increment over the rule smaller than about {half:.1f} points could not have been told from zero with these windows, and a one-point increment {'could' if half < 1 else 'could not'}. A null here is a bound, not a verdict.\n")
     print(f"wrote {R / 'headline.md'} ({len(rows)} rows)")
 
 

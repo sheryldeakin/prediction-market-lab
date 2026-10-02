@@ -175,7 +175,7 @@ Spans: cells selected on earlier years only (adjusted p at or below 0.05 and the
 | 2026 | previous 3 years | 159 | 159 | 52.9% | 9,789,234 |
 | 2026 | all earlier years | 120 | 120 | 53.0% | 7,314,120 |
 
-Across all test years and spans, 8,195 of 8,212 selected cell-years kept their sign in the test year.
+Across all test years and spans, 8,195 of 8,212 selected cell-years kept their sign in the test year. These cell-years are not independent observations: the events overlap heavily (the clusters table in the cells section reduces them to a few effects), so the count says the sign of those effects is reliable, not that there are thousands of separate confirmations.
 
 By span, averaged over test years:
 
@@ -188,7 +188,7 @@ By span, averaged over test years:
 <!-- table:horizons_spans:end -->
 
 - **The effects are fading.** The 4-hour-high reversal over 30 minutes was 13 points in 2018-19 and 6.4 points in 2024-26; the 4-hour-low mirror went from 10 to 11 points to about 6. Across the 483 cells that never flipped sign, 79% drifted toward zero over the nine years. They are still there in 2024-26, at about half their 2018 size.
-- **Direction is stable; size is not.** Cells selected on earlier years kept their sign in the test year almost without exception (the count is under the span table), so the sign of these effects is reliable. Their size in the test year is smaller than in the selection years, which is the fading above and the usual shrinkage of a selected estimate.
+- **Direction is stable; size is not.** Cells selected on earlier years kept their sign in the test year almost without exception (the count is under the span table, with the caveat that overlapping events make it a count of confirmations of a few effects, not of thousands), so the sign of these effects is reliable. Their size in the test year is smaller than in the selection years, which is the fading above and the usual shrinkage of a selected estimate.
 - **More history selects fewer, slightly better cells.** Selecting on all earlier years picks about 230 cells against 360 for the previous year alone, and the selected direction is right 53.1% of the time in the test year against 52.8%. The differences between spans are small; what the span mostly changes is how many cells survive, not how good they are. The accuracy figures here are firing-weighted across all selected cells, so the frequent weak cells (range position beyond 0.85, firing on 13% of minutes) dominate them; the strong cells above are rarer and stronger than these averages.
 
 ## The same cells under averaged prices
