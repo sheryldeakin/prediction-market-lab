@@ -12,7 +12,6 @@ Deferred work, each with a size and the trigger that makes it worth doing. Finis
 
 ## Product
 
-- **Compact model, later entry, fading forecast: write-ups.** `cells_compact_h5/h15.md`, `cells_entry.md` and `cells_decay_forecast.md` into horizons.md once the runs finish (logs/queue_council.log). Size: an hour. Trigger: the runs are done.
 - **Live view on the tracking page.** Every minute: the active patterns, their next-5-minute probability and years held, the implied contract move, shown separately from the window call; reads the same tables and the forward log. Shipped as a pre-registered forward experiment: frozen rule set, probabilities shrunk by the forward calibration and the calibration slope, a stated stopping rule (about twelve months for a two-standard-error call on a one-point increment at 96 windows a day), and a decay forecast beside each cell. Size: a week with the design frames. Trigger: the owner's design frames are ready (owner, 2026-10-01: fleshed out, more to add).
 
 ## Known limits
