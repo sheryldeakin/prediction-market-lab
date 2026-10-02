@@ -191,6 +191,35 @@ By span, averaged over test years:
 - **Direction is stable; size is not.** Cells selected on earlier years kept their sign in the test year almost without exception (the count is under the span table, with the caveat that overlapping events make it a count of confirmations of a few effects, not of thousands), so the sign of these effects is reliable. Their size in the test year is smaller than in the selection years, which is the fading above and the usual shrinkage of a selected estimate.
 - **More history selects fewer, slightly better cells.** Selecting on all earlier years picks about 230 cells against 360 for the previous year alone, and the selected direction is right 53.1% of the time in the test year against 52.8%. The differences between spans are small; what the span mostly changes is how many cells survive, not how good they are. The accuracy figures here are firing-weighted across all selected cells, so the frequent weak cells (range position beyond 0.85, firing on 13% of minutes) dominate them; the strong cells above are rarer and stronger than these averages.
 
+The fading, as a forecast with a record. For the strongest cells held in every year, the yearly deviation is fitted with a straight line in the year; the line fitted on earlier years forecasts each year from 2022, and its error is compared with "same as last year" and "the mean so far".
+
+<!-- table:cells_decay_forecast:start -->
+Fading as a forecast: the 16 strongest cells held in every year (both libraries, one horizon per event), their yearly deviation fitted with a straight line in the year (weights 1/se^2). Slope in points per year; the 2027 forecast with a 95% interval from the fitted line's uncertainty; the year the line reaches zero if the trend continued ('none' when the trend points away from zero). Record: mean absolute error, in points, of forecasting each year from 2022 with the line fitted on earlier years, against 'same as last year' and 'mean of earlier years'.
+
+| library | pattern | horizon (min) | 2018 | 2026 | slope (points/year) | 2027 forecast [95%] | line reaches zero | record: line | same as last year | mean so far |
+|---|---|---|---|---|---|---|---|---|---|---|
+| lib | sweep: range position > 0.95 | 30 | -13.5 | -8.4 | +0.99 | -4.5 [-6.6, -2.3] | 2032 | 1.4 | 1.6 | 3.4 |
+| pa | wick rejection at the daily low | 30 | +9.9 | +6.9 | -0.98 | +4.4 [-1.6, +10.4] | 2031 | 4.2 | 5.2 | 4.7 |
+| lib | price at 4h high (rangepos >= 0.98) | 30 | -11.8 | -8.5 | +0.90 | -4.8 [-7.1, -2.4] | 2032 | 1.2 | 1.1 | 3.0 |
+| pa | wick rejection at the 4h high | 30 | -11.2 | -6.4 | +0.88 | -4.2 [-6.1, -2.3] | 2032 | 0.9 | 0.9 | 3.0 |
+| lib | sweep: range position < 0.05 | 30 | +9.3 | +7.7 | -0.81 | +5.4 [-0.0, +10.9] | 2034 | 3.7 | 4.0 | 4.3 |
+| lib | price at 4h low (rangepos <= 0.02) | 30 | +7.5 | +7.7 | -0.62 | +6.3 [+0.0, +12.5] | 2037 | 4.4 | 4.8 | 3.8 |
+| lib | sweep: range position > 0.90 | 30 | -12.6 | -7.9 | +0.89 | -4.2 [-6.7, -1.6] | 2032 | 1.6 | 1.5 | 3.0 |
+| lib | sweep: range position < 0.1 | 30 | +9.8 | +8.1 | -0.85 | +4.6 [+0.0, +9.1] | 2032 | 2.9 | 3.1 | 3.6 |
+| pa | wick rejection at the 4h low | 30 | +9.0 | +6.8 | -0.92 | +3.7 [-0.4, +7.9] | 2031 | 2.9 | 3.2 | 3.9 |
+| lib | sweep: range position > 0.85 | 30 | -11.7 | -6.9 | +0.78 | -4.1 [-6.3, -1.8] | 2032 | 1.6 | 1.1 | 2.5 |
+| lib | sweep: RSI60 < 45 | 30 | +8.8 | +6.1 | -0.61 | +4.7 [+1.3, +8.0] | 2035 | 1.9 | 2.2 | 2.2 |
+| lib | sweep: RSI60 > 55 | 30 | -11.7 | -6.1 | +0.83 | -3.5 [-5.6, -1.5] | 2031 | 1.5 | 1.2 | 2.5 |
+| lib | sweep: range position < 0.15 | 30 | +9.1 | +7.2 | -0.76 | +4.2 [+0.3, +8.1] | 2032 | 2.2 | 2.4 | 2.8 |
+| lib | sweep: 15-min move < -3 sd | 3 | +5.6 | +8.0 | -0.28 | +6.2 [+0.8, +11.5] | 2049 | 3.0 | 3.4 | 2.5 |
+| lib | sweep: 5-min move < -3 sd | 3 | +4.0 | +5.6 | -0.15 | +6.7 [+1.2, +12.1] | 2071 | 3.4 | 3.0 | 2.5 |
+| lib | sweep: RSI14 < 25 | 10 | +5.3 | +6.4 | -0.34 | +6.1 [+1.7, +10.6] | 2045 | 2.4 | 1.7 | 2.2 |
+
+Across the 16 cells: the line beats 'same as last year' in 9 and 'mean so far' in 12; 16 trend toward zero, reaching it between 2031 and 2071 (median 2032); the 2027 forecasts are 3.5 to 6.7 points in size against 5.6 to 8.5 in 2026.
+<!-- table:cells_decay_forecast:end -->
+
+- **About a point a year, and a straight line is only a fair forecaster.** The range-position and wick-rejection cells at 30 minutes lose 0.6 to 1.0 points a year; the line reaches zero around 2031 to 2037 for them, and the 2027 forecasts are 3.5 to 6.7 points against 5.6 to 8.5 in 2026. The sharp-move cells at 3 to 10 minutes (3-sd drops, RSI14 below 25) fade much more slowly (0.15 to 0.34 a year). As a forecaster the line beats "same as last year" in 9 of 16 cells and "mean so far" in 12 of 16, with errors of 1 to 4 points, so the honest expiry statement is a range, not a year: these cells are smaller every year and the strongest of them would be half their 2026 size by about 2030 if the trend held.
+
 ## The same cells under averaged prices
 
 The labels above compare two prints. "Price at its 4-hour low" is partly "the last trade was at the bid", and the next print is then more likely above it; averaged prices remove most of that. Every cell was scored again with the VWAP of the decision minute against the VWAP of the horizon's last minute (at horizon 1, the minute's first and second halves), from the tick data for all nine years.
@@ -1038,6 +1067,45 @@ Across the 24 cells, the high-volatility deviation is 1.0 times the low-volatili
 - **The price-action library adds the probes.** Its holding events form small clusters of their own: wick rejections, liquidity sweeps and pin bars at a low (five members, one effect) and at a high (five, the mirror), dojis and volume climaxes at a new hourly extreme, retests of a broken level, failed breakouts and breakdowns, round-number crossings. These are not nested in the indicator clusters because they describe one candle's shape at an extreme, not where the price sits in its range. Of the 120 events whose 30-minute cell held every year, 30 clusters remain at the nesting cut of 0.5 (40 at 0.7); under Jaccard, which keeps a rare event apart from a broad one, 44 to 87.
 - **The deviation builds for half an hour, not five minutes.** For the eight strongest cells, the 1-minute deviation is 28% of the 30-minute one (median), 59% by 3 minutes, 77% by 5 and 91% by 15. The range-position and wick-rejection cells keep rising to a peak at 48 to 60 minutes; the one-candle events (doji, volume climax at an hourly extreme) peak at 11 to 28 minutes and fade a little by 60. The next five minutes carry most of the effect and the rest accrues slowly, so a 5-minute call leaves about a quarter of it on the table.
 - **The trailing-hour volatility does not change the size of a cell.** Across the 24 strongest cells, the deviation in the high-volatility third is 1.0 times the deviation in the low third (median; range 0.6 to 1.9), the middle third 0.96 times, and the sign agrees in all 24. The regime section's daily-state doubling turned out to be the era (its within-era table): the high-volatility days are concentrated in 2020 to 2022, when every cell was larger. For the live view the consequence is simple: show the cell's probability without a volatility adjustment, and expect it to shrink with the calendar rather than with the day's volatility.
+
+Two robustness questions a reviewer asked about the cells. The label starts at the open of the decision minute, which is the same print as the close of the last candle the features read; and the intervals use day blocks, where a reader may want months.
+
+<!-- table:cells_entry:start -->
+Later entry and coarser blocks for the 12 strongest cells at each of 5 and 30 minutes (one per group of near-identical events), 2018 to 2026-08. Deviation of the up-rate when the event fires from when it does not, points, 95% interval from day-clustered errors, years held. Embargo e: the label is the close of minute i+e+h-1 against the open of minute i+e, so e=0 is the published label (its open is the same print as the last candle the features read) and e=1 skips that print and one full minute. The last column is the embargo-0 deviation's 95% interval with calendar months as the bootstrap blocks.
+
+| event | horizon (min) | embargo 0 | embargo 1 | embargo 2 | embargo 0, month-block interval |
+|---|---|---|---|---|---|
+| lib: sweep: RSI14 < 25 | 5 | +7.5 [+6.9, +8.1] 9/9 | +6.0 [+5.3, +6.6] 9/9 | +4.8 [+4.2, +5.4] 9/9 | [+6.5, +8.5] |
+| lib: RSI14 below 30 | 5 | +7.4 [+7.0, +7.8] 9/9 | +6.2 [+5.8, +6.5] 9/9 | +5.2 [+4.8, +5.5] 9/9 | [+6.7, +8.1] |
+| lib: sweep: 5-min move < -3 sd | 5 | +7.1 [+6.2, +7.9] 9/9 | +4.6 [+3.7, +5.4] 8/9 | +3.2 [+2.4, +4.1] 8/9 | [+5.9, +8.1] |
+| lib: sweep: 15-min move < -3 sd | 5 | +6.9 [+5.5, +8.4] 9/9 | +5.1 [+3.7, +6.6] 9/9 | +3.4 [+2.0, +4.8] 8/9 | [+5.2, +8.7] |
+| lib: sweep: RSI14 < 20 | 5 | +6.8 [+5.7, +8.0] 9/9 | +5.4 [+4.3, +6.5] 9/9 | +4.4 [+3.4, +5.4] 9/9 | [+5.4, +8.2] |
+| pa: wick rejection at the daily low | 5 | +6.8 [+5.8, +7.8] 9/9 | +5.9 [+4.8, +6.9] 9/9 | +5.8 [+4.8, +6.8] 9/9 | [+5.6, +8.1] |
+| pa: pin bar at a new 1h high (long upper wick) | 5 | -6.8 [-7.4, -6.1] 9/9 | -5.0 [-5.7, -4.3] 9/9 | -4.3 [-4.9, -3.6] 9/9 | [-7.6, -5.9] |
+| lib: price at 4h low (rangepos <= 0.02) | 5 | +6.7 [+6.1, +7.3] 9/9 | +6.3 [+5.7, +6.9] 9/9 | +5.6 [+5.0, +6.1] 9/9 | [+5.8, +7.7] |
+| lib: RSI14 above 70 | 5 | -6.6 [-7.0, -6.2] 9/9 | -5.8 [-6.2, -5.5] 9/9 | -5.1 [-5.4, -4.7] 9/9 | [-7.3, -5.8] |
+| lib: sweep: RSI14 > 75 | 5 | -6.6 [-7.2, -5.9] 9/9 | -5.6 [-6.2, -5.0] 9/9 | -4.6 [-5.2, -4.0] 9/9 | [-7.5, -5.6] |
+| lib: RSI60 below 35 | 5 | +6.3 [+5.2, +7.4] 9/9 | +4.9 [+3.8, +6.0] 8/9 | +3.9 [+2.9, +5.0] 8/9 | [+5.0, +7.7] |
+| pa: wick rejection at the 4h low | 5 | +6.2 [+5.7, +6.7] 9/9 | +5.4 [+4.8, +5.9] 9/9 | +5.3 [+4.7, +5.8] 9/9 | [+5.4, +7.0] |
+| lib: sweep: range position > 0.95 | 30 | -9.0 [-9.7, -8.3] 9/9 | -8.8 [-9.5, -8.2] 9/9 | -8.3 [-9.0, -7.7] 9/9 | [-10.0, -8.1] |
+| pa: wick rejection at the daily low | 30 | +9.0 [+7.6, +10.4] 9/9 | +8.3 [+7.0, +9.7] 9/9 | +8.0 [+6.7, +9.3] 9/9 | [+7.5, +10.8] |
+| pa: wick rejection at the 4h high | 30 | -8.7 [-9.4, -8.0] 9/9 | -8.1 [-8.8, -7.4] 9/9 | -7.6 [-8.3, -7.0] 9/9 | [-9.7, -7.8] |
+| lib: sweep: range position < 0.05 | 30 | +8.6 [+7.8, +9.3] 9/9 | +8.1 [+7.4, +8.8] 9/9 | +7.6 [+6.8, +8.3] 9/9 | [+7.6, +9.6] |
+| lib: sweep: range position > 0.90 | 30 | -8.3 [-8.8, -7.7] 9/9 | -8.0 [-8.6, -7.5] 9/9 | -7.7 [-8.3, -7.2] 9/9 | [-9.1, -7.5] |
+| lib: sweep: range position < 0.1 | 30 | +8.2 [+7.6, +8.8] 9/9 | +7.8 [+7.2, +8.4] 9/9 | +7.4 [+6.8, +8.0] 9/9 | [+7.4, +9.1] |
+| pa: wick rejection at the 4h low | 30 | +8.2 [+7.5, +8.9] 9/9 | +7.6 [+6.9, +8.3] 9/9 | +7.2 [+6.5, +7.9] 9/9 | [+7.3, +9.2] |
+| lib: sweep: RSI60 < 40 | 30 | +7.3 [+6.4, +8.1] 9/9 | +6.7 [+5.8, +7.5] 9/9 | +6.3 [+5.4, +7.1] 9/9 | [+6.3, +8.3] |
+| pa: acceptance above the 4h high (last 5 closes all above it) | 30 | -7.0 [-7.8, -6.2] 9/9 | -6.7 [-7.5, -6.0] 9/9 | -6.5 [-7.3, -5.7] 9/9 | [-7.9, -6.1] |
+| lib: RSI14 below 30 | 30 | +7.0 [+6.5, +7.5] 9/9 | +6.2 [+5.7, +6.7] 9/9 | +5.4 [+4.9, +6.0] 9/9 | [+6.3, +7.8] |
+| lib: sweep: RSI14 < 25 | 30 | +6.9 [+6.2, +7.7] 9/9 | +5.9 [+5.1, +6.7] 9/9 | +5.0 [+4.2, +5.8] 9/9 | [+6.0, +8.0] |
+| pa: pin bar at a new 1h high (long upper wick) | 30 | -6.9 [-7.6, -6.2] 9/9 | -5.8 [-6.5, -5.1] 9/9 | -5.3 [-6.0, -4.6] 9/9 | [-7.7, -6.2] |
+
+At 5 minutes, across the 12 cells: the embargo-1 deviation is 81% of the embargo-0 one (median; range 65% to 94%) and embargo-2 is 67%; 10 of 12 cells still hold every year at embargo 1 and 9 at embargo 2; 12 of the 12 month-block intervals exclude zero.
+
+At 30 minutes, across the 12 cells: the embargo-1 deviation is 93% of the embargo-0 one (median; range 83% to 98%) and embargo-2 is 88%; 12 of 12 cells still hold every year at embargo 1 and 12 at embargo 2; 12 of the 12 month-block intervals exclude zero.
+<!-- table:cells_entry:end -->
+
+- **The cells survive a later entry, and month blocks.** Entering one minute later keeps 81% of the 5-minute deviation (median across the 12 strongest cells; 65 to 94%) and 93% of the 30-minute one; two minutes later, 67% and 88%. Ten of 12 cells at 5 minutes and 12 of 12 at 30 still hold their sign in every year at a one-minute embargo. So the shared boundary print is not the effect, and the first minute carries about a fifth of a 5-minute cell, which agrees with the horizon table (28% of the 30-minute deviation at one minute). All 24 month-block intervals exclude zero.
 
 ## What is not yet done
 
