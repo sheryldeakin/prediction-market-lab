@@ -976,6 +976,179 @@ Days per volatility state in each era, from the regime study's daily table.
 | 2024-26 | 513 | 440 | 22 |
 <!-- table:regimes_era:end -->
 
+## Hour of day and the calendar
+
+The forward log's hour table shows wide differences between clock hours, on a few dozen windows each. The question here is whether any hour of the day, weekday, session (Asia 00-08, Europe 08-13, overlap 13-17, US 17-21, late 21-24 UTC), month of the year or event-time slot changes the accuracy of two rules, in a way that holds year after year from 2018 to 2026-08: the previous-window reversal at the open (call the opposite of the previous 15-minute window) and the lead-sign rule at minute 3 (call the sign of the move so far). The event slots are the funding hours (00, 08, 16 UTC) and the funding settlement window, the US equity open (13:30 UTC) and close (20:00 UTC) windows, the first hour of the week and the weekend; they are fixed in UTC, so the daylight-saving shift of the US times is not followed. The six strongest any-minute cells are cut the same way. Code: `models/btc_15m/calendar_study.py`; the slice assignments and the family-wise null are tested in `tests/test_calendar.py`.
+
+Method. Per year and slice, the accuracy inside the slice minus the year's accuracy over all windows, with a day-clustered error (the regression of `stats.cluster_diff_pvalue`, scaled by the share outside the slice). A slice-year is scored when at least 100 decisions fall inside it and outside it. The nine yearly deviations are pooled by random effects, as in "Each cell as a small meta-analysis". The null rotates the labels within each month, per year, 500 times; the largest pooled |z| among the slices of a family, with the nine years pooled exactly as the real ones, gives each slice an adjusted p against its own family (hours, weekdays, sessions, months, event slots). Years held is the number of scored years whose deviation had the pooled sign. A slice "clears" when its adjusted p is 0.05 or less, and "holds" when it also keeps its sign in at least 8 years.
+
+<!-- table:calendar_rules:start -->
+Hour of day and the calendar against the two window rules, 2018 to 2026, all times UTC. A slice's deviation is its accuracy minus the year's accuracy over all windows, in points; pooled over the years by random effects (standard error in brackets), then 'years held' is the number of scored years whose deviation had the pooled sign. The adjusted p compares the slice's pooled |z| with the largest pooled |z| among the slices of its own family on 500 runs with the labels rotated within each month in every year. A slice-year is scored when at least 100 windows fall inside and outside it.
+
+The rules' accuracy over all windows, by year (day-block 95% intervals).
+
+| year | windows | reversal at the open | lead sign at minute 3 |
+|---|---|---|---|
+| 2018 | 33,905 | 53.00% [52.45, 53.56] | 65.71% [65.23, 66.19] |
+| 2019 | 34,316 | 53.36% [52.86, 53.83] | 65.67% [65.15, 66.18] |
+| 2020 | 34,251 | 53.58% [53.10, 54.06] | 64.16% [63.63, 64.69] |
+| 2021 | 34,373 | 52.26% [51.79, 52.75] | 65.43% [64.92, 65.94] |
+| 2022 | 35,040 | 52.17% [51.70, 52.67] | 63.23% [62.79, 63.73] |
+| 2023 | 34,934 | 52.84% [52.31, 53.35] | 64.16% [63.67, 64.70] |
+| 2024 | 35,136 | 52.30% [51.74, 52.80] | 64.41% [63.90, 64.91] |
+| 2025 | 35,040 | 51.73% [51.21, 52.21] | 65.80% [65.31, 66.30] |
+| 2026 | 23,328 | 52.21% [51.63, 52.82] | 66.34% [65.73, 66.98] |
+
+By family: how many slices there are, the typical size of a slice-year, the 95% half-width of a yearly deviation (median over slices and years), the smallest pooled deviation that would clear the family's 5% adjusted line (median over slices), and how many slices clear it and hold the sign in at least 8 years.
+
+| rule | family | slices | windows per slice-year (median) | yearly 95% half-width (points) | smallest clearing deviation (points) | clear the null | clear and hold |
+|---|---|---|---|---|---|---|---|
+| reversal at the open | hour | 24 | 1,391 | 2.4 | 1.3 | 0 | 0 |
+| reversal at the open | weekday | 7 | 4,766 | 1.2 | 0.6 | 1 | 1 |
+| reversal at the open | session | 5 | 5,570 | 1.1 | 0.5 | 0 | 0 |
+| reversal at the open | month | 12 | 2,936 | 1.6 | 1.1 | 0 | 0 |
+| reversal at the open | event slot | 6 | 696 | 4.0 | 2.2 | 1 | 0 |
+| lead sign at minute 3 | hour | 24 | 1,391 | 2.4 | 1.3 | 0 | 0 |
+| lead sign at minute 3 | weekday | 7 | 4,766 | 1.3 | 0.6 | 0 | 0 |
+| lead sign at minute 3 | session | 5 | 5,570 | 1.1 | 0.5 | 1 | 1 |
+| lead sign at minute 3 | month | 12 | 2,936 | 1.7 | 1.0 | 0 | 0 |
+| lead sign at minute 3 | event slot | 6 | 696 | 3.8 | 2.2 | 0 | 0 |
+
+Every slice: pooled deviation in points (standard error), years held out of years scored, adjusted p.
+
+| family | slice | reversal at the open | lead sign at minute 3 |
+|---|---|---|---|
+| hour | 00:00 | -0.3 (0.7) 4/9, p 1.000 | +0.5 (0.4) 7/9, p 0.994 |
+| hour | 01:00 | -0.5 (0.4) 6/9, p 1.000 | +0.3 (0.5) 6/9, p 1.000 |
+| hour | 02:00 | -0.3 (0.6) 5/9, p 1.000 | -0.3 (0.4) 5/9, p 1.000 |
+| hour | 03:00 | +0.4 (0.4) 4/9, p 1.000 | +0.3 (0.4) 7/9, p 1.000 |
+| hour | 04:00 | -0.3 (0.4) 6/9, p 1.000 | -0.6 (0.6) 6/9, p 1.000 |
+| hour | 05:00 | -0.2 (0.4) 6/9, p 1.000 | -1.0 (0.4) 7/9, p 0.319 |
+| hour | 06:00 | -0.1 (0.4) 4/9, p 1.000 | +0.1 (0.4) 5/9, p 1.000 |
+| hour | 07:00 | +0.3 (0.5) 6/9, p 1.000 | +0.8 (0.4) 7/9, p 0.519 |
+| hour | 08:00 | -0.1 (0.4) 6/9, p 1.000 | -0.2 (0.4) 6/9, p 1.000 |
+| hour | 09:00 | +0.6 (0.4) 6/9, p 0.960 | -0.2 (0.4) 5/9, p 1.000 |
+| hour | 10:00 | +0.1 (0.4) 3/9, p 1.000 | -0.1 (0.4) 5/9, p 1.000 |
+| hour | 11:00 | +0.3 (0.4) 5/9, p 1.000 | -0.5 (0.4) 7/9, p 0.996 |
+| hour | 12:00 | +1.1 (0.4) 7/9, p 0.162 | -0.2 (0.6) 6/9, p 1.000 |
+| hour | 13:00 | +0.4 (0.4) 6/9, p 1.000 | -0.5 (0.4) 6/9, p 0.996 |
+| hour | 14:00 | -0.8 (0.6) 6/9, p 0.930 | -0.6 (0.4) 7/9, p 0.974 |
+| hour | 15:00 | -0.1 (0.5) 5/9, p 1.000 | +0.1 (0.4) 5/9, p 1.000 |
+| hour | 16:00 | +0.6 (0.4) 7/9, p 0.968 | -1.0 (0.4) 8/9, p 0.202 |
+| hour | 17:00 | -0.0 (0.5) 5/9, p 1.000 | +0.4 (0.4) 6/9, p 1.000 |
+| hour | 18:00 | +0.6 (0.8) 6/9, p 1.000 | +1.0 (0.4) 8/9, p 0.220 |
+| hour | 19:00 | +0.1 (0.7) 4/9, p 1.000 | -0.6 (0.6) 6/9, p 1.000 |
+| hour | 20:00 | -0.7 (0.4) 7/9, p 0.922 | +0.7 (0.4) 8/9, p 0.876 |
+| hour | 21:00 | -0.2 (0.5) 6/9, p 1.000 | +0.2 (0.4) 6/9, p 1.000 |
+| hour | 22:00 | +0.1 (0.5) 6/9, p 1.000 | +1.0 (0.6) 8/9, p 0.778 |
+| hour | 23:00 | -0.4 (0.4) 6/9, p 1.000 | +0.6 (0.5) 5/9, p 0.976 |
+| weekday | Mon | -0.2 (0.2) 7/9, p 0.850 | +0.1 (0.2) 4/9, p 0.998 |
+| weekday | Tue | -0.4 (0.2) 7/9, p 0.297 | -0.2 (0.2) 6/9, p 0.888 |
+| weekday | Wed | -0.1 (0.2) 5/9, p 1.000 | -0.0 (0.2) 5/9, p 1.000 |
+| weekday | Thu | -0.1 (0.2) 5/9, p 1.000 | +0.3 (0.2) 5/9, p 0.619 |
+| weekday | Fri | -0.2 (0.2) 6/9, p 0.926 | +0.0 (0.3) 4/9, p 1.000 |
+| weekday | Sat | +0.9 (0.2) 8/9, p 0.002 | -0.2 (0.2) 5/9, p 0.912 |
+| weekday | Sun | +0.1 (0.3) 6/9, p 1.000 | +0.1 (0.3) 5/9, p 0.996 |
+| session | Asia 00-08 | -0.2 (0.1) 6/9, p 0.675 | +0.0 (0.1) 5/9, p 1.000 |
+| session | Europe 08-13 | +0.4 (0.2) 7/9, p 0.305 | -0.3 (0.2) 6/9, p 0.341 |
+| session | overlap 13-17 | -0.0 (0.2) 3/9, p 1.000 | -0.5 (0.2) 8/9, p 0.044 |
+| session | US 17-21 | +0.0 (0.3) 5/9, p 1.000 | +0.4 (0.2) 8/9, p 0.244 |
+| session | late 21-24 | -0.2 (0.2) 7/9, p 0.820 | +0.6 (0.3) 6/9, p 0.174 |
+| month | Jan | +0.1 (0.4) 5/9, p 1.000 | +0.2 (0.3) 4/9, p 1.000 |
+| month | Feb | -0.1 (0.3) 4/9, p 1.000 | -0.1 (0.4) 5/9, p 1.000 |
+| month | Mar | -0.4 (0.3) 6/9, p 0.836 | -0.2 (0.4) 4/9, p 1.000 |
+| month | Apr | -0.0 (0.2) 5/9, p 1.000 | -0.3 (0.4) 6/9, p 0.996 |
+| month | May | +0.0 (0.4) 5/9, p 1.000 | +0.3 (0.4) 5/9, p 0.996 |
+| month | Jun | -0.0 (0.4) 5/9, p 1.000 | -0.1 (0.3) 5/9, p 1.000 |
+| month | Jul | -0.5 (0.3) 7/9, p 0.876 | +0.0 (0.3) 5/9, p 1.000 |
+| month | Aug | -0.1 (0.4) 6/9, p 1.000 | -0.0 (0.4) 5/9, p 1.000 |
+| month | Sep | +0.7 (0.4) 6/8, p 0.633 | -0.0 (0.4) 3/8, p 1.000 |
+| month | Oct | +0.3 (0.4) 4/8, p 0.998 | +0.1 (0.3) 3/8, p 1.000 |
+| month | Nov | -0.4 (0.5) 6/8, p 0.998 | +0.3 (0.4) 6/8, p 0.996 |
+| month | Dec | +0.5 (0.5) 5/8, p 0.988 | -0.2 (0.5) 5/8, p 1.000 |
+| event slot | funding hours (00, 08, 16) | +0.0 (0.3) 4/9, p 1.000 | -0.3 (0.2) 5/9, p 0.842 |
+| event slot | funding settlement window (00:00, 08:00, 16:00 +15 min) | +1.3 (0.7) 7/9, p 0.246 | -2.0 (1.2) 7/9, p 0.425 |
+| event slot | US equity open window (13:30 +15 min) | +0.3 (1.1) 5/9, p 1.000 | -0.4 (0.8) 5/9, p 0.994 |
+| event slot | US equity close window (20:00 +15 min) | +0.8 (1.5) 6/9, p 0.992 | +2.1 (0.8) 7/9, p 0.060 |
+| event slot | first hour of the week (Mon 00-01) | -2.2 (1.4) 6/9, p 0.401 | +1.2 (1.1) 8/9, p 0.842 |
+| event slot | weekend (Sat, Sun) | +0.5 (0.2) 7/9, p 0.010 | -0.0 (0.2) 6/9, p 1.000 |
+<!-- table:calendar_rules:end -->
+
+<!-- table:calendar_cells:start -->
+The same slices for the six strongest any-minute cells at the 15-minute horizon, 2018 to 2026, all times UTC: every minute is a decision time, the call is the reversal the cell implies (up after a drop, a low or RSI14 below 25; down after the mirror), and a slice is the cell's firings inside it. Deviation, pooling, years held and the family-wise adjusted p are as in calendar_rules.md (500 rotated-label runs per year; a slice-year is scored when at least 100 firings fall inside and outside the slice).
+
+The cells over all firings: firings per year (mean) and the accuracy of the call, firing-weighted over the years.
+
+| cell | firings per year | accuracy |
+|---|---|---|
+| 3-sd drop (5-min move < -3 sd) | 2,572 | 55.5% |
+| 3-sd rise (5-min move > +3 sd) | 2,649 | 53.6% |
+| 4-hour low (rangepos <= 0.02) | 5,189 | 58.2% |
+| 4-hour high (rangepos >= 0.98) | 7,188 | 57.4% |
+| RSI14 below 25 | 7,137 | 57.0% |
+| RSI14 above 75 | 7,861 | 55.7% |
+
+By cell and family: slices scored, how many clear the family's 5% adjusted line and how many of those hold the sign in at least 8 years, the smallest pooled deviation that would clear the line (median over slices), and the slice with the largest pooled |z|.
+
+| cell | family | slices scored | clear the null | clear and hold | smallest clearing deviation (points) | largest |z| slice | its deviation (points), years held, adjusted p |
+|---|---|---|---|---|---|---|---|
+| 3-sd drop (5-min move < -3 sd) | hour | 21 | 0 | 0 | 9.2 | 12:00 | +4.2 (1.9) 7/9, p 0.455 |
+| 3-sd drop (5-min move < -3 sd) | weekday | 7 | 1 | 0 | 3.0 | Sat | +4.5 (1.7) 7/9, p 0.040 |
+| 3-sd drop (5-min move < -3 sd) | session | 5 | 0 | 0 | 2.5 | Europe 08-13 | -0.6 (0.9) 5/9, p 0.924 |
+| 3-sd drop (5-min move < -3 sd) | month | 12 | 0 | 0 | 5.8 | Oct | +3.4 (2.0) 7/8, p 0.675 |
+| 3-sd drop (5-min move < -3 sd) | event slot | 3 | 0 | 0 | 3.3 | weekend (Sat, Sun) | +2.1 (0.9) 7/9, p 0.066 |
+| 3-sd rise (5-min move > +3 sd) | hour | 20 | 0 | 0 | 8.6 | 07:00 | -5.3 (2.2) 7/8, p 0.319 |
+| 3-sd rise (5-min move > +3 sd) | weekday | 7 | 1 | 1 | 3.1 | Sat | +4.5 (1.2) 8/9, p 0.006 |
+| 3-sd rise (5-min move > +3 sd) | session | 5 | 0 | 0 | 3.3 | Asia 00-08 | -1.6 (0.7) 6/9, p 0.100 |
+| 3-sd rise (5-min move > +3 sd) | month | 12 | 0 | 0 | 6.2 | Oct | -3.8 (1.5) 7/8, p 0.172 |
+| 3-sd rise (5-min move > +3 sd) | event slot | 3 | 0 | 0 | 2.5 | weekend (Sat, Sun) | +1.6 (0.7) 8/9, p 0.072 |
+| 4-hour low (rangepos <= 0.02) | hour | 24 | 0 | 0 | 6.3 | 11:00 | +4.3 (1.9) 6/7, p 0.441 |
+| 4-hour low (rangepos <= 0.02) | weekday | 7 | 0 | 0 | 2.6 | Sat | +3.0 (1.2) 8/9, p 0.084 |
+| 4-hour low (rangepos <= 0.02) | session | 5 | 0 | 0 | 2.2 | Europe 08-13 | +1.0 (0.9) 5/9, p 0.693 |
+| 4-hour low (rangepos <= 0.02) | month | 12 | 0 | 0 | 3.8 | Sep | +1.5 (1.2) 8/8, p 0.940 |
+| 4-hour low (rangepos <= 0.02) | event slot | 3 | 0 | 0 | 2.5 | weekend (Sat, Sun) | +2.2 (1.0) 7/9, p 0.102 |
+| 4-hour high (rangepos >= 0.98) | hour | 24 | 0 | 0 | 5.1 | 07:00 | +2.3 (1.5) 4/9, p 0.958 |
+| 4-hour high (rangepos >= 0.98) | weekday | 7 | 0 | 0 | 2.6 | Sat | +2.1 (1.0) 7/9, p 0.180 |
+| 4-hour high (rangepos >= 0.98) | session | 5 | 0 | 0 | 2.0 | overlap 13-17 | -1.2 (1.0) 5/9, p 0.671 |
+| 4-hour high (rangepos >= 0.98) | month | 12 | 0 | 0 | 4.4 | Mar | +2.0 (1.3) 7/9, p 0.778 |
+| 4-hour high (rangepos >= 0.98) | event slot | 4 | 0 | 0 | 4.0 | weekend (Sat, Sun) | +0.9 (0.7) 6/9, p 0.513 |
+| RSI14 below 25 | hour | 24 | 0 | 0 | 5.6 | 22:00 | +3.7 (1.6) 7/9, p 0.385 |
+| RSI14 below 25 | weekday | 7 | 1 | 1 | 2.7 | Sat | +4.7 (1.3) 8/9, p 0.010 |
+| RSI14 below 25 | session | 5 | 0 | 0 | 2.2 | late 21-24 | +0.9 (1.0) 5/9, p 0.850 |
+| RSI14 below 25 | month | 12 | 0 | 0 | 4.6 | Oct | +3.0 (1.2) 6/8, p 0.172 |
+| RSI14 below 25 | event slot | 3 | 1 | 0 | 2.6 | weekend (Sat, Sun) | +2.0 (0.7) 7/9, p 0.012 |
+| RSI14 above 75 | hour | 24 | 0 | 0 | 5.7 | 12:00 | +4.6 (1.6) 8/9, p 0.118 |
+| RSI14 above 75 | weekday | 7 | 1 | 1 | 2.6 | Sat | +3.4 (0.8) 9/9, p 0.002 |
+| RSI14 above 75 | session | 5 | 0 | 0 | 2.2 | late 21-24 | +2.0 (0.9) 9/9, p 0.086 |
+| RSI14 above 75 | month | 12 | 0 | 0 | 4.3 | Aug | -1.7 (1.1) 5/9, p 0.792 |
+| RSI14 above 75 | event slot | 5 | 1 | 1 | 4.6 | weekend (Sat, Sun) | +1.7 (0.6) 9/9, p 0.024 |
+<!-- table:calendar_cells:end -->
+
+What the tables say, generated from the same files:
+
+<!-- table:calendar_sentences:start -->
+- **reversal at the open.** Slices clearing their family's 5% adjusted line on the pooled years: 2 of 54 (in 5 families); of those, holding the pooled sign in at least 8 years: 1 (weekday Sat (+0.9 points, 8 of 9 years, adjusted p 0.002)).
+  - Clears the null but not held: event slot weekend (Sat, Sun) (+0.5 points, 7 of 9 years, adjusted p 0.010).
+  - Largest pooled |z| among all 54: 4.50 (weekday Sat); the 5% line is 2.44 to 2.94 depending on the family.
+- **lead sign at minute 3.** Slices clearing their family's 5% adjusted line on the pooled years: 1 of 54 (in 5 families); of those, holding the pooled sign in at least 8 years: 1 (session overlap 13-17 (-0.5 points, 8 of 9 years, adjusted p 0.044)).
+  - Largest pooled |z| among all 54: 2.60 (session overlap 13-17); the 5% line is 2.55 to 2.99 depending on the family.
+- **Detectable deviation, reversal at the open.** A slice's pooled deviation has to reach about this many points to clear its family's 5% line (median over the family's slices; the median 95% half-width of a single year's deviation in brackets): hour 1.3 (yearly half-width 2.4); weekday 0.6 (yearly half-width 1.2); session 0.5 (yearly half-width 1.1); month 1.1 (yearly half-width 1.6); event slot 2.2 (yearly half-width 4.0).
+- **Detectable deviation, lead sign at minute 3.** A slice's pooled deviation has to reach about this many points to clear its family's 5% line (median over the family's slices; the median 95% half-width of a single year's deviation in brackets): hour 1.3 (yearly half-width 2.4); weekday 0.6 (yearly half-width 1.3); session 0.5 (yearly half-width 1.1); month 1.0 (yearly half-width 1.7); event slot 2.2 (yearly half-width 3.8).
+- **The six cells.** Cell-and-slice pairs clearing their family's 5% adjusted line on the pooled years: 6 of 302; of those, holding the pooled sign in at least 8 years: 4 (3-sd rise (5-min move > +3 sd): weekday Sat (+4.5 points, 8 of 9 years, adjusted p 0.006); RSI14 below 25: weekday Sat (+4.7 points, 8 of 9 years, adjusted p 0.010); RSI14 above 75: weekday Sat (+3.4 points, 9 of 9 years, adjusted p 0.002); RSI14 above 75: event slot weekend (Sat, Sun) (+1.7 points, 9 of 9 years, adjusted p 0.024)).
+  - Clears the null but not held: 3-sd drop (5-min move < -3 sd): weekday Sat (+4.5 points, 7 of 9 years, adjusted p 0.040); RSI14 below 25: event slot weekend (Sat, Sun) (+2.0 points, 7 of 9 years, adjusted p 0.012).
+- **Detectable deviation, the cells.** Median over cells and slices, in points: hour 6.3 (yearly half-width 10.1); weekday 2.9 (yearly half-width 5.5); session 2.2 (yearly half-width 5.0); month 4.6 (yearly half-width 6.9); event slot 2.8 (yearly half-width 6.5).
+- **How many clears chance alone would give.** Each rule is tested in 5 families at 5%, so up to 0.25 families per rule would show a clear slice on labels that carry no information; the six cells are 30 cell-and-family pairs, up to 1.5 such clears.
+- **The forward log's hour table.** With 132 windows in each clock hour, one hour's accuracy has a standard error of 4.4 points even if nothing depends on the hour, so the 24 hours would differ between the best and the worst by 17 points on average with no hour effect at all.
+<!-- table:calendar_sentences:end -->
+
+What it says, read after the numbers and with their limits:
+
+- **No hour of the day stands out, and the forward log's hour spread is what chance gives.** For both rules the largest pooled hour deviation is about a point and none of the 24 hours clears its family's line; an hour needs a pooled deviation of more than a point and a quarter to clear. Nine years of data narrow an hour to a standard error of roughly half a point, while the forward log's hour has a standard error of 4.4 points (generated sentence above), so the colour range in that heatmap is the spread expected from windows that carry no hour effect. No month and no session moves the reversal, and no month, weekday or hour moves the lead rule.
+- **Saturday is the one calendar effect for the reversal, small and consistent.** The reversal is 0.9 points more accurate on Saturdays than over the year (8 of 9 years, adjusted p 0.002), on a rule that scores 52 to 54% in a year, so about a point on a Saturday window. The weekend slice carries a smaller version that clears the null but keeps its sign in 7 of 9 years, so it is not held by the eight-year standard. The same Saturday direction shows in the cells, where the call is the same kind of reversal: three of the six cells have a Saturday slice that clears and holds, at 3 to 5 points, and the RSI14 above 75 cell also its weekend slice. Those are not independent confirmations: the cells fire on the same price moves. That the reversal is stronger when trading is thin is a guess here; volume by weekday is not in these tables.
+- **The count of clears is close to what a search of this size gives by chance, apart from Saturday.** Each rule is tested in five families, and the generated sentence above gives the expected number of chance clears. The lead rule's only clearing slice, the 13-17 overlap session, sits at an adjusted p of 0.044 with a deviation of half a point; across two rules and ten families it should not be read as a finding. A slice that clears the null but keeps its sign in fewer than 8 years is listed as such above, not folded in.
+- **The event slots are too thin to say.** The event slots have a median of about 700 windows per slice-year (the first hour of the week fewer), so a deviation has to reach more than two points pooled to clear. None does for the rules. A smaller effect at those times is not excluded; it is below what nine years of this data can resolve.
+- **Practical reading.** The calendar gives no reason to switch either rule off at some hours or to trust it more at others. The one conditioner worth a forward test is Saturday for the reversal, because it clears at the floor of the null (adjusted p 0.002), keeps its sign in 8 of 9 years and recurs in the cells, where the overlap session for the lead rule is only borderline; it should be written down before the forward log is read for it, and an effect of about a point would take years of Saturdays to confirm.
+
 ## One probability per minute from the cells
 
 The cells above are read one at a time. A live view needs one number per minute, so the whole event set of both libraries (0/1 for each event) plus the trailing-hour volatility tercile goes into a logistic regression for the next-h-minute direction, fit on all earlier years and scored on each later year from 2020, at horizons of 5 and 15 minutes. Two baselines on the same minutes: call the opposite of the previous h minutes (the one-bit rule at this horizon), and let the strongest firing cell decide (ranking and direction from the training years). The same run checks whether the cells keep their promises: for every event whose training-years deviation was at least 3 points, the deviation the training years promised against the one the test year delivered.
