@@ -12,7 +12,6 @@ Deferred work, each with a size and the trigger that makes it worth doing. Finis
 
 ## Product
 
-- **Retire the local scheduled task.** The forward log now runs on GitHub Actions (`.github/workflows/forward-log.yml`, 03:40 UTC daily, commits as the Actions bot, refuses to retrain). Once the first Actions run has committed, disable `PredictionMarketLabForwardLog` on the owner's machine so there is one writer; until then both append identical rows (the chain is content-determined) and only the bot pushes. Size: five minutes. Trigger: the first green Actions run.
 - **Link to the site.** Once calledit.money is deployed, the README and the forward-log section of the report link to it (the site is built in a separate private repo that reads this log). Size: ten minutes. Trigger: the deploy.
 - **Live view on the tracking page.** Every minute: the active patterns, their next-5-minute probability and years held, the implied contract move, shown separately from the window call; reads the same tables and the forward log. Shipped as a pre-registered forward experiment: frozen rule set, probabilities shrunk by the forward calibration and the calibration slope, a stated stopping rule (about twelve months for a two-standard-error call on a one-point increment at 96 windows a day), and a decay forecast beside each cell. Size: a week with the design frames. Trigger: the owner's design frames are ready (owner, 2026-10-01: fleshed out, more to add).
 
