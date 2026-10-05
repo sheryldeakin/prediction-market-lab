@@ -69,6 +69,7 @@ python -m models.btc_15m.search_null                                 # the wide 
 python -m models.btc_15m.settlement                                  # labels from 60-second VWAPs (needs the tick files)
 python -m models.btc_15m.boundary                                    # edge by minute and by phase offset
 python -m models.btc_15m.entry_seconds                               # the window call 10, 30 and 60 seconds after the open (needs the tick files)
+python -m models.btc_15m.entry_seconds --ablation                    # which inputs carry the fitted models' gain at those entries
 python -m models.btc_15m.venues                                      # Coinbase and Bitstamp candles download on first run
 python -m models.btc_15m.holdout2025                                 # runs once; refuses a second run
 python -m models.btc_15m.charts

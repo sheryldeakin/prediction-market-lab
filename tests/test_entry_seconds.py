@@ -73,6 +73,57 @@ def test_lead_z_matches_the_main_tables_scaling_and_shrinks_with_volatility():
     assert es.lead_z(np.array([4.0]), np.array([2.0]), 60)[0] > es.lead_z(np.array([4.0]), np.array([2.0]), 10)[0]   # less time left, surer
 
 
+def test_each_ablation_variant_has_exactly_its_intended_columns():
+    from models.btc_15m.evaluate import ALL
+    lead = es.variant_columns("+lead")
+    assert lead == ALL + ["tk_lead", "tk_leadz"]
+    assert not {"tk_flow", "tk_n", "tk_big"} & set(lead)                        # no flow, trade count or large-trade features
+    assert es.variant_columns("+ticks") == ALL + es.TICK_COLS                    # the main table's models
+    only = es.variant_columns("ticks-only")
+    assert set(only) == {"tk_lead", "tk_leadz", "tk_flow", "tk_n", "tk_big"} and len(only) == 5
+    assert not set(only) & set(ALL)                                              # no minute-0 feature
+    assert set(es.variant_columns("+lead")) < set(es.variant_columns("+ticks"))  # +lead is nested in +ticks
+    for v in es.VARIANTS:
+        assert len(es.variant_columns(v)) == len(set(es.variant_columns(v)))     # no column twice
+    with pytest.raises(ValueError):
+        es.variant_columns("everything")
+
+
+def test_paired_row_gives_both_intervals_and_the_month_interval_is_the_wider_one_on_month_level_differences():
+    rng = np.random.default_rng(1)
+    t = np.arange(0, 6 * 30 * 86400, 900)
+    month = pd.to_datetime(t, unit="s").to_period("M").astype(str)
+    shift = pd.Series(month).map({m: s for m, s in zip(sorted(set(month)), [-0.2, 0.3, -0.1, 0.25, -0.3, 0.1])}).values   # each month has its own gap
+    a = (rng.random(len(t)) < 0.5 + shift * 0.1).astype(float)
+    b = (rng.random(len(t)) < 0.5).astype(float)
+    r = es.paired_row(a, b, t, n_draws=200)
+    assert r["diff_low"] <= r["diff"] <= r["diff_high"] and r["diff_month_low"] <= r["diff"] <= r["diff_month_high"]
+    assert r["diff_month_high"] - r["diff_month_low"] > r["diff_high"] - r["diff_low"]
+    same = es.paired_row(a, a, t, n_draws=200)
+    assert same["diff"] == 0 and same["diff_low"] == 0 == same["diff_month_high"]    # a model against itself
+
+
+def test_excludes_zero_keeps_only_intervals_that_do_not_contain_it():
+    rows = [{"lo": 0.1, "hi": 0.3}, {"lo": -0.1, "hi": 0.3}, {"lo": -0.3, "hi": -0.1}, {"lo": 0.0, "hi": 0.2}]
+    assert es.excludes_zero(rows, "lo", "hi") == [rows[0], rows[2]]               # touching zero counts as containing it
+
+
+def test_write_ablation_names_the_comparisons_it_counts(tmp_path):
+    def row(entry, model, variant, diff, dlo, dhi, mlo, mhi):
+        return {"entry": entry, "entry_seconds": 10, "n": 100, "model": model, "variant": variant, "accuracy": 0.55, "ci_low": 0.5, "ci_high": 0.6, "auc": 0.55,
+                "log_loss": 0.69, "diff": diff, "diff_low": dlo, "diff_high": dhi, "diff_month_low": mlo, "diff_month_high": mhi, "days_better": 0.55, "sign_p": 0.01}
+    rows = [{**row("10 s", "lead-sign", "rule", 0, 0, 0, 0, 0)},
+            row("10 s", "forest", "+lead", 0.01, 0.002, 0.02, -0.01, 0.03),
+            row("10 s", "forest", "+ticks", 0.02, 0.005, 0.03, 0.001, 0.04)]
+    incs = [{k: v for k, v in row("10 s", "forest", "x", 0.01, -0.005, 0.02, -0.01, 0.03).items() if k != "variant"}]
+    es.write_ablation(rows, incs, {"plus_ticks_rows_reproduce_main_table": True}, tmp_path, "2025-10", "2026-08")
+    md = (tmp_path / "entry_seconds_ablation.md").read_text()
+    assert "outside the day-block interval for 2 of the 2 comparisons with the lead-sign rule (forest +lead at 10 s (+1.00); forest +ticks at 10 s (+2.00))" in md
+    assert "outside the month-block interval for 1 (forest +ticks at 10 s (+2.00))" in md
+    assert "outside the day-block interval for 0 of the 1 comparisons of +ticks with +lead (none)" in md and "reproduce" in md
+    assert len(pd.read_csv(tmp_path / "entry_seconds_ablation.csv")) == 4
+
+
 def test_join_returns_the_stored_predictions_on_the_walk_forward_windows_in_order():
     rng = np.random.default_rng(0)
     t = np.arange(0, 7 * 30 * 86400, 900)                                    # about seven months of quarter hours

@@ -22,7 +22,7 @@ The window call by entry time, walk-forward by month, 2025-10 to 2026-08, test m
 
 What these windows could detect: the day-block interval on a difference from the entry's rule is 0.28 to 1.43 points wide across the rows above, so an increment smaller than about 0.14 to 0.72 points could not be told from zero. A null here is a bound of that width, not a verdict.
 
-Of the 9 comparisons with the lead-sign rule at 10, 30 and 60 seconds, 3 have a day-block interval that excludes zero: forest+ticks at 10 s (+0.68); xgb+ticks at 10 s (+0.71); forest+ticks at 30 s (+0.83). The intervals are not adjusted for the number of comparisons. The fitted models differ from the rule in two ways at once, they use the tick features and they use the minute-0 features, and no row separates the two.
+Of the 9 comparisons with the lead-sign rule at 10, 30 and 60 seconds, 3 have a day-block interval that excludes zero: forest+ticks at 10 s (+0.68); xgb+ticks at 10 s (+0.71); forest+ticks at 30 s (+0.83). The intervals are not adjusted for the number of comparisons. The fitted models differ from the rule in two ways at once, they use the tick features and they use the minute-0 features; the ablation table below separates the two.
 
 Tick coverage at each entry over the scored windows: the share whose second [t+N-1, t+N) had no trade (the last earlier VWAP was used), the share with no trade at all in [t, t+N), the share whose lead is exactly zero, and the share whose lead has a different sign when measured against the candle open instead of the first traded second's VWAP.
 

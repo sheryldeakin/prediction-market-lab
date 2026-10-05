@@ -28,6 +28,13 @@ the existing out-of-fold predictions on the same windows. Part (b) is the rule o
 year from 2018, day-clustered intervals.
 
     python -m models.btc_15m.entry_seconds --start 2025-10 --end 2026-08
+    python -m models.btc_15m.entry_seconds --ablation        # only the feature-set ablation table
+
+The ablation separates what the fitted models gain from the tick features from what they gain
+from the minute-0 features: at each entry the forest and XGBoost are fitted on three feature
+sets, the minute-0 set plus the lead only, the minute-0 set plus all tick features (the main
+table), and the tick features alone, and each is compared with the lead-sign rule with day-block
+and month-block intervals; the tick increment proper is the second against the first.
 """
 from __future__ import annotations
 
@@ -47,7 +54,7 @@ from models.btc_15m.data import load
 from models.btc_15m.evaluate import ALL, N_JOBS, add_baseline_columns, format_p, score, walk_forward
 from models.btc_15m.features import CACHE_DIR, WINDOW, Series, dataset
 from models.btc_15m.log import current_model_id
-from models.btc_15m.stats import block_bootstrap_ci, day_sign_test, paired_difference_ci
+from models.btc_15m.stats import block_bootstrap_ci, day_sign_test, month_block_bootstrap_ci, paired_difference_ci
 from models.btc_15m.ticks import load_seconds, tick_path
 
 warnings.filterwarnings("ignore")
@@ -55,6 +62,8 @@ OUT = Path("results/btc_15m")
 ENTRIES = (10, 30, 60)
 CACHE_VERSION = 1
 TICK_COLS = ["tk_lead", "tk_flow", "tk_n", "tk_big", "tk_leadz"]
+LEAD_COLS = ["tk_lead", "tk_leadz"]
+VARIANTS = ("+lead", "+ticks", "ticks-only")
 LADDER = {"open": 0, "10 s": 10, "30 s": 30, "60 s": 60, "minute 3": 180}
 
 
@@ -93,6 +102,19 @@ def lead_z(lead_bp: np.ndarray, vol60: np.ndarray, n_sec: float) -> np.ndarray:
     """The lead in units of the volatility expected over the rest of the window; the same
     scaling as evaluate.add_baseline_columns with k = n_sec / 60 minutes."""
     return lead_bp / (vol60 * np.sqrt(WINDOW - n_sec / 60) + 1e-9)
+
+
+def variant_columns(variant: str) -> list[str]:
+    """The model inputs of one ablation variant: +lead is the minute-0 set plus the lead and its
+    scaled form, +ticks the minute-0 set plus every tick feature (the main table's models),
+    ticks-only the tick features without the minute-0 set."""
+    if variant == "+lead":
+        return ALL + LEAD_COLS
+    if variant == "+ticks":
+        return ALL + TICK_COLS
+    if variant == "ticks-only":
+        return list(TICK_COLS)
+    raise ValueError(f"unknown variant {variant!r}")
 
 
 def lead_sign_call(lead_bp: np.ndarray, prev_up: np.ndarray) -> np.ndarray:
@@ -245,11 +267,113 @@ def write_ladder(rows: list[dict], diag: list[dict], out: Path, start: str, end:
         hit = vs_rule[(vs_rule.diff_low > 0) | (vs_rule.diff_high < 0)]
         listed = "; ".join(f"{r.model} at {r.entry} ({r.diff*100:+.2f})" for r in hit.itertuples()) or "none"
         f.write(f"Of the {len(vs_rule)} comparisons with the lead-sign rule at 10, 30 and 60 seconds, {len(hit)} have a day-block interval that excludes zero: {listed}. "
-                "The intervals are not adjusted for the number of comparisons. The fitted models differ from the rule in two ways at once, they use the tick features and they use the minute-0 features, and no row separates the two.\n\n")
+                "The intervals are not adjusted for the number of comparisons. The fitted models differ from the rule in two ways at once, they use the tick features and they use the minute-0 features; the ablation table below separates the two.\n\n")
         f.write("Tick coverage at each entry over the scored windows: the share whose second [t+N-1, t+N) had no trade (the last earlier VWAP was used), the share with no trade at all in [t, t+N), the share whose lead is exactly zero, and the share whose lead has a different sign when measured against the candle open instead of the first traded second's VWAP.\n\n")
         f.write("| entry | windows | fallback used | no trade in [t, t+N) | lead exactly zero | sign differs from candle-open lead |\n|---|---|---|---|---|---|\n")
         for d in diag:
             f.write(f"| {d['entry']} | {d['windows']} | {d['fallback']*100:.2f}% | {d['no_trade_at_all']*100:.2f}% | {d['lead_zero']*100:.2f}% | {d['sign_differs_from_candle_open']*100:.2f}% |\n")
+
+
+# ---------------------------------------------------------------- ablation of the feature sets
+
+def paired_row(hits, base_hits, t, n_draws=2000) -> dict:
+    """Accuracy of hits minus accuracy of base_hits on the same windows, with day-block and
+    month-block intervals, the share of days better and the sign-flip p."""
+    d, dlo, dhi = paired_difference_ci(hits, base_hits, t)
+    _, mlo, mhi = month_block_bootstrap_ci(hits - base_hits, t)
+    sg = day_sign_test(hits, base_hits, t, n_draws=n_draws)
+    return {"diff": d, "diff_low": dlo, "diff_high": dhi, "diff_month_low": mlo, "diff_month_high": mhi,
+            "days_better": sg["share_days_a_better"], "sign_p": sg["p"]}
+
+
+def excludes_zero(rows: list[dict], low: str, high: str) -> list[dict]:
+    """The rows whose interval [low, high] does not contain zero."""
+    return [r for r in rows if r[low] > 0 or r[high] < 0]
+
+
+def ablation(start: str, end: str, log=print):
+    """Rows of the ablation table: at each entry the lead-sign rule, then the forest and XGBoost on each
+    variant (variant_columns) compared with the rule, then +ticks compared with +lead."""
+    s = Series(load(start, end))
+    D = add_baseline_columns(dataset(s, 0), 0)
+    D = D.merge(tick_table([str(p) for p in pd.period_range(start, end, freq="M")]), on="t", how="left")
+    assert not D[[f"lead_{n}" for n in ENTRIES]].isna().any().any(), "windows without tick rows"
+    main = OUT / "entry_seconds.csv"
+    M = pd.read_csv(main) if main.exists() else None
+    rows, increments, reproduced = [], [], []
+    for n in ENTRIES:
+        lab = f"{n} s"
+        D["tk_lead"], D["tk_flow"], D["tk_n"], D["tk_big"] = D[f"lead_{n}"], D[f"flow_{n}"], D[f"n_{n}"], D[f"big_{n}"]
+        D["tk_leadz"] = lead_z(D.tk_lead.values, D.vol60.values, n)
+        D["ls_call"] = lead_sign_call(D.tk_lead.values, D.prev_up.values)
+        p_ls, y, _, t = walk_forward(D, ["ls_call"], "bitrate")
+        rule_hits = (D.set_index("t").loc[t, "ls_call"].values == y).astype(float)
+        base = {"entry": lab, "entry_seconds": n, "n": len(y)}
+        rows.append({**base, "model": "lead-sign", "variant": "rule", **_acc_cells(rule_hits, t, p_ls, y)})
+        for kind in ("forest", "xgb"):
+            hits = {}
+            for v in VARIANTS:
+                p, y2, _, t2 = walk_forward(D, variant_columns(v), kind)
+                assert (t2 == t).all() and (y2 == y).all()
+                hits[v] = ((p > 0.5) == y).astype(float)
+                rows.append({**base, "model": kind, "variant": v, **_acc_cells(hits[v], t, p, y), **paired_row(hits[v], rule_hits, t)})
+                log(f"{lab} {kind} {v}: {rows[-1]['accuracy']*100:.2f}%")
+                if v == "+ticks" and M is not None:
+                    ref = M[(M.entry == lab) & (M.model == f"{kind}+ticks")]
+                    if len(ref) and int(ref.n.iloc[0]) == len(y):
+                        reproduced.append(bool(abs(float(ref.accuracy.iloc[0]) - rows[-1]["accuracy"]) < 1e-12))
+            increments.append({**base, "model": kind, **paired_row(hits["+ticks"], hits["+lead"], t)})
+    if reproduced:
+        assert all(reproduced), "the +ticks variants do not reproduce the main table's forest+ticks and xgb+ticks rows"
+    return rows, increments, {"plus_ticks_rows_reproduce_main_table": len(reproduced) == 6 and all(reproduced), "windows": int(rows[0]["n"])}
+
+
+def _acc_cells(hits, t, prob, y) -> dict:
+    m, lo, hi = block_bootstrap_ci(hits, t)
+    sc = score(prob, y)
+    return {"accuracy": m, "ci_low": lo, "ci_high": hi, "auc": sc["auc"], "log_loss": sc["log_loss"]}
+
+
+def _names(rows: list[dict], with_variant: bool) -> str:
+    label = lambda r: f"{r['model']} {r['variant']}" if with_variant else r["model"]
+    return "; ".join(f"{label(r)} at {r['entry']} ({r['diff']*100:+.2f})" for r in rows) or "none"
+
+
+def write_ablation(rows: list[dict], increments: list[dict], checks: dict, out: Path, start: str, end: str):
+    R = pd.DataFrame(rows + [dict(r, variant="+ticks minus +lead") for r in increments])
+    R.to_csv(out / "entry_seconds_ablation.csv", index=False)
+    vs_rule = [r for r in rows if r["variant"] != "rule"]
+    with open(out / "entry_seconds_ablation.md", "w") as f:
+        f.write(f"Which inputs carry the fitted models' gain over the lead-sign rule at 10, 30 and 60 seconds, same windows and same month-by-month walk-forward as the table above ({start} to {end}, {rows[0]['n']} windows), on CPU. "
+                "Each model is fitted on three input sets: +lead is the minute-0 feature set plus the lead and the lead scaled by the volatility left in the window (no signed-volume share, trade count or large-trade count); "
+                "+ticks is the minute-0 set plus all five tick features, the models of the table above; ticks-only is the five tick features with no minute-0 feature. "
+                "Accuracy has a day-block 95% interval. \"vs lead-sign\" is accuracy minus the entry's lead-sign rule on the same windows, with a day-block and a month-block 95% interval, the share of days better and the sign-flip p. "
+                "The month-block interval resamples whole calendar months (the convention of checks.md); with so few test months it is wide.\n\n")
+        f.write("| entry | model | inputs | accuracy [95% CI] | AUC | log loss | vs lead-sign, day blocks | vs lead-sign, month blocks | days better | sign p |\n|---|---|---|---|---|---|---|---|---|---|\n")
+        for r in rows:
+            acc = _fmt_ci(r["accuracy"], r["ci_low"], r["ci_high"])
+            if r["variant"] == "rule":
+                cells = ["baseline", "", "", ""]
+            else:
+                cells = [_fmt_ci(r["diff"], r["diff_low"], r["diff_high"], sign=True), _fmt_ci(r["diff"], r["diff_month_low"], r["diff_month_high"], sign=True),
+                         f"{r['days_better']*100:.0f}%", format_p(r["sign_p"], 2000)]
+            f.write(f"| {r['entry']} | {r['model']} | {r['variant']} | {acc} | {r['auc']:.3f} | {r['log_loss']:.4f} | " + " | ".join(cells) + " |\n")
+        f.write("\nThe tick increment proper: accuracy of +ticks minus accuracy of +lead, the same model on the same windows, so the only difference is the signed-volume share, trade count and large-trade count.\n\n")
+        f.write("| entry | model | +ticks minus +lead, day blocks | +ticks minus +lead, month blocks | days better | sign p |\n|---|---|---|---|---|---|\n")
+        for r in increments:
+            f.write(f"| {r['entry']} | {r['model']} | {_fmt_ci(r['diff'], r['diff_low'], r['diff_high'], sign=True)} | {_fmt_ci(r['diff'], r['diff_month_low'], r['diff_month_high'], sign=True)} | "
+                    f"{r['days_better']*100:.0f}% | {format_p(r['sign_p'], 2000)} |\n")
+        dd, mm = excludes_zero(vs_rule, "diff_low", "diff_high"), excludes_zero(vs_rule, "diff_month_low", "diff_month_high")
+        di, mi = excludes_zero(increments, "diff_low", "diff_high"), excludes_zero(increments, "diff_month_low", "diff_month_high")
+        w = lambda rs, lo, hi: [r[hi] - r[lo] for r in rs]
+        f.write(f"\nZero is outside the day-block interval for {len(dd)} of the {len(vs_rule)} comparisons with the lead-sign rule ({_names(dd, True)}) and outside the month-block interval for {len(mm)} ({_names(mm, True)}). "
+                f"Zero is outside the day-block interval for {len(di)} of the {len(increments)} comparisons of +ticks with +lead ({_names(di, False)}) and outside the month-block interval for {len(mi)} ({_names(mi, False)}). "
+                "The intervals are not adjusted for the number of comparisons.\n\n")
+        both = vs_rule + increments
+        f.write(f"What these windows could detect: across the rows above a day-block interval on a difference is {min(w(both, 'diff_low', 'diff_high'))*100:.2f} to {max(w(both, 'diff_low', 'diff_high'))*100:.2f} points wide and a month-block interval is "
+                f"{min(w(both, 'diff_month_low', 'diff_month_high'))*100:.2f} to {max(w(both, 'diff_month_low', 'diff_month_high'))*100:.2f} points wide. A null here is a bound of that width, not a verdict.\n")
+        if checks.get("plus_ticks_rows_reproduce_main_table"):
+            f.write("\nThe +ticks rows reproduce the forest+ticks and xgb+ticks accuracies of the table above exactly.\n")
 
 
 # ---------------------------------------------------------------- part (b)
@@ -332,11 +456,17 @@ def main():
     ap.add_argument("--end", default="2026-08")
     ap.add_argument("--years-from", type=int, default=2018)
     ap.add_argument("--out", default=str(OUT), help="output directory (a smoke run points this elsewhere)")
+    ap.add_argument("--ablation", action="store_true", help="only the feature-set ablation (entry_seconds_ablation.md/.csv)")
     a = ap.parse_args()
     evaluate.XGB_DEVICE = "cpu"                     # this study is CPU only
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
+    if a.ablation:
+        rows, incs, checks = ablation(a.start, a.end, log=lambda m: print(m, flush=True))
+        write_ablation(rows, incs, checks, out, a.start, a.end)
+        print(f"wrote entry_seconds_ablation.md and .csv to {out} in {time.time()-t0:.0f}s (checks: {checks})")
+        return
     commit = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
     dirty = bool(subprocess.run(["git", "status", "--porcelain", "models"], capture_output=True, text=True).stdout.strip())
     rows, diag, checks = study_period(a.start, a.end, log=lambda m: print(m, flush=True))
