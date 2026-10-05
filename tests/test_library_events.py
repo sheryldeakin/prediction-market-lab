@@ -271,6 +271,14 @@ def test_rendering_twice_gives_the_same_document_and_one_row_per_cell():
     null = np.array([1.0, 2.0, 3.0])
     a = L.render(G, [2020, 2021], "2021-12", 3, null, 9.0, shares)
     assert a == L.render(G, [2020, 2021], "2021-12", 3, null, 9.0, shares)
+    A = pd.DataFrame(rows)
+    b = L.render(G, [2020, 2021], "2021-12", 3, null, 9.0, shares, year_rows=A)           # with the per-year ranges and the new sentences present
+    assert b == L.render(G, [2020, 2021], "2021-12", 3, null, 9.0, shares, year_rows=A)
+    assert "Per year at 15 minutes, the oriented deviation runs from" in b and "Per year at 15 minutes" not in a
+    assert "Every event was scored in every year." in b
+    assert b.count("Every event was scored in every year.") == 1
+    table = [ln for ln in b.splitlines() if ln.startswith("| ") and not ln.startswith("| family")]
+    assert len(table) == len(names) * len(L.HORIZONS)
     table = [ln for ln in a.splitlines() if ln.startswith("| ") and not ln.startswith("| family")]
     assert len(table) == len(names) * len(L.HORIZONS)
     assert "Of 66 cells (11 events at 6 horizons), 66 hold their sign in every year." in a
@@ -455,6 +463,10 @@ def test_the_derivatives_document_has_the_coverage_then_one_row_per_cell(tmp_pat
     funding = next(x for x in lines if x.startswith("Funding at an extreme"))
     assert "(reversal positive)" in funding
     assert "fires on" in a and L.DERIV_SHARE_EVENTS[0] in a
+    assert "over the years in which it was scored" in a and "the share is the share of minutes the event fires on over the years in which it was scored" in a
+    assert any(x.startswith("Open interest up over 15 or 60 minutes, top decile") for x in lines)
+    assert any(x.startswith("Open interest down over 15 or 60 minutes, bottom decile") for x in lines)
+    assert not any(x.startswith("Open interest moves") for x in lines)
     assert "| event |" in L.render_derivatives(tmp_path).splitlines()                 # coverage only: the stand-alone list stays
 
 
@@ -468,6 +480,9 @@ def test_render_with_the_tick_arguments_given_explicitly_is_the_default():
                         share_events=L.TICK_SHARE_EVENTS, intro=L.tick_intro([2020, 2021], "2021-12", 3, null))
     assert default == explicit
     assert default.startswith("Tick-level events for the price-action library, 2020 to 2021-12,")
+    # The contract changed after the outside review of 2026-10-05: the share is the aggregate over the scored years, and the intro and header say so.
+    assert "the share of minutes it fires on over the years in which it was scored (an event with fewer than" in default
+    assert "| share (scored years) |" in default
 
 
 def test_a_negative_deviation_on_the_top_funding_decile_is_a_positive_reversal():
@@ -475,3 +490,98 @@ def test_a_negative_deviation_on_the_top_funding_decile_is_a_positive_reversal()
     s = L.effect_sentences(pd.DataFrame(rows), L.DERIV_EFFECTS, L.DERIV_ORIENT)
     first = next(x for x in s if x.startswith("Funding at an extreme"))
     assert "from +5.0 to +5.0 points (reversal positive)" in first
+
+
+# ---------------- reporting after the outside review of 2026-10-05 ----------------
+
+def share_table(events, years):
+    return pd.DataFrame({"year": list(years) * len(events), "event": np.repeat(events, len(years)), "share": 0.01, "fires": 5})
+
+
+def test_share_is_the_aggregate_over_the_scored_years_and_not_the_mean_of_the_yearly_shares():
+    A = pd.DataFrame([year_rows(2020, 0.0, fires=1000, share=0.10), year_rows(2021, 0.0, fires=3000, share=0.30), year_rows(2022, 0.0, fires=1000, share=0.10)])
+    V = pd.DataFrame([vwap_rows(2020, 0.0, 0.0), vwap_rows(2021, 0.0, 0.0, fires=3000), vwap_rows(2022, 0.0, 0.0)])
+    G = L.pool_cells(A, V).iloc[0]
+    # every year is 10,000 minutes (fires / share), so the aggregate is 5000 / 30000; the mean of the three shares would be 0.1667
+    assert G.share == pytest.approx(5000 / 30000)
+    # these three years happen to have equal minutes, so the mean agrees; unequal minutes tell the two apart:
+    # 1000 firings at 0.10 is 10,000 minutes and 3000 firings at 0.15 is 20,000, so 4000 / 30000 = 0.1333, where the mean of the shares is 0.125
+    A2 = pd.DataFrame([year_rows(2020, 0.0, fires=1000, share=0.10), year_rows(2021, 0.0, fires=3000, share=0.15)])
+    V2 = pd.DataFrame([vwap_rows(2020, 0.0, 0.0), vwap_rows(2021, 0.0, 0.0, fires=3000)])
+    G2 = L.pool_cells(A2, V2).iloc[0]
+    assert G2.share == pytest.approx(4000 / 30000)
+    assert G2.share != pytest.approx(A2.share.mean())
+
+
+def test_the_table_header_says_the_share_is_over_the_scored_years():
+    G = scored_cells(["trade-count climax"])
+    a = L.render(G, [2020, 2021], "2021-12", 3, np.array([1.0]), 9.0, share_table(["trade-count climax", "large-trade burst"], [2020, 2021]))
+    assert "| fires | share (scored years) | up-rate |" in a
+
+
+def test_an_event_scored_in_fewer_than_all_years_gets_a_sentence_with_the_counts():
+    names = [name for _, name in L.TICK_EVENTS]
+    partial = names[-1]
+    G = pd.concat([scored_cells(names[:-1], years=(2020, 2021, 2022)), scored_cells([partial], years=(2020, 2021))], ignore_index=True)
+    s = L.sentences(G, np.array([1.0]), 9.0, share_table(list(L.TICK_SHARE_EVENTS), [2020, 2021, 2022]), [2020, 2021, 2022])
+    expected = f"'{partial}' was scored in 2 of 3 years (fewer than {L.MIN_FIRES} firings in the others)."
+    assert s.count(expected) == 1
+    assert sum(" years (fewer than " in x for x in s) == 1
+    assert "Every event was scored in every year." not in s
+    full = L.sentences(scored_cells(names), np.array([1.0]), 9.0, share_table(list(L.TICK_SHARE_EVENTS), [2020, 2021]), [2020, 2021])
+    assert "Every event was scored in every year." in full and not any(" years (fewer than " in x for x in full)
+
+
+def strong_cells(retained_by_event):
+    """Cells that hold their sign in every year and clear the null in every year, with the given VWAP retention at the shortest horizon."""
+    G = scored_cells(list(retained_by_event))
+    first = min(L.HORIZONS)
+    for ev, r in retained_by_event.items():
+        G.loc[(G.event == ev) & (G.horizon == first), "retained"] = r
+    return G
+
+
+def test_strong_one_minute_cells_that_keep_under_half_under_the_vwap_label_are_listed():
+    low, high = "large-trade burst", "trade-count climax"
+    G = strong_cells({low: 0.2, high: 0.9})
+    s = L.sentences(G, np.array([1.0]), 9.0, share_table(list(L.TICK_SHARE_EVENTS), [2020, 2021]), [2020, 2021])
+    line = next(x for x in s if x.startswith("Of the ") and "VWAP label" in x)
+    assert f"Of the {len(G)} cells that hold their sign in every year and clear the null in at least half of the years, 1 are at the {min(L.HORIZONS)}-minute horizon" in line
+    assert line.endswith(f"keep less than half of their deviation under the VWAP label: {low} (retained 20%).")
+    assert high not in line
+    nan = strong_cells({low: float("nan")})
+    line = next(x for x in L.sentences(nan, np.array([1.0]), 9.0, share_table(list(L.TICK_SHARE_EVENTS), [2020, 2021]), [2020, 2021]) if "VWAP label:" in x)
+    assert f"{low} (retained not measured)" in line                                  # an unmeasured retention counts as failing
+    ok = strong_cells({low: 0.9})
+    line = next(x for x in L.sentences(ok, np.array([1.0]), 9.0, share_table(list(L.TICK_SHARE_EVENTS), [2020, 2021]), [2020, 2021]) if "VWAP label:" in x)
+    assert line.endswith("VWAP label: none.")
+
+
+def test_the_vwap_sentence_is_absent_when_no_cell_is_strong():
+    G = strong_cells({"large-trade burst": 0.2}).assign(years_adj_05=0)
+    s = L.sentences(G, np.array([1.0]), 9.0, share_table(list(L.TICK_SHARE_EVENTS), [2020, 2021]), [2020, 2021])
+    assert not any("VWAP label:" in x for x in s)
+
+
+def test_the_effect_sentence_gives_the_oriented_per_year_range_at_15_minutes():
+    ev = "trade-count climax at a new 1h high"                                           # orient -1: a fall is the reversal
+    G = pd.DataFrame([{"event": ev, "horizon": h, "deviation": -0.01, "lo": -0.02, "hi": 0.0, "years": 2, "years_held": 2} for h in (5, 10, 15, 30)])
+    A = pd.DataFrame([{"year": 2020, "pattern": ev, "horizon": 15, "diff": 0.02}, {"year": 2021, "pattern": ev, "horizon": 15, "diff": -0.01},
+                      {"year": 2020, "pattern": ev, "horizon": 5, "diff": 0.50},            # another horizon: not in the range
+                      {"year": 2020, "pattern": "large-trade burst", "horizon": 15, "diff": 0.50}])   # another event: not in this group
+    first = next(x for x in L.effect_sentences(G, A=A) if x.startswith("A reversal from a price extreme"))
+    assert first.endswith(" Per year at 15 minutes, the oriented deviation runs from -2.0 to +1.0 points over 2 year-cells, 1 of them positive.")
+    assert "Per year" not in next(x for x in L.effect_sentences(G) if x.startswith("A reversal from a price extreme"))
+
+
+def test_open_interest_up_and_down_are_separate_groups_with_a_range_of_one_sign_each():
+    d = L.DERIV_EVENTS
+    rows = [{"event": e, "horizon": h, "deviation": dev, "lo": dev - 0.001, "hi": dev + 0.001, "years": 3, "years_held": 3}
+            for events, dev in (([d[2], d[4]], -0.003), ([d[3], d[5]], 0.015)) for e in events for h in (5, 10, 15, 30)]
+    s = L.effect_sentences(pd.DataFrame(rows), L.DERIV_EFFECTS, L.DERIV_ORIENT)
+    up = next(x for x in s if x.startswith("Open interest up over 15 or 60 minutes, top decile"))
+    down = next(x for x in s if x.startswith("Open interest down over 15 or 60 minutes, bottom decile"))
+    assert "runs from -0.3 to -0.3 points (up positive)" in up
+    assert "runs from +1.5 to +1.5 points (up positive)" in down
+    assert not any(x.startswith("Open interest moves") for x in s)
+    assert sorted(e for _, evs in L.DERIV_EFFECTS[2:] for e in evs) == sorted(d[2:6])        # the four open-interest events, each in one group
