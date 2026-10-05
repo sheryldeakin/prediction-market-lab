@@ -12,7 +12,7 @@ Deferred work, each with a size and the trigger that makes it worth doing. Finis
 
 ## Product
 
-- **The daily runner pushes the log.** Decided 2026-10-04: after a successful run the runner commits and pushes `predictions.csv`, the chart and the spliced docs, guarded (chain verifies; nothing else modified or staged; a failed push keeps the commit local). The site reads the public CSV until the per-window runner brings the database (the CSV is the serving copy only until then). Size: an hour. Trigger: now; the step must be added by hand or with an explicit permission grant, since it is an unattended push.
+- **Retire the local scheduled task.** The forward log now runs on GitHub Actions (`.github/workflows/forward-log.yml`, 03:40 UTC daily, commits as the Actions bot, refuses to retrain). Once the first Actions run has committed, disable `PredictionMarketLabForwardLog` on the owner's machine so there is one writer; until then both append identical rows (the chain is content-determined) and only the bot pushes. Size: five minutes. Trigger: the first green Actions run.
 - **Link to the site.** Once calledit.money is deployed, the README and the forward-log section of the report link to it (the site is built in a separate private repo that reads this log). Size: ten minutes. Trigger: the deploy.
 - **Live view on the tracking page.** Every minute: the active patterns, their next-5-minute probability and years held, the implied contract move, shown separately from the window call; reads the same tables and the forward log. Shipped as a pre-registered forward experiment: frozen rule set, probabilities shrunk by the forward calibration and the calibration slope, a stated stopping rule (about twelve months for a two-standard-error call on a one-point increment at 96 windows a day), and a decay forecast beside each cell. Size: a week with the design frames. Trigger: the owner's design frames are ready (owner, 2026-10-01: fleshed out, more to add).
 
@@ -22,4 +22,5 @@ Deferred work, each with a size and the trigger that makes it worth doing. Finis
 - September 2026 is a holdout, not forward: the log was first written after the month had passed. The forward log proper begins 2026-10-01.
 - The first year of every nine-year study takes its volatility cutoffs from its own first quarter, because no earlier year exists; later years use the previous year.
 - The tercile cutoffs in the volatility table come from the previous year, so a calm year after a wild one has most of its minutes in the low tercile. This is deliberate: the tercile must be known at the time.
+- The forward log is computed on GitHub Actions, not on the owner's machine; the CSV in the repo is the serving copy until the per-window runner brings the database (the site repo's batch 2).
 - Background runs are launched through `scripts/run_queue.py`, which waits for load; a job that seems not to start is usually waiting.
