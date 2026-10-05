@@ -1,0 +1,45 @@
+{
+  "ran_at": "2026-10-05 06:29 UTC",
+  "commit": "c11d090cfa8e39ba317826562f49d8419ffd3512",
+  "dirty": true,
+  "model_id": "dbba22d74696",
+  "device": "cpu",
+  "threads": 2,
+  "seconds": 476,
+  "start": "2025-10",
+  "end": "2026-08",
+  "years_from": 2018,
+  "checks": {
+    "windows": 23328,
+    "reversal_agrees_with_prev_window_rule": 1.0,
+    "first_test_month": "2026-01",
+    "last_test_month": "2026-08",
+    "matches_walk_forward_csv": true
+  },
+  "coverage": [
+    {
+      "entry": "10 s",
+      "windows": 23328,
+      "fallback": 0.0842335390946502,
+      "no_trade_at_all": 0.0,
+      "lead_zero": 0.0174039780521262,
+      "sign_differs_from_candle_open": 0.0775034293552812
+    },
+    {
+      "entry": "30 s",
+      "windows": 23328,
+      "fallback": 0.08967764060356653,
+      "no_trade_at_all": 0.0,
+      "lead_zero": 0.009816529492455418,
+      "sign_differs_from_candle_open": 0.03883744855967078
+    },
+    {
+      "entry": "60 s",
+      "windows": 23328,
+      "fallback": 0.11899862825788751,
+      "no_trade_at_all": 0.0,
+      "lead_zero": 0.005529835390946502,
+      "sign_differs_from_candle_open": 0.024305555555555556
+    }
+  ]
+}

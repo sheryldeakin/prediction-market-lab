@@ -1281,6 +1281,80 @@ Hidden Markov models, round two (forest on price + flow + indicators, walk-forwa
 
 Nothing changes. At the open the state probabilities move the forest by a tenth of a point in either direction with intervals across zero, and the mixture of experts is seven tenths worse with an interval that excludes zero: three forests, each fit on the windows of one state, lose more to the smaller training sets than they gain from fitting one state at a time. At minute 3 every variant is within two tenths of the base forest and all of them, like the base forest, sit level with or just below the lead z-score. The states carry volatility, the forest already has `vol60` and the indicator bank, and a one-hot of the previous day's regime is a coarser copy of the same thing. This closes the HMM question for the window label on the current data: as a detector the states are volatility states (regime study), as predictors they lose (study 29), and as features they add nothing (this study). What has not been tried is a different observable for the HMM (order-flow imbalance rather than returns) or a non-homogeneous transition matrix; both are listed under open items in [horizons.md](horizons.md).
 
+**31. Entry seconds after the open.** Study 24 priced an entry a few seconds after the open at the odds a driftless market would set from the lead so far. This study asks what the call itself is worth there, from the per-second trade aggregates. At 10, 30 and 60 seconds after the open the window's lead is the volume-weighted price of the second just before the entry against the volume-weighted price of the first traded second, in basis points; when that second had no trades the last earlier price is used, and the coverage table counts how often. Four calls are made at each entry: a one-bit rule (up when the lead is above the open, down when below, the previous-window rule when it is exactly zero), the one-feature logistic on the lead scaled by the volatility left in the window, and the forest and XGBoost on the minute-0 features plus the tick features (lead, signed-volume share, trade count, large-trade count, scaled lead). The first table is the study period of the main table, walk-forward by month on the same windows, with the open and minute 3 rows read from the stored predictions so the whole ladder is in one place; every model is compared with its entry's one-bit rule by day blocks. The second table is the one-bit rules alone, year by year since 2018, next to the previous-window rule at the open and the same sign rule on the candle lead at minutes 1 and 3. Nothing here is priced: no spread, no fee, no contract price.
+
+<!-- table:entry_seconds:start -->
+The window call by entry time, walk-forward by month, 2025-10 to 2026-08, test months after the first three (the windows of the main table). Open and minute 3 are the stored out-of-fold predictions of the main table on the same windows. Entries at 10, 30 and 60 seconds: lead-sign calls up when the lead at that second is above the open, down when below, and the previous-window rule when exactly zero (its AUC and log loss use the training up-rate of each call); lead-z is the one-feature logistic on the lead scaled by the volatility left in the window; forest+ticks and xgb+ticks are the minute-0 feature set plus the tick features at that second (lead, signed-volume share, trades, large trades, lead-z), on CPU. Accuracy has a day-block 95% interval. The last columns are accuracy minus the entry's one-bit rule on the same windows (named in the cell; at minute 3 it is the lead z-score, as in checks.md), day-block interval, share of days better, sign-flip p.
+
+| entry | model | n | accuracy [95% CI] | AUC | log loss | vs one-bit rule | days better | sign p |
+|---|---|---|---|---|---|---|---|---|
+| open | prev-window | 23328 | 52.21% [51.63, 52.82] | 0.519 | 0.6922 | baseline |  |  |
+| open | forest | 23328 | 52.65% [52.01, 53.33] | 0.539 | 0.6910 | +0.44 [-0.25, +1.18] vs prev-window | 54% | 0.1044 |
+| 10 s | lead-sign | 23328 | 54.15% [53.51, 54.81] | 0.540 | 0.6898 | baseline |  |  |
+| 10 s | lead-z | 23328 | 53.95% [53.31, 54.60] | 0.562 | 0.6872 | -0.20 [-0.63, +0.24] vs lead-sign | 47% | 0.8186 |
+| 10 s | forest+ticks | 23328 | 54.82% [54.22, 55.43] | 0.570 | 0.6854 | +0.68 [+0.12, +1.22] vs lead-sign | 54% | 0.0090 |
+| 10 s | xgb+ticks | 23328 | 54.85% [54.19, 55.48] | 0.569 | 0.6859 | +0.71 [+0.14, +1.29] vs lead-sign | 60% | 0.0050 |
+| 30 s | lead-sign | 23328 | 56.12% [55.48, 56.74] | 0.558 | 0.6857 | baseline |  |  |
+| 30 s | lead-z | 23328 | 56.00% [55.37, 56.63] | 0.590 | 0.6804 | -0.12 [-0.40, +0.15] vs lead-sign | 51% | 0.7856 |
+| 30 s | forest+ticks | 23328 | 56.94% [56.29, 57.57] | 0.596 | 0.6784 | +0.83 [+0.35, +1.33] vs lead-sign | 61% | < 0.0005 |
+| 30 s | xgb+ticks | 23328 | 56.52% [55.87, 57.14] | 0.593 | 0.6792 | +0.40 [-0.12, +0.95] vs lead-sign | 54% | 0.0745 |
+| 60 s | lead-sign | 23328 | 58.85% [58.20, 59.54] | 0.584 | 0.6776 | baseline |  |  |
+| 60 s | lead-z | 23328 | 58.81% [58.15, 59.48] | 0.628 | 0.6670 | -0.04 [-0.27, +0.17] vs lead-sign | 50% | 0.6392 |
+| 60 s | forest+ticks | 23328 | 59.06% [58.45, 59.70] | 0.629 | 0.6663 | +0.21 [-0.20, +0.61] vs lead-sign | 54% | 0.1649 |
+| 60 s | xgb+ticks | 23328 | 58.97% [58.34, 59.65] | 0.628 | 0.6668 | +0.12 [-0.37, +0.61] vs lead-sign | 52% | 0.3073 |
+| minute 3 | lead-z | 23328 | 66.35% [65.73, 66.98] | 0.721 | 0.6150 | baseline |  |  |
+| minute 3 | lead-sign | 23328 | 66.29% [65.69, 66.91] | 0.661 | 0.6391 | -0.05 [-0.19, +0.09] vs lead-z | 47% | 0.7526 |
+| minute 3 | xgb-all | 23328 | 66.28% [65.66, 66.92] | 0.719 | 0.6169 | -0.07 [-0.42, +0.27] vs lead-z | 50% | 0.6492 |
+
+What these windows could detect: the day-block interval on a difference from the entry's rule is 0.28 to 1.43 points wide across the rows above, so an increment smaller than about 0.14 to 0.72 points could not be told from zero. A null here is a bound of that width, not a verdict.
+
+Of the 9 comparisons with the lead-sign rule at 10, 30 and 60 seconds, 3 have a day-block interval that excludes zero: forest+ticks at 10 s (+0.68); xgb+ticks at 10 s (+0.71); forest+ticks at 30 s (+0.83). The intervals are not adjusted for the number of comparisons. The fitted models differ from the rule in two ways at once, they use the tick features and they use the minute-0 features, and no row separates the two.
+
+Tick coverage at each entry over the scored windows: the share whose second [t+N-1, t+N) had no trade (the last earlier VWAP was used), the share with no trade at all in [t, t+N), the share whose lead is exactly zero, and the share whose lead has a different sign when measured against the candle open instead of the first traded second's VWAP.
+
+| entry | windows | fallback used | no trade in [t, t+N) | lead exactly zero | sign differs from candle-open lead |
+|---|---|---|---|---|---|
+| 10 s | 23328 | 8.42% | 0.00% | 1.74% | 7.75% |
+| 30 s | 23328 | 8.97% | 0.00% | 0.98% | 3.88% |
+| 60 s | 23328 | 11.90% | 0.00% | 0.55% | 2.43% |
+<!-- table:entry_seconds:end -->
+
+<!-- table:entry_seconds_years:start -->
+The one-bit rules by year, 2018 to 2026-08, quarter-hour windows whose own and previous candles are present and that have a trade in the first 60 seconds. Open: the opposite of the previous window. 10 s, 30 s, 60 s: up if the tick lead at that second is above the open, down if below, the open rule if exactly zero. Minute 1 and minute 3: the same rule on the candle lead (close of the last closed minute against the window open). Accuracy with day-block 95% intervals; the last column is the share of windows whose second 10 had no trade, so the last VWAP before it was used.
+
+| year | windows | open | 10 s | 30 s | 60 s | minute 1 | minute 3 | no trade at second 10 |
+|---|---|---|---|---|---|---|---|---|
+| 2018 | 34648 | 53.07% [52.53, 53.62] | 53.27% [52.73, 53.78] | 55.80% [55.29, 56.31] | 58.49% [57.94, 59.02] | 58.74% [58.18, 59.29] | 65.74% [65.25, 66.21] | 28.14% |
+| 2019 | 34908 | 53.36% [52.87, 53.81] | 52.34% [51.82, 52.83] | 55.39% [54.86, 55.91] | 57.88% [57.35, 58.39] | 58.04% [57.52, 58.55] | 65.66% [65.16, 66.17] | 17.64% |
+| 2020 | 35043 | 53.50% [53.03, 53.97] | 51.97% [51.47, 52.48] | 54.30% [53.80, 54.80] | 56.96% [56.41, 57.49] | 57.03% [56.48, 57.57] | 64.19% [63.68, 64.71] | 6.17% |
+| 2021 | 34962 | 52.26% [51.79, 52.76] | 52.85% [52.29, 53.36] | 55.44% [54.95, 55.93] | 58.10% [57.55, 58.64] | 58.17% [57.64, 58.69] | 65.41% [64.91, 65.91] | 0.53% |
+| 2022 | 35040 | 52.17% [51.70, 52.67] | 52.35% [51.84, 52.83] | 54.71% [54.20, 55.27] | 57.14% [56.64, 57.72] | 57.19% [56.66, 57.77] | 63.23% [62.79, 63.72] | 1.65% |
+| 2023 | 35029 | 52.84% [52.31, 53.35] | 52.30% [51.75, 52.80] | 54.66% [54.15, 55.20] | 57.09% [56.55, 57.66] | 57.20% [56.68, 57.76] | 64.10% [63.62, 64.65] | 5.00% |
+| 2024 | 35136 | 52.30% [51.74, 52.80] | 52.70% [52.20, 53.21] | 55.21% [54.69, 55.73] | 57.33% [56.79, 57.86] | 57.54% [57.01, 58.09] | 64.44% [63.93, 64.95] | 3.19% |
+| 2025 | 35040 | 51.73% [51.21, 52.21] | 53.84% [53.34, 54.36] | 56.18% [55.66, 56.72] | 58.44% [57.96, 58.94] | 58.57% [58.08, 59.08] | 65.77% [65.27, 66.26] | 4.95% |
+| 2026 | 23328 | 52.21% [51.63, 52.82] | 54.15% [53.51, 54.81] | 56.12% [55.48, 56.74] | 58.85% [58.20, 59.54] | 58.94% [58.29, 59.60] | 66.29% [65.69, 66.91] | 8.42% |
+| all | 303134 | 52.62% [52.45, 52.78] | 52.81% [52.63, 52.99] | 55.28% [55.11, 55.46] | 57.77% [57.59, 57.95] | 57.90% [57.72, 58.07] | 64.93% [64.75, 65.11] | 8.38% |
+
+Spread across years for each column: the year with the lowest and the year with the highest accuracy, and whether their day-block intervals overlap.
+
+| column | lowest year | its accuracy | highest year | its accuracy | intervals overlap |
+|---|---|---|---|---|---|
+| open | 2025 | 51.73% | 2020 | 53.50% | no |
+| 10 s | 2020 | 51.97% | 2026 | 54.15% | no |
+| 30 s | 2020 | 54.30% | 2025 | 56.18% | no |
+| 60 s | 2020 | 56.96% | 2026 | 58.85% | no |
+| minute 1 | 2020 | 57.03% | 2026 | 58.94% | no |
+| minute 3 | 2022 | 63.23% | 2026 | 66.29% | no |
+
+In 9 of the 9 years the accuracy rises at every step from 10 s to 30 s, 60 s, minute 1 and minute 3.
+<!-- table:entry_seconds_years:end -->
+
+The lead becomes informative within seconds, and the sign of the lead carries nearly all of it. In the study period the one-bit rule gains accuracy at every step of the ladder, and by minute 3 it is level with the lead z-score. The same ordering holds in every year since 2018, and the tick lead at 60 seconds and the candle lead at minute 1 give almost the same accuracy, so the two readings of the lead agree. Scaling the lead by the volatility left in the window does not change the call at any entry in a way the intervals can see; it improves AUC and log loss because it ranks large leads above small ones, which is confidence, not direction.
+
+The fitted models are the open question, and the data does not settle it. At 10 seconds both models are above the sign rule with intervals that exclude zero, and at 30 seconds the forest is; at 60 seconds, where the rule is already strong, neither is distinguishable from it. Three things limit that reading. The sentence under the first table gives the number of comparisons and says the intervals are not adjusted for them. The models carry the minute-0 features that the rule lacks, so the table cannot say whether any increment comes from the tick features or from the previous window's reversal that the rule uses only at an exact zero. And the day-block interval is the only one reported: the main table's month-block interval was wider than its day-block interval, and no month-block interval is computed here. The increment at 10 and 30 seconds is a candidate for the ablation listed in BACKLOG.md, not a finding. Where the intervals include zero (the 60-second rows), the null is a bound: the width stated under the first table is the smallest increment these windows could have shown.
+
+Across years the early lead is not equally informative. The spread table gives the lowest and highest year for each column, and for every column the two years' intervals do not overlap. The columns that read the lead are lowest in the middle years and highest in the most recent two, so what moves is how much of the window's direction is already in the first seconds, not only how fast it arrives. The reversal at the open does not move with them. The cause was not tested: volatility, trading activity and the share of seconds without a trade all differ by year, and the earliest years carry many windows with no trade yet at second 10, where the lead is zero and the call is the previous-window rule, so their 10-second column is partly the open rule. The tick lead is measured against the first traded second's price instead of the candle open, which changes the sign of a minority of leads at 10 seconds (the coverage table gives the share); the candle-open version was not scored. Whether any of this is tradable depends on the contract price at the second of entry, which this repository does not have.
+
 ## What remains open
 
 - The forward log from October 2026 is the only test of the frozen models that nobody can revise. The question it answers is narrow: does the forest's increment over the one-bit rule, about half a point in the backtest and absent in 2025, show up at all. If it stays absent, the report already says what the project found.
