@@ -424,20 +424,23 @@ def sentences(R: pd.DataFrame) -> str:
     increment these windows could have detected."""
     V = R[R.variant.isin(VARIANT_LETTERS)]
     ref = R[R.variant == "reference"]
-    day = V[V.diff_low > 0]
-    month = V[V.diff_month_low > 0]
-    both = V[V.adds.astype(bool)]
+    meets = (V.diff_low > 0) & (V.diff_month_low > 0)          # the pre-registered test, from the intervals (not a stored flag)
+    day, month, both, not_met = V[V.diff_low > 0], V[V.diff_month_low > 0], V[meets], V[~meets]
     names = lambda X: "; ".join(_label(r) for _, r in X.iterrows()) or "none"
+    if set(day.index) == set(month.index):
+        alone = f"The day-block interval alone and the month-block interval alone are above zero for the same {len(day)} rows."
+    else:
+        alone = f"The day-block interval alone is above zero for {len(day)} ({names(day)}) and the month-block interval alone for {len(month)} ({names(month)})."
     out = [f"The pre-registered test (the day-block and the month-block interval over the one-feature baseline both entirely above zero) is met by {len(both)} of the {len(V)} variant rows: {names(both)}. "
-           f"The day-block interval alone is above zero for {len(day)} ({names(day)}) and the month-block interval alone for {len(month)} ({names(month)}). "
-           "The intervals are not adjusted for the number of comparisons."]
-    out.append("The forest without any HMM column, on the same windows: " + "; ".join(
-        f"minute {int(r['minute'])} {r['diff']*100:+.2f} over the baseline, day blocks [{r['diff_low']*100:+.2f}, {r['diff_high']*100:+.2f}], month blocks [{r['diff_month_low']*100:+.2f}, {r['diff_month_high']*100:+.2f}]" for _, r in ref.iterrows()) +
-        ". A variant built on this forest can meet the test through the forest alone, so the last column of the table attributes: it compares each row with this forest.")
+           f"{alone} The intervals are not adjusted for the number of comparisons."]
+    ref_meets = lambda r: "meets" if (r["diff_low"] > 0 and r["diff_month_low"] > 0) else "does not meet"
+    out.append("The forest without any HMM column, on the same windows, " + "; ".join(
+        f"at minute {int(r['minute'])} is {r['diff']*100:+.2f} over the baseline (day blocks [{r['diff_low']*100:+.2f}, {r['diff_high']*100:+.2f}], month blocks [{r['diff_month_low']*100:+.2f}, {r['diff_month_high']*100:+.2f}]) and {ref_meets(r)} the same test" for _, r in ref.iterrows()) +
+        ". A variant built on this forest can meet the test through the forest alone, so the last column of the table compares each row with this forest.")
     vr = V[(V.vs_ref_low > 0) | (V.vs_ref_high < 0)]
     vr_names = "; ".join("%s: %s at minute %d (%+.2f)" % (r.variant, r.model, r.minute, r.vs_ref * 100) for r in vr.itertuples())
-    out.append("Against the forest without HMM columns, the day-block interval excludes zero for " + (f"{len(vr)} variant rows ({vr_names})" if len(vr) else "none of the variant rows") + ".")
-    not_met = V[~V.adds.astype(bool)]
+    out.append("Against the forest without HMM columns, the day-block interval excludes zero for " + (f"{len(vr)} variant rows ({vr_names})" if len(vr) else "none of the variant rows") + ". "
+               f"Of the {len(both)} rows that meet the pre-registered test, {int((both.vs_ref_low <= 0).sum() if len(both) else 0)} have a day-block interval against that forest that includes zero or lies below it.")
     if len(not_met):
         out.append("Rows that do not meet the test close with the upper end of their intervals over the baseline (day blocks, month blocks, points): " +
                    "; ".join(f"{r.variant}: {r.model} at minute {int(r.minute)} {r.diff_high*100:+.2f}, {r.diff_month_high*100:+.2f}" for r in not_met.itertuples()) + ".")
@@ -498,10 +501,16 @@ def main():
     ap.add_argument("--end", default="2026-08")
     ap.add_argument("--minutes", default="0,3")
     ap.add_argument("--out", default=str(OUT), help="output directory (a smoke run points this elsewhere)")
+    ap.add_argument("--rewrite", action="store_true", help="regenerate hmm_models3.md from the stored .csv and .json without refitting")
     a = ap.parse_args()
     evaluate.XGB_DEVICE = "cpu"                     # this study is CPU only
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
+    if a.rewrite:
+        meta = json.loads((out / "hmm_models3.json").read_text())
+        write_table(pd.read_csv(out / "hmm_models3.csv", float_precision="round_trip"), out, meta["start"], meta["end"], meta["fits"])
+        print(f"rewrote hmm_models3.md in {out} from the stored rows")
+        return
     t0 = time.time()
     s = Series(load(a.start, a.end))
     minutes = [int(x) for x in a.minutes.split(",")]

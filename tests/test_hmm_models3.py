@@ -377,3 +377,12 @@ def test_walk_forward_is_causal_and_the_hmm_fits_see_only_earlier_months(regimes
     assert np.allclose(m0["windows"]["3"]["means"], m1["windows"]["3"]["means"])
     assert np.allclose(m0["hazard_first"], m1["hazard_first"]) and np.allclose(m0["hazard_tail"], m1["hazard_tail"])
     assert np.isclose(m0["bucket"]["stay_spread"], m1["bucket"]["stay_spread"])
+
+
+def test_rewriting_the_table_from_the_stored_csv_reproduces_it_exactly(tmp_path):
+    rows, _ = synthetic_scores()
+    diag = {"months": {"2026-01": {"bucket": {"stay_spread": 0.05}, "windows": {"3": {"converged": True, "per_state_fallbacks": 1}}}}}
+    H.write_table(pd.DataFrame(rows), tmp_path, "2025-10", "2026-08", diag)
+    first = (tmp_path / "hmm_models3.md").read_text()
+    H.write_table(pd.read_csv(tmp_path / "hmm_models3.csv", float_precision="round_trip"), tmp_path, "2025-10", "2026-08", diag)     # what --rewrite does, minus the json read
+    assert (tmp_path / "hmm_models3.md").read_text() == first
