@@ -1,0 +1,60 @@
+# The daily forward log, computed here rather than on anyone's machine.
+#
+# Every day after Binance publishes the previous day's 1-minute file, this job scores the
+# new windows with the frozen models in results/btc_15m/models (it refuses to retrain), appends
+# the rows to the hash-chained log, redraws the chart, re-splices the README and report, verifies
+# the chain, and commits. The commit is made by the Actions bot with the repository token; no
+# credential leaves this repo. The CSV is the serving copy until the per-window runner brings
+# the database.
+name: forward log
+
+on:
+  schedule:
+    - cron: "40 3 * * *"        # 03:40 UTC, after the previous day's daily kline file is published
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: forward-log
+  cancel-in-progress: false
+
+jobs:
+  log:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LAB_XGB_DEVICE: cpu
+      LAB_FORWARD_NO_TRAIN: "1"
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: requirements-runner.txt
+      - run: pip install -r requirements-runner.txt
+      - name: score the new windows
+        run: python -m models.btc_15m.log
+      - name: redraw the chart and re-splice the docs
+        run: |
+          python -m models.btc_15m.charts
+          python scripts/update_readme.py
+      - name: verify the chain
+        run: python -m models.btc_15m.log --verify
+      - name: commit the day's rows
+        run: |
+          git config user.name "forward-log runner"
+          git config user.email "forward-log-runner@users.noreply.github.com"
+          git add results/btc_15m/predictions.csv results/btc_15m/forward_log.png README.md docs/btc_15m.md
+          if git diff --cached --quiet; then
+            echo "nothing new"
+          else
+            last=$(tail -1 results/btc_15m/predictions.csv | cut -d, -f2 | cut -c1-10)
+            git commit -m "Forward log through ${last} (daily runner)"
+            git push
+          fi

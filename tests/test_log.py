@@ -97,3 +97,12 @@ def test_a_new_model_id_scores_an_already_logged_window_as_a_new_row():
     out = L.merge_log(old, new)
     assert len(out) == 3 and (out.model_id == "refit1").all()
     assert L.merge_log(pd.concat([old, out]), new).empty              # and only once per model_id
+
+
+def test_unattended_runner_refuses_to_retrain(tmp_path, monkeypatch):
+    """With LAB_FORWARD_NO_TRAIN set, a spec mismatch raises instead of fitting a new model version."""
+    import models.btc_15m.log as L
+    monkeypatch.setattr(L, "MODELS", tmp_path)                 # no saved models here, so the spec cannot match
+    monkeypatch.setenv("LAB_FORWARD_NO_TRAIN", "1")
+    with pytest.raises(RuntimeError, match="refusing to retrain"):
+        L.train_or_load("2025-10", "2026-08")

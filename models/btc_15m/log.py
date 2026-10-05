@@ -27,6 +27,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -95,6 +96,9 @@ def train_or_load(train_start: str, train_end: str) -> tuple[dict, dict]:
         manifest = json.loads(mpath.read_text())
         if all(manifest.get(key) == val for key, val in want.items()):
             return {k: joblib.load(MODELS / f"k{k}.joblib") for k in LOCKED}, manifest
+    if os.environ.get("LAB_FORWARD_NO_TRAIN"):
+        # an unattended runner must never mint a new model version: a spec mismatch is a bug to fix by hand
+        raise RuntimeError("saved models do not match the spec and LAB_FORWARD_NO_TRAIN is set; refusing to retrain")
     s = Series(load(train_start, train_end))
     fitted = {}
     for k, (name, cols) in LOCKED.items():
