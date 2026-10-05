@@ -1,3 +1,5 @@
+import types
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -191,6 +193,17 @@ def test_funding_and_open_interest_use_the_previous_years_deciles():
     assert own["funding_bp"] != cuts["funding_bp"]                # this year's own deciles are not what the events use
 
 
+def test_funding_at_the_exchange_default_is_not_an_extreme():
+    prev = np.concatenate([np.linspace(-2, 0.9, 60), np.full(40, 1.0)])               # 40% of the year at the default
+    cuts = L.decile_cuts(deriv_arrays(100, funding_bp=prev, doi15=prev, doi60=prev, pvol_ratio5=prev, ret15=prev))
+    assert cuts["funding_bp"][1] == 1.0
+    lo = cuts["funding_bp"][0]
+    cur = deriv_arrays(7, funding_bp=[1.0, 1.5, 1.0, lo, lo - 1, 0.0, 0.0])
+    ev = L.deriv_events(cur, cuts)
+    assert np.flatnonzero(ev[L.DERIV_EVENTS[0]]).tolist() == [2]                      # only 1.5, known at decision minute 2
+    assert np.flatnonzero(ev[L.DERIV_EVENTS[1]]).tolist() == [5]                      # only below the lower cut, not at it
+
+
 def test_unknown_values_never_fire():
     cuts = {k: (-1.0, 1.0) for k in ("funding_bp", "doi15", "doi60", "pvol_ratio5", "ret15")}
     ev = L.deriv_events(deriv_arrays(5), cuts)
@@ -335,3 +348,130 @@ def test_one_missing_series_day_removes_the_year_and_with_no_full_year_nothing_i
 
 def test_the_cache_key_has_no_dot_that_would_truncate_a_file_name():
     assert "." not in L.code_key()
+    assert "." not in L.deriv_code_key() and L.deriv_code_key() != L.code_key()
+
+
+# ---------------- derivatives scoring ----------------
+
+def test_the_derivatives_events_are_grouped_into_families_in_table_order():
+    fams = [f for f, _ in L.DERIV_EVENT_FAMILIES]
+    assert [fams.count(f) for f in ("funding", "open interest", "liquidation signature")] == [2, 4, 2]
+    assert fams == sorted(fams, key=["funding", "open interest", "liquidation signature"].index)
+    assert L.DERIV_EVENTS == [name for _, name in L.DERIV_EVENT_FAMILIES]
+
+
+def month_files(cache, month, skip_day=None):
+    p = pd.Period(month, "M")
+    days = [str(d.date()) for d in pd.date_range(p.start_time, p.end_time.normalize()) if str(d.date()) != skip_day]
+    touch_futures(cache, [month], days, perp_months=[month])
+
+
+def test_require_futures_names_a_missing_metrics_day_and_passes_when_everything_is_there(tmp_path, monkeypatch):
+    monkeypatch.setattr(L.derivatives, "CACHE", tmp_path)
+    month_files(tmp_path, "2024-02")
+    L.require_futures(["2024-02"])
+    (tmp_path / "BTCUSDT-metrics-2024-02-10.csv").unlink()
+    with pytest.raises(FileNotFoundError, match="2024-02-10"):
+        L.require_futures(["2024-02"])
+
+
+def test_a_missing_futures_file_is_an_error_and_never_a_download(tmp_path, monkeypatch):
+    monkeypatch.setattr(L.derivatives, "CACHE", tmp_path)
+    month_files(tmp_path, "2024-02", skip_day="2024-02-10")
+
+    def no_download(*a, **k):
+        raise AssertionError("download attempted")
+
+    monkeypatch.setattr(L.derivatives, "_fetch", no_download)
+    t = np.arange(1706745600, 1706745600 + 60 * 120, 60)                 # 2024-02-01, two hours
+    s = types.SimpleNamespace(t=t, c=np.full(len(t), 100.0))
+    monkeypatch.setattr(L, "year_frame", lambda year, end: (s, pd.DataFrame({"i": [0], "t": [t[0]]})))
+    with pytest.raises(FileNotFoundError, match="2024-02-10"):
+        L.deriv_year_arrays(2024, "2024-02")
+
+
+def test_the_reference_cutoffs_come_from_the_previous_year_and_not_its_december_before():
+    t_dec = 1701388800 + 60 * np.arange(100)                           # 2023-12-01
+    t_in = 1704067200 + 60 * np.arange(101)                            # 2024-01-01
+    s = types.SimpleNamespace(t=np.concatenate([t_dec, t_in]))
+    arrs = {k: np.concatenate([np.full(100, 1000.0), np.linspace(-5, 5, 101)]) for k in ("funding_bp", "doi15", "doi60", "pvol_ratio5", "ret15")}
+    asked = []
+
+    def fake(year, end):
+        asked.append((year, end))
+        return s, None, arrs
+
+    original = L.deriv_year_arrays
+    L.deriv_year_arrays = fake
+    try:
+        cuts = L.deriv_reference_cutoffs(2025)
+    finally:
+        L.deriv_year_arrays = original
+    assert asked == [(2024, "2024-12")]
+    assert cuts["funding_bp"] == pytest.approx((-4.0, 4.0))
+    assert all(v == pytest.approx((-4.0, 4.0)) for v in cuts.values())
+
+
+def test_scorable_years_need_a_fully_covered_previous_year_and_stay_in_the_range(tmp_path):
+    months = [str(p) for p in pd.period_range("2023-01", "2025-06", freq="M")]
+    days = [str(d.date()) for d in pd.date_range("2023-01-01", "2025-06-30")]
+    touch_futures(tmp_path, months, days, perp_months=months)
+    assert L.scorable_years(tmp_path, 2018, "2025-06") == [2024, 2025]
+    assert L.scorable_years(tmp_path, 2025, "2025-06") == [2025]
+    assert L.scorable_years(tmp_path, 2018, "2023-12") == []
+
+
+def scored_cells(events, years=(2020, 2021)):
+    rows, vrows = [], []
+    for k, name in enumerate(events):
+        for h in L.HORIZONS:
+            for y in years:
+                r = year_rows(y, 0.03 + 0.001 * k)
+                r.update({"pattern": name, "horizon": h})
+                rows.append(r)
+                v = vwap_rows(y, 0.03, 0.02)
+                v.update({"pattern": name, "horizon": h})
+                vrows.append(v)
+    return L.pool_cells(pd.DataFrame(rows), pd.DataFrame(vrows))
+
+
+def test_the_derivatives_document_has_the_coverage_then_one_row_per_cell(tmp_path):
+    months = [f"2024-{m:02d}" for m in range(1, 13)] + ["2025-01"]
+    days = [str(d.date()) for d in pd.date_range("2024-01-01", "2025-01-10")]
+    touch_futures(tmp_path, months, days, perp_months=months)
+    names = L.DERIV_EVENTS
+    G = scored_cells(names)
+    shares = pd.DataFrame({"year": [2020, 2021] * len(names), "event": np.repeat(names, 2), "share": 0.01, "fires": 5})
+    args = (tmp_path, G, [2020, 2021], "2021-12", 3, np.array([1.0, 2.0, 3.0]), 9.0, shares)
+    a = L.render_derivatives(*args)
+    assert a == L.render_derivatives(*args)
+    lines = a.splitlines()
+    head = next(k for k, ln in enumerate(lines) if ln.startswith("| family"))
+    assert any(ln.startswith("| series | first stamp") for k, ln in enumerate(lines) if k < head)
+    table = [ln for ln in lines[head + 1:] if ln.startswith("| ") and not ln.startswith("|---")]
+    assert len(table) == len(names) * len(L.HORIZONS) == 48
+    assert "| event |" not in lines
+    assert "Of 48 cells (8 events at 6 horizons)" in a
+    funding = next(x for x in lines if x.startswith("Funding at an extreme"))
+    assert "(reversal positive)" in funding
+    assert "fires on" in a and L.DERIV_SHARE_EVENTS[0] in a
+    assert "| event |" in L.render_derivatives(tmp_path).splitlines()                 # coverage only: the stand-alone list stays
+
+
+def test_render_with_the_tick_arguments_given_explicitly_is_the_default():
+    names = [name for _, name in L.TICK_EVENTS]
+    G = scored_cells(names)
+    shares = pd.DataFrame({"year": [2020, 2021] * len(names), "event": np.repeat(names, 2), "share": 0.01, "fires": 5})
+    null = np.array([1.0, 2.0, 3.0])
+    default = L.render(G, [2020, 2021], "2021-12", 3, null, 9.0, shares, 0.09)
+    explicit = L.render(G, [2020, 2021], "2021-12", 3, null, 9.0, shares, 0.09, events=L.TICK_EVENTS, effects=L.TICK_EFFECTS, orient=L.TICK_ORIENT,
+                        share_events=L.TICK_SHARE_EVENTS, intro=L.tick_intro([2020, 2021], "2021-12", 3, null))
+    assert default == explicit
+    assert default.startswith("Tick-level events for the price-action library, 2020 to 2021-12,")
+
+
+def test_a_negative_deviation_on_the_top_funding_decile_is_a_positive_reversal():
+    rows = [{"event": L.DERIV_EVENTS[0], "horizon": h, "deviation": -0.05, "lo": -0.06, "hi": -0.04, "years": 3, "years_held": 3} for h in (5, 10, 15, 30)]
+    s = L.effect_sentences(pd.DataFrame(rows), L.DERIV_EFFECTS, L.DERIV_ORIENT)
+    first = next(x for x in s if x.startswith("Funding at an extreme"))
+    assert "from +5.0 to +5.0 points (reversal positive)" in first
