@@ -122,7 +122,7 @@ class Series:
         return f
 
 
-CACHE_DIR = Path("data/feature_cache")
+CACHE_DIR = Path("data/feature_cache")       # a write location: deliberately not under LAB_DATA_ROOT (see paths.py)
 FEATURE_VERSION = 3          # bump when a feature definition changes; invalidates the cache (3: weekday Monday 0)
 
 

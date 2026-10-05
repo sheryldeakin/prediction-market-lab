@@ -20,7 +20,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-CACHE = Path("data/binance_klines")
+from models.btc_15m.paths import DATA_ROOT
+
+CACHE = DATA_ROOT / "binance_klines"
 COLS = ["t", "open", "high", "low", "close", "volume", "close_time",
         "quote_volume", "trades", "taker_buy", "taker_buy_quote", "ignore"]
 MONTH_URL = "https://data.binance.vision/data/spot/monthly/klines/{sym}/1m/{sym}-1m-{month}.zip"

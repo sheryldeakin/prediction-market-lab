@@ -500,6 +500,157 @@ Null: the largest |z| across cells on rotated outcomes has median 2.57 and 95th 
 - **The search is far outside its null** (largest |z| 24 against a null 95th percentile of 3.8), and the cells that hold are the same families as in the direction tables: sharp drops, oversold RSI, and the 4-hour extremes.
 - **A 5-basis-point bounce cannot be traded on spot.** Binance's spot taker fee for a regular account is 0.100% per side (0.075% with the BNB discount; schedule logged in [sources.md](sources.md)), so a round trip costs 15 to 20 basis points against a bounce of 5 and a touch rate of 56.5%: a certain loss. The only instrument where the size works is a binary contract on the window's direction, whose payoff does not scale with the move; whether the edge survives that contract's spread and fee is a question about real quotes, which this repo does not have, and the break-even table in the main report (study 6) is the hypothetical version.
 
+## The mechanism
+
+After a sharp move the next 10 to 30 minutes revert, and the reversal keeps its size under averaged prices. Two explanations are open. **A, bid-ask bounce or last-trade noise:** after a sharp move the last print sits on one side of the spread and the next prints return across it, so the deviation lives in the print the label starts from, disappears when the label starts a minute or two later, and is complete within seconds. **B, transient price impact:** aggressive trading pushes the price past where it settles and it comes back over minutes, so the deviation survives a later entry, the event minute carries unusually heavy aggressive flow, and larger flow is followed by a larger recovery. The per-second table (`data/binance_ticks`) holds last prints only: notional, quantity, signed notional, trade count and large-trade count per second. It has no bid, ask or book depth, so these are the two hypotheses the data can see; inventory, replenishment and the spread itself stay out of reach. This is a pre-specified test of two hypotheses with a stated rule, not a search.
+
+**Events (frozen before the run).** Six events with the library's own definitions: a 5-minute move of more than 3 standard deviations, down and up (`sweep: 5-min move < -3 sd`, `> +3 sd`), price at the 4-hour low and high (`rangepos <= 0.02`, `>= 0.98`), RSI14 below 25 and above 75. The three families in both directions are six events; each is the first firing of its kind in any 30 minutes, so no two events of one kind are closer than 30 minutes. The same rule applied to a firing of any of the six gives the set the tables call "any of the six", which counts one episode once where several of the six fire together. A minute at which a down-side and an up-side event fire together has no direction and is nobody's event. Everything is signed so that a reversal is positive: a down-move expects the price up, an up-move expects it down.
+
+**Matched controls.** One control minute per event: the same year, the same hour of day, the same previous-year volatility decile of `vol60` (the first year uses its own first quarter, as elsewhere in this document), and none of the six firing in the 30 minutes up to and including the control, so a control is not inside an episode's aftermath. A control carries the orientation of its event. The comparison throughout is event against control, not event against all other minutes, so the baseline is matched on time of day and volatility. Years run 2018 to 2026-08, each scored on its own with a day-clustered interval and pooled with the random-effects model used for the cells above. A year with too few events in a slice is not scored. The comparison is narrow (six events, one control each), so no search-wide rotated-label null is used; the per-slice null is a day-level sign flip on the matched pairs, stated under the first table.
+
+**Labels, paths and flows.** *Last print:* the label of the cells above, the close of the horizon's last minute against the open of the decision minute (the print the signal was read from). *Embargoed VWAP:* the 60-second VWAP of minute g after the decision minute against the VWAP of minute g+h-1, for g of 0, 1 and 2 minutes and h of 5, 15 and 30; g=0 is the VWAP label of the section above, and g=1 and g=2 enter after a gap instead of at the signal print. *Path:* the VWAP of the trailing window of the lag or 60 seconds, whichever is shorter, relative to the event minute's close, at 1, 5, 10, 30 and 60 seconds and 2, 5, 15, 30 and 60 minutes. *Flow:* signed aggressor volume over volume in the event minute and in the bins between those lags, the event minute's trade count against the previous 24 hours' per-minute mean, and its large-trade share (a trade is large at or above the previous UTC day's 99th percentile of notional).
+
+**Decision rule (stated before any table of this section was generated; a two-month smoke run of the code came first and changed no definition or threshold).** The rule is applied to the events of any of the six kinds, at horizons of 5, 15 and 30 minutes. A criterion scored at the three horizons is met when it holds at two of the three horizons. Embargoed deviations are compared with the last-print deviation of the same cell: "under half" means the whole 95% interval of the embargoed deviation lies below half of the last-print deviation, "over half" means the whole interval lies above it, and anything else is "unresolved" and counts for neither side.
+
+- *A1:* the VWAP label entered one minute later (g=1) keeps under half of the last-print deviation.
+- *A2:* the price path reaches at least four fifths of its 30-minute excess over the controls within the first 60 seconds.
+- *A3 (corroboration only):* in the half of events whose signal-minute close was nearer its minute's VWAP, the last-print deviation is under half of the far half's and its interval includes zero.
+- *B1:* the event minute's flow exceeds the controls' on all three measures, absolute imbalance, trade count and large-trade share, with the lower end of each interval above zero.
+- *B2 (reported only):* the price recovers while flow in the direction of the move continues or fades; the path table shows the flow bins beside the price.
+- *B3:* in thirds of the event minute's absolute imbalance and of its large-trade share, the highest third's 15-minute last-print deviation exceeds the lowest third's, with the lower end of the interval of the difference above zero, for both measures.
+
+A is supported if A1 and A2 are met. B is supported if the g=1 label is over half of the last-print deviation (A1 read the other way at two of three horizons), B1 is met and B3 is met. If neither holds, or both, or they conflict, the section says "unidentified with this data" and names what data would settle it. A3 can corroborate A and cannot make it supported; B2 is not part of the verdict. A control-only common-factor check is out of scope here: the cross-venue replication earlier in this document covers it.
+
+<!-- table:mechanism_embargo:start -->
+Embargoed labels for events of any of the six kinds and for each kind alone, 2018 to 2026-08. Each event is the first firing of its kind in any 30 minutes; each has one matched control minute (same year, same hour of day, same previous-year volatility decile, none of the six firing in the 30 minutes up to and including it). All labels are signed so that a reversal is positive: the share of events whose label points back against the move, minus the same share for the matched controls, in points, with a 95% interval (day-clustered errors, years pooled by random effects). 'Last print' is the library's label (close of the horizon's last minute against the open of the decision minute); the VWAP labels compare the 60-second VWAP of minute g after the decision minute with the VWAP of minute g+h-1, so g=0 is the VWAP label of the cells section and g=1 and g=2 enter one and two minutes later. 'Retained' is the embargoed deviation as a share of the last-print deviation. The p after a last-print or g=1 interval is a per-slice null: a day-level sign flip on the matched pairs (event against its control), 2000 draws, one-sided, all years pooled; no search-wide adjustment is used because the comparison is six events. Years held: years in which the last-print deviation had the pooled sign, out of the years with at least 100 events.
+
+| event | horizon (min) | events | last print | VWAP, g=0 | VWAP, g=1 | VWAP, g=2 | retained, g=1 | retained, g=2 | years held |
+|---|---|---|---|---|---|---|---|---|---|
+| any of the six | 5 | 48,085 | +6.2 [+4.7, +7.6], p <0.001 | +7.2 [+5.8, +8.7] | +5.7 [+4.5, +7.0], p <0.001 | +5.3 [+3.8, +6.7] | 93% (over half) | 85% (over half) | 9/9 |
+| any of the six | 15 | 48,085 | +6.5 [+5.5, +7.5], p <0.001 | +7.4 [+6.3, +8.5] | +6.0 [+5.1, +6.9], p <0.001 | +5.6 [+4.7, +6.5] | 92% (over half) | 86% (over half) | 9/9 |
+| any of the six | 30 | 48,085 | +7.2 [+5.8, +8.5], p <0.001 | +7.9 [+6.6, +9.2] | +6.9 [+5.7, +8.0], p <0.001 | +6.5 [+5.3, +7.6] | 96% (over half) | 90% (over half) | 9/9 |
+| 3-sd 5-minute drop | 5 | 10,248 | +7.8 [+5.9, +9.7], p <0.001 | +8.3 [+6.4, +10.3] | +5.6 [+4.1, +7.2], p <0.001 | +5.2 [+3.0, +7.4] | 73% (over half) | 67% (unresolved) | 9/9 |
+| 3-sd 5-minute drop | 15 | 10,248 | +5.4 [+3.5, +7.3], p <0.001 | +5.6 [+3.9, +7.3] | +3.8 [+1.3, +6.3], p <0.001 | +3.3 [+1.1, +5.5] | 70% (unresolved) | 61% (unresolved) | 8/9 |
+| 3-sd 5-minute drop | 30 | 10,248 | +5.4 [+2.8, +8.1], p <0.001 | +5.7 [+3.4, +8.0] | +4.3 [+1.9, +6.7], p <0.001 | +3.7 [+1.4, +6.0] | 79% (unresolved) | 68% (unresolved) | 8/9 |
+| 3-sd 5-minute rise | 5 | 10,099 | +5.3 [+3.4, +7.3], p <0.001 | +6.1 [+4.3, +8.0] | +4.1 [+2.7, +5.5], p <0.001 | +4.1 [+2.1, +6.0] | 76% (unresolved) | 77% (unresolved) | 9/9 |
+| 3-sd 5-minute rise | 15 | 10,099 | +4.1 [+2.6, +5.7], p <0.001 | +4.7 [+3.2, +6.3] | +4.5 [+3.1, +5.9], p <0.001 | +4.7 [+3.1, +6.4] | 109% (over half) | 114% (over half) | 8/9 |
+| 3-sd 5-minute rise | 30 | 10,099 | +5.2 [+2.8, +7.7], p <0.001 | +6.0 [+4.2, +7.9] | +5.0 [+2.9, +7.1], p <0.001 | +4.6 [+2.8, +6.4] | 95% (over half) | 87% (over half) | 8/9 |
+| price at 4-hour low | 5 | 13,127 | +7.2 [+4.9, +9.5], p <0.001 | +8.2 [+5.5, +11.0] | +5.4 [+3.7, +7.0], p <0.001 | +5.2 [+2.8, +7.6] | 75% (over half) | 73% (unresolved) | 9/9 |
+| price at 4-hour low | 15 | 13,127 | +7.4 [+5.4, +9.5], p <0.001 | +8.8 [+6.6, +11.0] | +7.5 [+5.2, +9.9], p <0.001 | +6.9 [+4.5, +9.2] | 101% (over half) | 92% (over half) | 9/9 |
+| price at 4-hour low | 30 | 13,127 | +8.5 [+6.5, +10.5], p <0.001 | +9.1 [+7.1, +11.2] | +8.0 [+6.5, +9.4], p <0.001 | +7.4 [+5.5, +9.4] | 94% (over half) | 88% (over half) | 9/9 |
+| price at 4-hour high | 5 | 15,876 | +4.9 [+3.7, +6.1], p <0.001 | +6.3 [+4.7, +7.8] | +6.1 [+5.0, +7.2], p <0.001 | +5.4 [+3.8, +7.1] | 123% (over half) | 110% (over half) | 9/9 |
+| price at 4-hour high | 15 | 15,876 | +6.4 [+5.1, +7.7], p <0.001 | +7.5 [+6.0, +8.9] | +7.2 [+6.1, +8.4], p <0.001 | +6.6 [+5.3, +7.8] | 113% (over half) | 103% (over half) | 9/9 |
+| price at 4-hour high | 30 | 15,876 | +7.3 [+5.9, +8.8], p <0.001 | +8.4 [+6.6, +10.2] | +7.9 [+5.5, +10.3], p <0.001 | +7.8 [+5.6, +9.9] | 107% (over half) | 106% (over half) | 9/9 |
+| RSI14 below 25 | 5 | 16,604 | +7.9 [+5.4, +10.4], p <0.001 | +8.7 [+6.1, +11.3] | +6.0 [+4.5, +7.6], p <0.001 | +5.2 [+3.7, +6.7] | 76% (over half) | 66% (unresolved) | 9/9 |
+| RSI14 below 25 | 15 | 16,604 | +7.4 [+6.0, +8.8], p <0.001 | +7.6 [+6.4, +8.8] | +5.8 [+4.8, +6.9], p <0.001 | +4.7 [+3.6, +5.7] | 78% (over half) | 63% (unresolved) | 9/9 |
+| RSI14 below 25 | 30 | 16,604 | +7.5 [+6.0, +8.9], p <0.001 | +7.9 [+6.6, +9.2] | +6.2 [+5.1, +7.2], p <0.001 | +5.4 [+3.9, +6.8] | 83% (over half) | 72% (over half) | 9/9 |
+| RSI14 above 75 | 5 | 16,815 | +6.8 [+5.0, +8.7], p <0.001 | +7.7 [+6.0, +9.4] | +6.5 [+4.9, +8.0], p <0.001 | +6.2 [+4.8, +7.6] | 95% (over half) | 91% (over half) | 9/9 |
+| RSI14 above 75 | 15 | 16,815 | +5.8 [+4.6, +7.1], p <0.001 | +6.7 [+5.2, +8.2] | +5.1 [+3.9, +6.2], p <0.001 | +4.9 [+3.9, +6.0] | 86% (over half) | 84% (over half) | 9/9 |
+| RSI14 above 75 | 30 | 16,815 | +6.5 [+5.4, +7.6], p <0.001 | +7.0 [+5.9, +8.0] | +6.2 [+5.1, +7.3], p <0.001 | +5.9 [+4.8, +7.0] | 96% (over half) | 91% (over half) | 9/9 |
+
+Is the reversal confined to events whose last print was far from the minute's VWAP? Events of any of the six kinds split in each year at the median of |close minus VWAP| of the event minute, in basis points (the median of that year's events); each control takes the half of the event it is matched to. Same deviations as above, points with 95% intervals.
+
+| half of events by distance from VWAP | horizon (min) | events | last print | VWAP, g=1 |
+|---|---|---|---|---|
+| near the VWAP | 5 | 25,263 | +6.4 [+4.4, +8.4] | +6.2 [+4.9, +7.4] |
+| far from the VWAP | 5 | 22,822 | +5.9 [+4.4, +7.4] | +5.3 [+3.8, +6.8] |
+| near the VWAP | 15 | 25,263 | +6.7 [+5.2, +8.3] | +6.1 [+4.7, +7.5] |
+| far from the VWAP | 15 | 22,822 | +6.2 [+5.0, +7.3] | +5.9 [+4.8, +7.0] |
+| near the VWAP | 30 | 25,263 | +7.4 [+5.8, +8.9] | +7.1 [+5.5, +8.6] |
+| far from the VWAP | 30 | 22,822 | +7.0 [+5.1, +8.9] | +6.6 [+5.4, +7.9] |
+<!-- table:mechanism_embargo:end -->
+
+<!-- table:mechanism_path:start -->
+The path after the event minute and the flow beside it, events of any of the six kinds, 2018 to 2026-08, events minus matched controls. Price: the VWAP of the trailing window of min(lag, 60) seconds ending at the lag after the event minute, against the event minute's close, in basis points, positive in the reversal direction; mean excess over the controls with a 95% interval (day-clustered errors, years pooled by random effects). Share: the excess at that lag as a share of the excess at 30 minutes. Flow: signed aggressor volume over volume in the bin that ends at the lag, positive when aggressors trade in the direction of the move (selling after a drop, buying after a rise), in percent, for the events, for the controls, and the excess with its interval. Years held: years in which the price excess had the pooled sign.
+
+| lag after the event minute | price excess (bp) | share of 30-minute excess | years held | flow bin | flow, events (%) | flow, controls (%) | flow excess (points) |
+|---|---|---|---|---|---|---|---|
+| 1 s | -0.02 [-0.05, +0.01] | -2% | 7/9 | 0 to 1 s | -1.2 | +0.0 | -1.1 [-2.5, +0.4] |
+| 5 s | -0.11 [-0.17, -0.04] | -9% | 8/9 | 1 s to 5 s | +3.9 | -0.2 | +4.0 [+2.3, +5.8] |
+| 10 s | -0.20 [-0.32, -0.08] | -16% | 8/9 | 5 s to 10 s | +4.3 | -0.1 | +4.3 [+2.9, +5.7] |
+| 30 s | -0.48 [-0.66, -0.29] | -39% | 8/9 | 10 s to 30 s | +5.2 | +0.0 | +5.0 [+3.6, +6.3] |
+| 60 s | -0.79 [-1.03, -0.56] | -64% | 9/9 | 30 s to 60 s | +4.5 | +0.2 | +4.2 [+2.6, +5.7] |
+| 2 min | -0.30 [-0.63, +0.04] | -24% | 7/9 | 60 s to 2 min | +2.8 | +0.5 | +2.0 [+1.1, +3.0] |
+| 5 min | +0.06 [-0.36, +0.49] | 5% | 5/9 | 2 min to 5 min | +2.1 | -0.0 | +2.0 [+0.9, +3.1] |
+| 15 min | +0.55 [+0.09, +1.01] | 45% | 7/9 | 5 min to 15 min | +1.3 | +0.1 | +1.2 [+0.6, +1.7] |
+| 30 min | +1.23 [+0.17, +2.30] | 100% | 6/9 | 15 min to 30 min | +0.5 | -0.0 | +0.5 [+0.1, +0.9] |
+| 60 min | +1.47 [+0.10, +2.84] | 119% | 6/9 | 30 min to 60 min | +0.2 | -0.2 | +0.3 [+0.0, +0.7] |
+<!-- table:mechanism_path:end -->
+
+<!-- table:mechanism_flow:start -->
+Flow in the event minute against matched controls, 2018 to 2026-08. The event minute is the minute that closes at the decision time; all four measures come from the per-second trade table. Imbalance is signed aggressor volume over volume, positive when aggressors trade in the direction of the move; trade count is the minute's count over the mean per-minute count of the previous 24 hours; a trade is large when its notional is at or above the previous UTC day's 99th percentile. 'Excess' is the event mean minus the control mean (imbalance and share in points of a share, count as a ratio), 95% interval, years pooled by random effects. 'Events higher' is the share of matched pairs in which the event exceeds its control (ties count half), with a day-block 95% interval.
+
+| event | measure | events | controls | excess | events higher |
+|---|---|---|---|---|---|
+| any of the six | imbalance in the direction of the move (share of volume) | 33.6% | 0.1% | +32.99 [+26.15, +39.83] | 74.9% [74.5, 75.3] |
+| any of the six | absolute imbalance | 38.3% | 32.1% | +6.09 [+4.70, +7.47] | 58.3% [57.7, 58.7] |
+| any of the six | trade count against the day's average | 2.24x | 0.84x | +1.41 [+1.32, +1.49] | 84.7% [84.3, 85.1] |
+| any of the six | large-trade share | 1.3% | 0.8% | +0.46 [+0.39, +0.53] | 67.9% [67.4, 68.4] |
+| 3-sd 5-minute drop | imbalance in the direction of the move (share of volume) | 31.5% | -0.4% | +32.44 [+25.81, +39.07] | 75.3% [74.4, 76.1] |
+| 3-sd 5-minute drop | absolute imbalance | 35.0% | 31.0% | +4.10 [+2.86, +5.34] | 56.3% [55.4, 57.3] |
+| 3-sd 5-minute drop | trade count against the day's average | 3.96x | 0.86x | +3.11 [+2.89, +3.33] | 93.4% [92.9, 93.9] |
+| 3-sd 5-minute drop | large-trade share | 1.4% | 0.8% | +0.59 [+0.46, +0.71] | 72.8% [72.0, 73.7] |
+| 3-sd 5-minute rise | imbalance in the direction of the move (share of volume) | 31.5% | -1.1% | +32.56 [+26.46, +38.67] | 75.9% [75.1, 76.7] |
+| 3-sd 5-minute rise | absolute imbalance | 35.1% | 31.0% | +4.19 [+2.47, +5.91] | 56.5% [55.5, 57.5] |
+| 3-sd 5-minute rise | trade count against the day's average | 3.73x | 0.86x | +2.87 [+2.74, +3.01] | 92.9% [92.4, 93.4] |
+| 3-sd 5-minute rise | large-trade share | 1.4% | 0.9% | +0.55 [+0.45, +0.65] | 72.1% [71.2, 73.1] |
+| price at 4-hour low | imbalance in the direction of the move (share of volume) | 36.4% | 1.2% | +34.58 [+27.30, +41.86] | 76.3% [75.6, 77.1] |
+| price at 4-hour low | absolute imbalance | 40.1% | 31.9% | +8.05 [+6.15, +9.95] | 60.5% [59.7, 61.5] |
+| price at 4-hour low | trade count against the day's average | 2.19x | 0.87x | +1.33 [+1.23, +1.43] | 84.7% [84.0, 85.5] |
+| price at 4-hour low | large-trade share | 1.3% | 0.9% | +0.41 [+0.35, +0.48] | 66.4% [65.4, 67.3] |
+| price at 4-hour high | imbalance in the direction of the move (share of volume) | 34.4% | -0.4% | +33.77 [+26.55, +40.98] | 75.8% [75.1, 76.4] |
+| price at 4-hour high | absolute imbalance | 39.2% | 31.9% | +7.30 [+5.73, +8.87] | 59.9% [59.1, 60.7] |
+| price at 4-hour high | trade count against the day's average | 1.91x | 0.85x | +1.07 [+0.99, +1.14] | 80.8% [80.1, 81.6] |
+| price at 4-hour high | large-trade share | 1.3% | 0.8% | +0.47 [+0.41, +0.52] | 68.2% [67.4, 68.9] |
+| RSI14 below 25 | imbalance in the direction of the move (share of volume) | 34.5% | 0.5% | +33.89 [+27.16, +40.62] | 75.2% [74.5, 75.9] |
+| RSI14 below 25 | absolute imbalance | 38.3% | 32.5% | +5.67 [+4.48, +6.86] | 57.6% [56.8, 58.5] |
+| RSI14 below 25 | trade count against the day's average | 3.14x | 0.84x | +2.33 [+2.17, +2.48] | 90.9% [90.5, 91.4] |
+| RSI14 below 25 | large-trade share | 1.4% | 0.8% | +0.56 [+0.46, +0.66] | 70.8% [70.1, 71.5] |
+| RSI14 above 75 | imbalance in the direction of the move (share of volume) | 34.5% | -1.1% | +34.88 [+27.14, +42.62] | 76.8% [76.1, 77.4] |
+| RSI14 above 75 | absolute imbalance | 38.2% | 32.4% | +5.79 [+4.32, +7.26] | 58.3% [57.4, 59.1] |
+| RSI14 above 75 | trade count against the day's average | 2.94x | 0.84x | +2.12 [+1.99, +2.24] | 90.0% [89.5, 90.6] |
+| RSI14 above 75 | large-trade share | 1.4% | 0.8% | +0.56 [+0.46, +0.66] | 71.5% [70.7, 72.1] |
+<!-- table:mechanism_flow:end -->
+
+<!-- table:mechanism_scale:start -->
+Does the recovery grow with the event's own flow? Events of any of the six kinds, 2018 to 2026-08, split in each year into thirds of the event minute's absolute imbalance and of its large-trade share (cutoffs from that year's events, so each year contributes equal thirds; a descriptive split, not a rule a trader could apply in advance). Last-print deviation at 5, 15 and 30 minutes (points, reversal positive, events minus matched controls, 95% interval) and the 30-minute price excess in basis points (path table). 'Mean move' is the mean absolute 5-minute move into the event, in basis points, so the reader can see whether a larger flow is just a larger move. The last row of each block is the highest third minus the lowest, with the two thirds treated as independent samples.
+
+| measure | third | events | mean move (bp) | last print, 5 min | last print, 15 min | last print, 30 min | price excess at 30 min (bp) |
+|---|---|---|---|---|---|---|---|
+| absolute imbalance | lowest third | 16,030 | 33.4 | +5.9 [+4.3, +7.6] | +6.5 [+5.3, +7.6] | +6.8 [+4.6, +9.0] | +1.29 [-0.32, +2.90] |
+| absolute imbalance | middle third | 16,024 | 33.8 | +6.7 [+5.0, +8.3] | +6.6 [+5.3, +7.9] | +8.0 [+6.5, +9.6] | +1.93 [+0.62, +3.24] |
+| absolute imbalance | highest third | 16,028 | 27.8 | +5.8 [+3.9, +7.7] | +6.4 [+5.1, +7.6] | +6.6 [+5.5, +7.7] | +0.24 [-0.85, +1.34] |
+| absolute imbalance | highest minus lowest |  |  | -0.1 [-2.1, +1.8] | -0.1 [-1.6, +1.4] | -0.2 [-2.2, +1.8] | -0.80 [-2.55, +0.96] |
+| large-trade share | lowest third | 16,034 | 24.4 | +5.9 [+4.1, +7.7] | +7.0 [+5.9, +8.1] | +7.9 [+6.3, +9.4] | +1.31 [+0.48, +2.15] |
+| large-trade share | middle third | 16,021 | 34.7 | +6.2 [+4.2, +8.2] | +6.2 [+4.7, +7.7] | +6.9 [+4.7, +9.1] | +1.63 [-0.31, +3.58] |
+| large-trade share | highest third | 16,027 | 36.0 | +6.2 [+5.1, +7.3] | +6.3 [+5.0, +7.6] | +6.8 [+5.7, +7.9] | +0.46 [-1.05, +1.96] |
+| large-trade share | highest minus lowest |  |  | +0.6 [-1.0, +2.1] | -0.7 [-2.2, +0.9] | -1.0 [-2.6, +0.5] | -0.92 [-2.36, +0.52] |
+<!-- table:mechanism_scale:end -->
+
+<!-- table:mechanism_verdict:start -->
+The pre-specified rule applied to the tables above, 2018 to 2026-08. A criterion scored at three horizons is met when it holds at 2 of them. A is supported when A1 and A2 are met; B when A1 read the other way, B1 and B3 are met; if neither or both, the section says it cannot tell. A3 corroborates A and B2 is reported; neither enters the verdict.
+
+| criterion | what is measured | value | met |
+|---|---|---|---|
+| A1 | VWAP label entered one minute later keeps under half of the last-print deviation (class by interval) | 5 min: over half; 15 min: over half; 30 min: over half | no |
+| A2 | the first 60 seconds reach at least 80% of the 30-minute price excess | -64% | no |
+| A3 (corroboration) | near-VWAP half keeps under half of the far half's last-print deviation, interval includes zero | 5 min: near +6.4, far +5.9; 15 min: near +6.7, far +6.2; 30 min: near +7.4, far +7.0 | no |
+| A1, other side | VWAP label entered one minute later keeps over half of the last-print deviation (class by interval) | 5 min: over half; 15 min: over half; 30 min: over half | yes |
+| B1 | the event minute's flow exceeds the controls' on all three measures (lower bound of the excess above zero, shown in points of a share, count as a ratio) | absolute imbalance: lower bound +4.70; trade count against the day's average: lower bound +1.32; large-trade share: lower bound +0.39 | yes |
+| B2 (reported, not in the rule) | price recovers while flow in the direction of the move continues or fades | see the path table | reported |
+| B3 | highest third minus lowest third of the 15-minute last-print deviation is above zero for both flow measures | absolute imbalance: lower bound -1.6; large-trade share: lower bound -2.2 | no |
+
+Verdict by the rule: unidentified with this data.
+<!-- table:mechanism_verdict:end -->
+
+**What it says** (written after the tables, and cautious: the rule's verdict is the last line of the table above).
+
+- **The bounce reading, as specified, does not describe the reversal.** All three predictions of A fail. The embargoed VWAP labels keep most of the last-print deviation at both gaps, in the pooled set and in nearly every one of the six events, so entering a minute or two later does not remove it. The half of events whose signal-minute close was nearest its VWAP shows the reversal as strongly as the half farthest from it. And the price path is not finished within a minute: in the first minute after the event minute the price moves slightly further in the direction of the move, relative to the controls, and turns only after a few minutes. This agrees with the VWAP and later-entry results above and tests them against matched controls instead of all other minutes.
+- **The event minute is heavy trading, and the aggressive flow does not stop at the signal.** Against matched controls the event minute has more trades, a larger share of large trades, and a larger imbalance, and the imbalance points in the direction of the move. The path table shows aggressive flow in the direction of the move continuing through the first minutes after the event minute and fading over the next half hour, while the price excess turns toward a reversal as that flow thins. That ordering is what transient price impact predicts for B1 and B2, and it is also what any process that reacts to the same sharp move would produce, so it does not by itself tell impact from other causes.
+- **The recovery does not grow with the event's own flow, which B needed.** Splitting events into thirds of absolute imbalance and of large-trade share, the last-print deviation is similar in all three thirds and the highest-minus-lowest differences are indistinguishable from zero. The thirds also differ in how large the preceding move was (the table shows it), so this split does not hold the size of the move fixed. A transient impact usually predicts a larger recovery after more pressure; its absence is evidence against the simple form of B, or evidence that one minute of last-print aggressor volume is too coarse a measure of pressure without the depth it pushed against.
+- **Verdict.** Neither side meets its conditions in full: A fails on all of its criteria, and B meets the embargo and flow criteria and fails the scaling one, so the section says "unidentified with this data". The trade table can exclude the bounce; it cannot separate impact from the other reversal explanations. What would settle it is quote and book data around the same events: the best bid and ask and the depth at several price levels, before and after each event, to see whether the spread widens and the book thins during the move and how fast each refills.
+- **Limits.** The rule is conjunctive and was fixed before the run, so a single missed criterion makes the verdict "unidentified", whatever the other criteria say. Controls are matched on year, hour of day and volatility decile, not on the size of the recent move, so event-minus-control differences in flow partly reflect that events follow sharp moves by construction. The retained shares carry no interval of their own (the classes compare each embargoed interval with half of the last-print deviation). The path and flow tables pool basis points across years whose volatility differs.
+
 ## Inside the window: the next five minutes against the close
 
 A pattern that fires at minute k of a 15-minute window says something about the next few minutes; it need not say the same about where the window closes, and a trader holding a window contract cares about both. Sixteen of the strongest patterns from both libraries, fired at minutes 1 to 10 of a quarter-hour window, scored on the next-5-minute direction and on the window's close against its open, with the agreement between the two and the move a 5-basis-point bounce implies for the contract at that minute (the driftless-market model of the main report's study 24; a model number, not a measured quote).
@@ -1198,6 +1349,6 @@ At 30 minutes, across the 12 cells: the embargo-1 deviation is 93% of the embarg
 ## What is not yet done
 
 - Derivatives events (funding extremes, open-interest spikes, liquidation signatures) and tick-level events (large-trade bursts) for the library.
-- The mechanism of the reversal from the tick data: order-book replenishment and inventory after a sharp move.
+- The mechanism of the reversal at the level of the book: the tick-table test above excludes the bounce and leaves price impact unidentified. Settling it needs best bid and ask and depth around the same events (spread, depth and refill after a sharp move), and a measure of pressure that sees the depth it pushed against, which the last-print table cannot supply.
 - HMM variants not yet tried, after the states lost as predictors (study 29 in [btc_15m.md](btc_15m.md)) and added nothing as features (study 30): an HMM observing order-flow imbalance rather than returns, a non-homogeneous transition matrix driven by time of day, and a hidden semi-Markov model with explicit state durations.
 

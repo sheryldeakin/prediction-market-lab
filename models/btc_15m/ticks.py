@@ -30,7 +30,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-CACHE = Path("data/binance_ticks")
+from models.btc_15m.paths import DATA_ROOT
+
+CACHE = DATA_ROOT / "binance_ticks"
 URL = "https://data.binance.vision/data/spot/monthly/aggTrades/{sym}/{sym}-aggTrades-{month}.zip"
 COLS = ["id", "price", "qty", "first", "last", "ts", "buyer_maker", "best"]
 
