@@ -217,17 +217,21 @@ def pool_cells(A: pd.DataFrame, V: pd.DataFrame) -> pd.DataFrame:
     VWAP-label year rows V. Deviation is the up-rate when the event fires minus the unconditional
     up-rate (as in the price-action table), firing-weighted over the years; its error combines the
     years as independent. Retained = VWAP deviation over last-print deviation, firing-weighted over
-    the years in which both exist."""
+    the years in which both exist. Share is the aggregate over the scored years: total firings over
+    total minutes (each year's minutes are its firings divided by its share)."""
     rows = []
     vg = {k: g for k, g in V.groupby(["pattern", "horizon"])}
     for (pat, h), g in A.groupby(["pattern", "horizon"]):
         w = g.fires / g.fires.sum()
         dev_y = (1 - g.share) * g["diff"]
         se_y = (1 - g.share) * g.se
+        ok = g.share > 0
+        minutes = (g.fires[ok] / g.share[ok]).sum()          # minutes scored: fires / share, summed over the scored years
+        agg_share = float(g.fires[ok].sum() / minutes) if minutes > 0 else float("nan")
         dev = float((w * dev_y).sum())
         se = float(np.sqrt(((w * se_y) ** 2).sum()))
         row = {"event": pat, "horizon": h, "years": len(g), "years_held": int((np.sign(dev_y) == np.sign(dev)).sum()),
-               "fires": int(g.fires.sum()), "share": float(g.share.mean()), "up_rate": float((w * g.up_rate).sum()),
+               "fires": int(g.fires.sum()), "share": agg_share, "up_rate": float((w * g.up_rate).sum()),
                "deviation": dev, "se": se, "lo": dev - 1.96 * se, "hi": dev + 1.96 * se,
                "min_p_adj": float(g.p_adj.min()), "years_adj_05": int((g.p_adj <= 0.05).sum())}
         v = vg.get((pat, h))
@@ -255,9 +259,10 @@ TICK_SHARE_EVENTS = ("trade-count climax", "large-trade burst")
 DERIV_SHARE_EVENTS = (DERIV_EVENTS[0], DERIV_EVENTS[6])
 
 
-def sentences(G: pd.DataFrame, null_all: np.ndarray, real_max_z: float, per_year_share: pd.DataFrame, events: list[tuple[str, str]] = TICK_EVENTS, share_events: tuple = TICK_SHARE_EVENTS) -> list[str]:
-    """The generated summary sentences the doc quotes. events: the (family, event) list that gives
-    the order; share_events: the events whose firing share per year gets a sentence."""
+def sentences(G: pd.DataFrame, null_all: np.ndarray, real_max_z: float, per_year_share: pd.DataFrame, years: list[int], events: list[tuple[str, str]] = TICK_EVENTS, share_events: tuple = TICK_SHARE_EVENTS) -> list[str]:
+    """The generated summary sentences the doc quotes. years: every year the part was run over;
+    events: the (family, event) list that gives the order; share_events: the events whose firing
+    share per year gets a sentence."""
     ev_order = [name for _, name in events]
     c_all, c_half, c_any, hd = cleared(G), cleared(G, 0.5), cleared(G, 0.0), held_all(G)
     strong = c_half & hd
@@ -270,6 +275,17 @@ def sentences(G: pd.DataFrame, null_all: np.ndarray, real_max_z: float, per_year
     if len(r):
         out.append(f"Among those {len(r)} cells (interval excludes zero), the VWAP label keeps a median of {r.median()*100:.0f}% of the last-print deviation (range {r.min()*100:.0f}% to {r.max()*100:.0f}%).")
     out.append(f"The largest absolute pooled deviation is {G.deviation.abs().max()*100:.1f} points ({G.loc[G.deviation.abs().idxmax(), 'event']}, {int(G.loc[G.deviation.abs().idxmax(), 'horizon'])} minutes); {int((G.lo > 0).sum() + (G.hi < 0).sum())} of the {len(G)} pooled 95% intervals exclude zero.")
+    scored_years = G.groupby("event").years.max()
+    partly = [e for e in ev_order if e in scored_years.index and scored_years[e] < len(years)]
+    out += [f"'{e}' was scored in {int(scored_years[e])} of {len(years)} years (fewer than {MIN_FIRES} firings in the others)." for e in partly]
+    if not partly:
+        out.append("Every event was scored in every year.")
+    if int(strong.sum()):
+        first = min(HORIZONS)
+        bad = G[strong & (G.horizon == first) & ~(G.retained >= 0.5)]
+        bad = bad.assign(_o=bad.event.map({e: k for k, e in enumerate(ev_order)})).sort_values("_o")
+        listed = ", ".join(f"{r.event} (retained {r.retained*100:.0f}%)" if not np.isnan(r.retained) else f"{r.event} (retained not measured)" for r in bad.itertuples()) or "none"
+        out.append(f"Of the {int(strong.sum())} cells that hold their sign in every year and clear the null in at least half of the years, {len(bad)} are at the {first}-minute horizon and keep less than half of their deviation under the VWAP label: {listed}.")
     for ev in share_events:
         s = per_year_share[per_year_share.event == ev].set_index("year").share
         out.append(f"'{ev}' fires on {s.min()*100:.2f}% of minutes in its quietest year ({s.idxmin()}) and {s.max()*100:.2f}% in its busiest ({s.idxmax()}).")
@@ -292,13 +308,16 @@ TICK_EFFECTS = [("A reversal from a price extreme on heavy trading", ["trade-cou
 DERIV_ORIENT = {DERIV_EVENTS[0]: -1, DERIV_EVENTS[1]: 1, DERIV_EVENTS[6]: 1, DERIV_EVENTS[7]: -1}
 DERIV_EFFECTS = [("Funding at an extreme, read against the crowd (top decile: down is the reversal)", [DERIV_EVENTS[0], DERIV_EVENTS[1]]),
                  ("Liquidation signatures, a reversal of the forced move", [DERIV_EVENTS[6], DERIV_EVENTS[7]]),
-                 ("Open interest moves (deviation signed up)", DERIV_EVENTS[2:6])]
+                 ("Open interest up over 15 or 60 minutes, top decile (deviation signed up)", [DERIV_EVENTS[2], DERIV_EVENTS[4]]),
+                 ("Open interest down over 15 or 60 minutes, bottom decile (deviation signed up)", [DERIV_EVENTS[3], DERIV_EVENTS[5]])]
 EFFECT_HORIZONS = (5, 10, 15, 30)
 
 
-def effect_sentences(G: pd.DataFrame, effects: list = TICK_EFFECTS, orient: dict = TICK_ORIENT, scale: float | None = None) -> list[str]:
+def effect_sentences(G: pd.DataFrame, effects: list = TICK_EFFECTS, orient: dict = TICK_ORIENT, scale: float | None = None, A: pd.DataFrame | None = None) -> list[str]:
     """One generated sentence per group of events: the range of the pooled deviation over 5 to 30
-    minutes, oriented so that a reversal is positive for events with a side."""
+    minutes, oriented so that a reversal is positive for events with a side. A (the per-year rows:
+    year, pattern, horizon, diff), when given, adds the range of the oriented per-year deviation at
+    15 minutes."""
     out = []
     for label, evs in effects:
         g = G[G.event.isin(evs) & G.horizon.isin(EFFECT_HORIZONS)]
@@ -306,33 +325,39 @@ def effect_sentences(G: pd.DataFrame, effects: list = TICK_EFFECTS, orient: dict
         excl = (g.lo > 0) | (g.hi < 0)
         side = "reversal positive" if any(e in orient for e in evs) else "up positive"
         out.append(f"{label}: at {', '.join(str(h) for h in EFFECT_HORIZONS[:-1])} and {EFFECT_HORIZONS[-1]} minutes the pooled deviation runs from {dev.min()*100:+.1f} to {dev.max()*100:+.1f} points ({side}); {int(excl.sum())} of {len(g)} cells have an interval that excludes zero; cells holding their sign in every year: {int(held_all(g).sum())}.")
+        if A is not None:
+            a = A[A.pattern.isin(evs) & (A.horizon == 15)]
+            if len(a):
+                d = a["diff"] * a.pattern.map(lambda e: orient.get(e, 1))
+                out[-1] += f" Per year at 15 minutes, the oriented deviation runs from {d.min()*100:+.1f} to {d.max()*100:+.1f} points over {len(d)} year-cells, {int((d > 0).sum())} of them positive."
     if scale is not None:
         out.append(f"For scale, the largest deviation among the price-action library's cells that hold their sign in every year is {scale*100:.1f} points (price_action_summary.csv).")
     return out
 
 
 def tick_intro(years: list[int], end: str, null_runs: int, null_all: np.ndarray) -> str:
-    return f"Tick-level events for the price-action library, {years[0]} to {end}, every minute as a decision time (definitions in models/btc_15m/library_events.py; every cutoff is a percentile of the previous year). For each event and horizon: minutes it fires on in all years, the share of minutes it fires on, the pooled up-rate of the next h minutes, the deviation from the unconditional up-rate in points with a 95% interval (day-clustered errors, years combined as independent), the smallest search-wide adjusted p across years ({null_runs} rotated-label runs per year; the smallest possible value is {1/(len(null_all)+1):.4f}), the years in which the sign matched the pooled sign out of years with at least {MIN_FIRES} firings, the years with an adjusted p of at most 0.05, and the share of the last-print deviation kept under the 60-second VWAP label, shown only where the interval excludes zero because a ratio of two near-zero deviations means nothing (at 1 minute the VWAP label compares the two halves of the decision minute, a shorter question). Every cell is listed."
+    return f"Tick-level events for the price-action library, {years[0]} to {end}, every minute as a decision time (definitions in models/btc_15m/library_events.py; every cutoff is a percentile of the previous year). For each event and horizon: minutes it fires on in all years, the share of minutes it fires on over the years in which it was scored (an event with fewer than {MIN_FIRES} firings in a year is not scored in it, and the years columns count the scored years), the pooled up-rate of the next h minutes, the deviation from the unconditional up-rate in points with a 95% interval (day-clustered errors, years combined as independent), the smallest search-wide adjusted p across years ({null_runs} rotated-label runs per year; the smallest possible value is {1/(len(null_all)+1):.4f}), the years in which the sign matched the pooled sign out of years with at least {MIN_FIRES} firings, the years with an adjusted p of at most 0.05, and the share of the last-print deviation kept under the 60-second VWAP label, shown only where the interval excludes zero because a ratio of two near-zero deviations means nothing (at 1 minute the VWAP label compares the two halves of the decision minute, a shorter question). Every cell is listed."
 
 
 def deriv_intro(years: list[int], end: str, null_runs: int, null_all: np.ndarray) -> str:
-    return f"Derivatives events for the price-action library, scored in {years[0]} to {end}, every minute as a decision time. Every cutoff is a decile of the previous calendar year of the futures series themselves, so a year never defines its own extreme. The columns are the same as in the tick table. The null covers these {len(DERIV_EVENTS)} events at the {len(HORIZONS)} horizons only ({null_runs} rotated-label runs per year; the smallest possible adjusted p is {1/(len(null_all)+1):.4f}). The comparison at each cut is strict, because the funding rate sits at the exchange default on a large share of minutes, so the previous year's upper decile can be the default itself; this was set after the one-year smoke run and is the only thing that run changed. The orientation of the funding and liquidation groups below was fixed before the run."
+    return f"Derivatives events for the price-action library, scored in {years[0]} to {end}, every minute as a decision time. Every cutoff is a decile of the previous calendar year of the futures series themselves, so a year never defines its own extreme. The columns are the same as in the tick table; the share is the share of minutes the event fires on over the years in which it was scored (an event with fewer than {MIN_FIRES} firings in a year is not scored in it, and the years columns count the scored years). The null covers these {len(DERIV_EVENTS)} events at the {len(HORIZONS)} horizons only ({null_runs} rotated-label runs per year; the smallest possible adjusted p is {1/(len(null_all)+1):.4f}). The comparison at each cut is strict, because the funding rate sits at the exchange default on a large share of minutes, so the previous year's upper decile can be the default itself; this was set after the one-year smoke run and is the only thing that run changed. The orientation of the funding and liquidation groups below was fixed before the run."
 
 
 def render(G: pd.DataFrame, years: list[int], end: str, null_runs: int, null_all: np.ndarray, real_max_z: float, per_year_share: pd.DataFrame, scale: float | None = None, *,
-           events: list[tuple[str, str]] = TICK_EVENTS, effects: list = TICK_EFFECTS, orient: dict = TICK_ORIENT, share_events: tuple = TICK_SHARE_EVENTS, intro: str | None = None) -> str:
+           events: list[tuple[str, str]] = TICK_EVENTS, effects: list = TICK_EFFECTS, orient: dict = TICK_ORIENT, share_events: tuple = TICK_SHARE_EVENTS, intro: str | None = None, year_rows: pd.DataFrame | None = None) -> str:
     """The markdown of a scored library table: results/btc_15m/library_ticks.md by default (the tick
-    events), library_derivatives.md with the derivatives arguments. One shaping function for both."""
+    events), library_derivatives.md with the derivatives arguments. One shaping function for both.
+    year_rows: the per-year rows, for the per-year ranges in the effect sentences."""
     fam = {name: f for f, name in events}
     order = {name: k for k, (_, name) in enumerate(events)}
     G = G.assign(_o=G.event.map(order)).sort_values(["_o", "horizon"])
     lines = [tick_intro(years, end, null_runs, null_all) if intro is None else intro, ""]
-    lines.append("| family | event | horizon (min) | fires | share | up-rate | deviation (points) [95% interval] | min adjusted p | years held | years p<=0.05 | VWAP retained |")
+    lines.append("| family | event | horizon (min) | fires | share (scored years) | up-rate | deviation (points) [95% interval] | min adjusted p | years held | years p<=0.05 | VWAP retained |")
     lines.append("|---|---|---|---|---|---|---|---|---|---|---|")
     for r in G.itertuples():
         ret = f"{r.retained*100:.0f}%" if (r.lo > 0 or r.hi < 0) and not np.isnan(r.retained) else "-"
         lines.append(f"| {fam[r.event]} | {r.event} | {r.horizon} | {r.fires:,} | {r.share*100:.2f}% | {r.up_rate*100:.1f}% | {r.deviation*100:+.1f} [{r.lo*100:+.1f}, {r.hi*100:+.1f}] | {r.min_p_adj:.4f} | {r.years_held}/{r.years} | {r.years_adj_05}/{r.years} | {ret} |")
-    lines += [""] + [s + "\n" for s in sentences(G, null_all, real_max_z, per_year_share, events, share_events) + effect_sentences(G, effects, orient, scale)]
+    lines += [""] + [s + "\n" for s in sentences(G, null_all, real_max_z, per_year_share, years, events, share_events) + effect_sentences(G, effects, orient, scale, year_rows)]
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -383,7 +408,7 @@ def _scorable(days: set, start: int = 0, end: str = "9999") -> list[int]:
 
 
 def render_derivatives(cache: Path, G: pd.DataFrame | None = None, years: list[int] | None = None, end: str | None = None, null_runs: int | None = None,
-                       null_all: np.ndarray | None = None, real_max_z: float | None = None, per_year_share: pd.DataFrame | None = None, scale: float | None = None) -> str:
+                       null_all: np.ndarray | None = None, real_max_z: float | None = None, per_year_share: pd.DataFrame | None = None, scale: float | None = None, year_rows: pd.DataFrame | None = None) -> str:
     """The markdown of results/btc_15m/library_derivatives.md: the coverage of the futures files, and
     when G (the pooled cells) is given, the scored table and sentences from the same renderer as the
     tick table."""
@@ -405,7 +430,7 @@ def render_derivatives(cache: Path, G: pd.DataFrame | None = None, years: list[i
         return text
     intro = deriv_intro(years, end, null_runs, null_all)
     return text + "\n" + render(G, years, end, null_runs, null_all, real_max_z, per_year_share, scale, events=DERIV_EVENT_FAMILIES, effects=DERIV_EFFECTS,
-                                orient=DERIV_ORIENT, share_events=DERIV_SHARE_EVENTS, intro=intro)
+                                orient=DERIV_ORIENT, share_events=DERIV_SHARE_EVENTS, intro=intro, year_rows=year_rows)
 
 
 # ---------------- one year ----------------
@@ -582,7 +607,7 @@ def main():
         years = override or list(range(a.start, int(a.end[:4]) + 1))
         Rs, Vs, Ss, nulls = score_years(years, a.end, a.null_runs, a.refresh, run_year, code_key(), "year")
         G, A, shares, null_all, scale = assemble(Rs, Vs, Ss, nulls, years, a.end, a.null_runs, out, "library_ticks")
-        (out / "library_ticks.md").write_text(render(G, years, a.end, a.null_runs, null_all, float(A.z.abs().max()), shares, scale), encoding="utf-8")
+        (out / "library_ticks.md").write_text(render(G, years, a.end, a.null_runs, null_all, float(A.z.abs().max()), shares, scale, year_rows=A), encoding="utf-8")
         print(f"wrote library_ticks.md in {time.time() - t_all:.0f}s", flush=True)
     if a.part in ("derivatives", "both"):
         cov = futures_days(derivatives.CACHE)[0]
@@ -595,7 +620,7 @@ def main():
             return
         Rs, Vs, Ss, nulls = score_years(years, a.end, a.null_runs, a.refresh, run_deriv_year, deriv_code_key(), "deriv-year")
         G, A, shares, null_all, scale = assemble(Rs, Vs, Ss, nulls, years, a.end, a.null_runs, out, "library_derivatives")
-        (out / "library_derivatives.md").write_text(render_derivatives(derivatives.CACHE, G, years, a.end, a.null_runs, null_all, float(A.z.abs().max()), shares, scale), encoding="utf-8")
+        (out / "library_derivatives.md").write_text(render_derivatives(derivatives.CACHE, G, years, a.end, a.null_runs, null_all, float(A.z.abs().max()), shares, scale, year_rows=A), encoding="utf-8")
         print(f"wrote library_derivatives.md in {time.time() - t_all:.0f}s", flush=True)
 
 
