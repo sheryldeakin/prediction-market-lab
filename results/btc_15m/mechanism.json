@@ -1,0 +1,427 @@
+{
+  "ran_at": "2026-10-05 06:22 UTC",
+  "commit": "4d8b245c1446350f1b824d3622d44fdd6592a320",
+  "dirty": false,
+  "years": [
+    2018,
+    2019,
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025,
+    2026
+  ],
+  "end": "2026-08",
+  "wall_seconds": 133,
+  "peak_working_set_mb": 13005,
+  "per_year": [
+    {
+      "year": 2018,
+      "rows": 508624,
+      "ambiguous": 0,
+      "events": {
+        "union": 5067,
+        "drop5": 1136,
+        "rise5": 946,
+        "low4h": 1455,
+        "high4h": 1574,
+        "rsi_lo": 2006,
+        "rsi_hi": 1788
+      },
+      "unique_events": 7777,
+      "unmatched": 0,
+      "controls_with_replacement": 0,
+      "edges_used": [
+        9.57550272151243,
+        11.493530844180368,
+        12.964372659009799,
+        14.49390574628095,
+        16.144519147185743,
+        18.176276623901288,
+        20.677087956327348,
+        24.81999096436467,
+        32.71496468476152
+      ],
+      "next_edges": [
+        3.500302035709848,
+        4.656471841134711,
+        5.686891486930832,
+        6.855022344318634,
+        8.194098453805333,
+        9.844398428370289,
+        12.113692395876322,
+        15.067536149626186,
+        20.259325715320067
+      ]
+    },
+    {
+      "year": 2019,
+      "rows": 514772,
+      "ambiguous": 0,
+      "events": {
+        "union": 4720,
+        "drop5": 1091,
+        "rise5": 1031,
+        "low4h": 1047,
+        "high4h": 1647,
+        "rsi_lo": 1674,
+        "rsi_hi": 1702
+      },
+      "unique_events": 7138,
+      "unmatched": 0,
+      "controls_with_replacement": 0,
+      "edges_used": [
+        3.500302035709848,
+        4.656471841134711,
+        5.686891486930832,
+        6.855022344318634,
+        8.194098453805333,
+        9.844398428370289,
+        12.113692395876322,
+        15.067536149626186,
+        20.259325715320067
+      ],
+      "next_edges": [
+        2.987277106466518,
+        3.649023701389906,
+        4.303247197604842,
+        5.005170969603163,
+        5.777449261556224,
+        6.72012397079179,
+        7.989345503737381,
+        9.99103036243864,
+        13.84809297415707
+      ]
+    },
+    {
+      "year": 2020,
+      "rows": 513796,
+      "ambiguous": 0,
+      "events": {
+        "union": 4874,
+        "drop5": 1071,
+        "rise5": 1058,
+        "low4h": 1038,
+        "high4h": 1852,
+        "rsi_lo": 1545,
+        "rsi_hi": 1772
+      },
+      "unique_events": 7412,
+      "unmatched": 0,
+      "controls_with_replacement": 0,
+      "edges_used": [
+        2.987277106466518,
+        3.649023701389906,
+        4.303247197604842,
+        5.005170969603163,
+        5.777449261556224,
+        6.72012397079179,
+        7.989345503737381,
+        9.99103036243864,
+        13.84809297415707
+      ],
+      "next_edges": [
+        3.058378092509001,
+        3.9181423201675076,
+        4.624883805778775,
+        5.36351267766228,
+        6.1557991012570525,
+        7.0372697609436115,
+        8.182092435046648,
+        9.949859576162199,
+        13.464163931114852
+      ]
+    },
+    {
+      "year": 2021,
+      "rows": 515613,
+      "ambiguous": 0,
+      "events": {
+        "union": 5295,
+        "drop5": 1122,
+        "rise5": 1169,
+        "low4h": 1572,
+        "high4h": 1927,
+        "rsi_lo": 1635,
+        "rsi_hi": 1661
+      },
+      "unique_events": 8172,
+      "unmatched": 0,
+      "controls_with_replacement": 0,
+      "edges_used": [
+        3.058378092509001,
+        3.9181423201675076,
+        4.624883805778775,
+        5.36351267766228,
+        6.1557991012570525,
+        7.0372697609436115,
+        8.182092435046648,
+        9.949859576162199,
+        13.464163931114852
+      ],
+      "next_edges": [
+        5.380098160307988,
+        6.312629779206278,
+        7.166821966054645,
+        8.077007777898267,
+        9.096679853831942,
+        10.31391414390866,
+        11.803709827885955,
+        14.055173613496281,
+        18.1265228457996
+      ]
+    },
+    {
+      "year": 2022,
+      "rows": 525600,
+      "ambiguous": 0,
+      "events": {
+        "union": 5033,
+        "drop5": 1360,
+        "rise5": 1238,
+        "low4h": 1315,
+        "high4h": 1248,
+        "rsi_lo": 1872,
+        "rsi_hi": 1749
+      },
+      "unique_events": 7725,
+      "unmatched": 0,
+      "controls_with_replacement": 0,
+      "edges_used": [
+        5.380098160307988,
+        6.312629779206278,
+        7.166821966054645,
+        8.077007777898267,
+        9.096679853831942,
+        10.31391414390866,
+        11.803709827885955,
+        14.055173613496281,
+        18.1265228457996
+      ],
+      "next_edges": [
+        2.8096153236285675,
+        3.7726352855359084,
+        4.536731674056217,
+        5.287269139716929,
+        6.1182269469552,
+        7.056680796493204,
+        8.190711671288026,
+        9.801310738473171,
+        12.803284277165579
+      ]
+    },
+    {
+      "year": 2023,
+      "rows": 524021,
+      "ambiguous": 0,
+      "events": {
+        "union": 6021,
+        "drop5": 1325,
+        "rise5": 1434,
+        "low4h": 1311,
+        "high4h": 1639,
+        "rsi_lo": 2319,
+        "rsi_hi": 2539
+      },
+      "unique_events": 9623,
+      "unmatched": 0,
+      "controls_with_replacement": 0,
+      "edges_used": [
+        2.8096153236285675,
+        3.7726352855359084,
+        4.536731674056217,
+        5.287269139716929,
+        6.1182269469552,
+        7.056680796493204,
+        8.190711671288026,
+        9.801310738473171,
+        12.803284277165579
+      ],
+      "next_edges": [
+        1.6434879411674168,
+        2.22083975384293,
+        2.728473574164477,
+        3.2297977372464883,
+        3.7642371026125994,
+        4.381063170627419,
+        5.158971434712209,
+        6.284836030483848,
+        8.386701765204018
+      ]
+    },
+    {
+      "year": 2024,
+      "rows": 527040,
+      "ambiguous": 0,
+      "events": {
+        "union": 6119,
+        "drop5": 1160,
+        "rise5": 1191,
+        "low4h": 1822,
+        "high4h": 2256,
+        "rsi_lo": 1948,
+        "rsi_hi": 2012
+      },
+      "unique_events": 9665,
+      "unmatched": 0,
+      "controls_with_replacement": 0,
+      "edges_used": [
+        1.6434879411674168,
+        2.22083975384293,
+        2.728473574164477,
+        3.2297977372464883,
+        3.7642371026125994,
+        4.381063170627419,
+        5.158971434712209,
+        6.284836030483848,
+        8.386701765204018
+      ],
+      "next_edges": [
+        2.743713957840143,
+        3.4427998338775434,
+        4.03622840975881,
+        4.638445100788067,
+        5.271503206961668,
+        6.020131381704387,
+        6.966131852676082,
+        8.362673289771724,
+        10.712277887288922
+      ]
+    },
+    {
+      "year": 2025,
+      "rows": 525600,
+      "ambiguous": 0,
+      "events": {
+        "union": 6740,
+        "drop5": 1135,
+        "rise5": 1164,
+        "low4h": 2241,
+        "high4h": 2440,
+        "rsi_lo": 2099,
+        "rsi_hi": 2165
+      },
+      "unique_events": 10575,
+      "unmatched": 0,
+      "controls_with_replacement": 0,
+      "edges_used": [
+        2.743713957840143,
+        3.4427998338775434,
+        4.03622840975881,
+        4.638445100788067,
+        5.271503206961668,
+        6.020131381704387,
+        6.966131852676082,
+        8.362673289771724,
+        10.712277887288922
+      ],
+      "next_edges": [
+        2.1366595609404793,
+        2.7116768560712052,
+        3.213598940972282,
+        3.7097884013317652,
+        4.230279003846726,
+        4.864014010980131,
+        5.644935115996778,
+        6.810366009646578,
+        8.979489172423747
+      ]
+    },
+    {
+      "year": 2026,
+      "rows": 349920,
+      "ambiguous": 0,
+      "events": {
+        "union": 4216,
+        "drop5": 848,
+        "rise5": 868,
+        "low4h": 1326,
+        "high4h": 1293,
+        "rsi_lo": 1506,
+        "rsi_hi": 1427
+      },
+      "unique_events": 6635,
+      "unmatched": 0,
+      "controls_with_replacement": 0,
+      "edges_used": [
+        2.1366595609404793,
+        2.7116768560712052,
+        3.213598940972282,
+        3.7097884013317652,
+        4.230279003846726,
+        4.864014010980131,
+        5.644935115996778,
+        6.810366009646578,
+        8.979489172423747
+      ],
+      "next_edges": [
+        2.076621735496386,
+        2.7386652614501346,
+        3.279740965630334,
+        3.814296895682778,
+        4.384667575799161,
+        5.073474588144362,
+        5.940536412853223,
+        7.1740641556609726,
+        9.347127937139437
+      ]
+    }
+  ],
+  "criteria": [
+    {
+      "id": "A1",
+      "what": "VWAP label entered one minute later keeps under half of the last-print deviation (class by interval)",
+      "value": "5 min: over half; 15 min: over half; 30 min: over half",
+      "met": false
+    },
+    {
+      "id": "A2",
+      "what": "the first 60 seconds reach at least 80% of the 30-minute price excess",
+      "value": "-64%",
+      "met": false
+    },
+    {
+      "id": "A3 (corroboration)",
+      "what": "near-VWAP half keeps under half of the far half's last-print deviation, interval includes zero",
+      "value": "5 min: near +6.4, far +5.9; 15 min: near +6.7, far +6.2; 30 min: near +7.4, far +7.0",
+      "met": false
+    },
+    {
+      "id": "A1, other side",
+      "what": "VWAP label entered one minute later keeps over half of the last-print deviation (class by interval)",
+      "value": "5 min: over half; 15 min: over half; 30 min: over half",
+      "met": true
+    },
+    {
+      "id": "B1",
+      "what": "the event minute's flow exceeds the controls' on all three measures (lower bound of the excess above zero, shown in points of a share, count as a ratio)",
+      "value": "absolute imbalance: lower bound +4.70; trade count against the day's average: lower bound +1.32; large-trade share: lower bound +0.39",
+      "met": true
+    },
+    {
+      "id": "B2 (reported, not in the rule)",
+      "what": "price recovers while flow in the direction of the move continues or fades",
+      "value": "see the path table",
+      "met": null
+    },
+    {
+      "id": "B3",
+      "what": "highest third minus lowest third of the 15-minute last-print deviation is above zero for both flow measures",
+      "value": "absolute imbalance: lower bound -1.6; large-trade share: lower bound -2.2",
+      "met": false
+    }
+  ],
+  "rule": {
+    "A1": false,
+    "A2": false,
+    "A3": false,
+    "B_embargo": true,
+    "B1": true,
+    "B3": false,
+    "A_supported": false,
+    "B_supported": false,
+    "verdict": "unidentified with this data"
+  }
+}
