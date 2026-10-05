@@ -1,0 +1,100 @@
+year,event,share,fires
+2018,large-trade burst,0.00021626977885432066,110
+2018,large-trade burst with net large buying,8.257573374437699e-05,42
+2018,large-trade burst with net large selling,0.00013369404510994368,68
+2018,net taker buying in each of the last 3 minutes,0.21591588285255905,109820
+2018,net taker selling in each of the last 3 minutes,0.1139663091006323,57966
+2018,net taker buying in each of the last 5 minutes,0.09203458743590551,46811
+2018,net taker selling in each of the last 5 minutes,0.03530112617572116,17955
+2018,trade-count climax,0.22230960395105226,113072
+2018,trade-count climax at a new 1h high,0.025928780395734374,13188
+2018,trade-count climax at a new 1h low,0.03026597250621284,15394
+2018,trade-count climax with no new 1h high or low,0.1661246814935984,84495
+2019,large-trade burst,0.0007615021796057283,392
+2019,large-trade burst with net large buying,0.00035355458338837386,182
+2019,large-trade burst with net large selling,0.0004079475962173545,210
+2019,net taker buying in each of the last 3 minutes,0.21707085855485536,111742
+2019,net taker selling in each of the last 3 minutes,0.09721391217859557,50043
+2019,net taker buying in each of the last 5 minutes,0.08644021042325535,44497
+2019,net taker selling in each of the last 5 minutes,0.025937696689019605,13352
+2019,trade-count climax,0.028707855128095545,14778
+2019,trade-count climax at a new 1h high,0.0064319737670269555,3311
+2019,trade-count climax at a new 1h low,0.0071468533642078435,3679
+2019,trade-count climax with no new 1h high or low,0.015150396680472132,7799
+2020,large-trade burst,0.004620510864234054,2374
+2020,large-trade burst with net large buying,0.0022207257355059207,1141
+2020,large-trade burst with net large selling,0.0023997851287281334,1233
+2020,net taker buying in each of the last 3 minutes,0.12936262641203902,66466
+2020,net taker selling in each of the last 3 minutes,0.18634049311399856,95741
+2020,net taker buying in each of the last 5 minutes,0.039451455441459254,20270
+2020,net taker selling in each of the last 5 minutes,0.07008034317121971,36007
+2020,trade-count climax,0.06378601623990844,32773
+2020,trade-count climax at a new 1h high,0.01253415752555489,6440
+2020,trade-count climax at a new 1h low,0.011378056660620169,5846
+2020,trade-count climax with no new 1h high or low,0.03988158724474305,20491
+2021,large-trade burst,0.004212461671835272,2172
+2021,large-trade burst with net large buying,0.002046108224579287,1055
+2021,large-trade burst with net large selling,0.0021663534472559846,1117
+2021,net taker buying in each of the last 3 minutes,0.12833268362124306,66170
+2021,net taker selling in each of the last 3 minutes,0.16871762348893454,86993
+2021,net taker buying in each of the last 5 minutes,0.03935121884048695,20290
+2021,net taker selling in each of the last 5 minutes,0.059065617042239046,30455
+2021,trade-count climax,0.047225341486735205,24350
+2021,trade-count climax at a new 1h high,0.010560245765719638,5445
+2021,trade-count climax at a new 1h low,0.01261799062475151,6506
+2021,trade-count climax with no new 1h high or low,0.02405292341349035,12402
+2022,large-trade burst,0.009277016742770167,4876
+2022,large-trade burst with net large buying,0.004539573820395738,2386
+2022,large-trade burst with net large selling,0.004737442922374429,2490
+2022,net taker buying in each of the last 3 minutes,0.127351598173516,66936
+2022,net taker selling in each of the last 3 minutes,0.14732115677321156,77432
+2022,net taker buying in each of the last 5 minutes,0.03664573820395738,19261
+2022,net taker selling in each of the last 5 minutes,0.04648592085235921,24433
+2022,trade-count climax,0.06886986301369863,36198
+2022,trade-count climax at a new 1h high,0.01006468797564688,5290
+2022,trade-count climax at a new 1h low,0.010669710806697107,5608
+2022,trade-count climax with no new 1h high or low,0.048156392694063924,25311
+2023,large-trade burst,0.01748975708988762,9165
+2023,large-trade burst with net large buying,0.008596983708668165,4505
+2023,large-trade burst with net large selling,0.008892773381219455,4660
+2023,net taker buying in each of the last 3 minutes,0.11894943141591653,62332
+2023,net taker selling in each of the last 3 minutes,0.17267246923310325,90484
+2023,net taker buying in each of the last 5 minutes,0.03414366981475933,17892
+2023,net taker selling in each of the last 5 minutes,0.061482268840370904,32218
+2023,trade-count climax,0.013358243276509911,7000
+2023,trade-count climax at a new 1h high,0.0027308065898122404,1431
+2023,trade-count climax at a new 1h low,0.002639207207344744,1383
+2023,trade-count climax with no new 1h high or low,0.007999679402161364,4192
+2024,large-trade burst,0.014738919247115968,7768
+2024,large-trade burst with net large buying,0.007200591985428051,3795
+2024,large-trade burst with net large selling,0.007538327261687917,3973
+2024,net taker buying in each of the last 3 minutes,0.13841833636915604,72952
+2024,net taker selling in each of the last 3 minutes,0.16739146933819066,88222
+2024,net taker buying in each of the last 5 minutes,0.04579918032786885,24138
+2024,net taker selling in each of the last 5 minutes,0.05940915300546448,31311
+2024,trade-count climax,0.00194672131147541,1026
+2024,trade-count climax at a new 1h high,0.0006432149362477231,339
+2024,trade-count climax at a new 1h low,0.0006868548876745598,362
+2024,trade-count climax with no new 1h high or low,0.0006318306010928962,333
+2025,large-trade burst,0.013340943683409438,7012
+2025,large-trade burst with net large buying,0.005407153729071537,2842
+2025,large-trade burst with net large selling,0.007933789954337899,4170
+2025,net taker buying in each of the last 3 minutes,0.13562785388127854,71286
+2025,net taker selling in each of the last 3 minutes,0.18958904109589042,99648
+2025,net taker buying in each of the last 5 minutes,0.048110730593607307,25287
+2025,net taker selling in each of the last 5 minutes,0.07742960426179604,40697
+2025,trade-count climax,0.0058428462709284625,3071
+2025,trade-count climax at a new 1h high,0.0012861491628614915,676
+2025,trade-count climax at a new 1h low,0.0017313546423135464,910
+2025,trade-count climax with no new 1h high or low,0.0028386605783866058,1492
+2026,large-trade burst,0.015823616826703246,5537
+2026,large-trade burst with net large buying,0.007601737540009145,2660
+2026,large-trade burst with net large selling,0.008221879286694102,2877
+2026,net taker buying in each of the last 3 minutes,0.1526920438957476,53430
+2026,net taker selling in each of the last 3 minutes,0.16358310470964793,57241
+2026,net taker buying in each of the last 5 minutes,0.05582418838591678,19534
+2026,net taker selling in each of the last 5 minutes,0.06264288980338363,21920
+2026,trade-count climax,0.006953017832647462,2433
+2026,trade-count climax at a new 1h high,0.0020147462277091905,705
+2026,trade-count climax at a new 1h low,0.0022490855052583448,787
+2026,trade-count climax with no new 1h high or low,0.0026977594878829446,944
