@@ -236,6 +236,9 @@ def test_pooling_weights_years_by_firings_and_measures_from_the_unconditional_ra
     assert G.retained == pytest.approx((0.05 * 1000 + 0.01 * 3000 + 0.0) / (0.10 * 1000 + 0.02 * 3000 - 0.01 * 1000))
     full = L.pool_cells(A, V)
     assert not L.cleared(full).iloc[0] and not L.held_all(full).iloc[0]
+    assert L.cleared(full, 0.5).iloc[0] and L.cleared(full, 0.0).iloc[0]        # 2 of 3 years: not all, at least half, at least one
+    none = full.assign(years_adj_05=0)
+    assert not L.cleared(none, 0.0).iloc[0]                                    # no year at all is not "at least one"
 
 
 def test_rendering_twice_gives_the_same_document_and_one_row_per_cell():
@@ -257,7 +260,8 @@ def test_rendering_twice_gives_the_same_document_and_one_row_per_cell():
     assert a == L.render(G, [2020, 2021], "2021-12", 3, null, 9.0, shares)
     table = [ln for ln in a.splitlines() if ln.startswith("| ") and not ln.startswith("| family")]
     assert len(table) == len(names) * len(L.HORIZONS)
-    assert "Of 66 cells (11 events at 6 horizons), 66 clear the search-wide null" in a
+    assert "Of 66 cells (11 events at 6 horizons), 66 hold their sign in every year." in a
+    assert "in every scored year by 66 cells, in at least half of the scored years by 66 and in at least one year by 66; 66 cells" in a
     assert "Null: the largest |z|" in a
 
 
@@ -278,3 +282,56 @@ def test_vwap_retention_is_shown_only_where_the_interval_excludes_zero():
     climax = next(ln for ln in a.splitlines() if "| trade-count climax |" in ln)
     assert burst.rstrip().endswith("| - |")
     assert climax.rstrip().endswith("| 50% |")
+
+
+def test_effect_sentences_orient_events_with_a_side_so_that_a_reversal_is_positive():
+    rows = []
+    for ev, dev in (("trade-count climax at a new 1h high", -0.06), ("trade-count climax at a new 1h low", 0.08)):
+        for h in (5, 10, 15, 30):
+            rows.append({"event": ev, "horizon": h, "deviation": dev, "lo": dev - 0.01, "hi": dev + 0.01, "years": 3, "years_held": 3})
+    G = pd.DataFrame(rows)
+    s = L.effect_sentences(G, scale=0.09)
+    first = next(x for x in s if x.startswith("A reversal from a price extreme"))
+    assert "from +6.0 to +8.0 points (reversal positive)" in first and "8 of 8 cells" in first and first.endswith("cells holding their sign in every year: 8.")
+    assert s[-1].startswith("For scale") and "9.0 points" in s[-1]
+
+
+# ---------------- derivatives coverage ----------------
+
+def touch_futures(cache, funding, metrics_days, perp_months=(), perp_days=()):
+    cache.mkdir(parents=True, exist_ok=True)
+    for m in funding:
+        (cache / f"BTCUSDT-funding-{m}.csv").touch()
+    for d in metrics_days:
+        (cache / f"BTCUSDT-metrics-{d}.csv").touch()
+    for m in perp_months:
+        (cache / f"BTCUSDT-perp-1m-{m}.csv").touch()
+    for d in perp_days:
+        (cache / f"BTCUSDT-perp-1m-{d}.csv").touch()
+
+
+def test_a_year_needs_all_three_series_for_every_day_before_its_successor_can_be_scored(tmp_path):
+    days = [str(d.date()) for d in pd.date_range("2024-01-01", "2025-01-10")]
+    months = [f"2024-{m:02d}" for m in range(1, 13)] + ["2025-01"]
+    touch_futures(tmp_path, months, days, perp_months=months)
+    cov, covered = L.futures_days(tmp_path)
+    assert L.full_years(covered) == [2024]
+    text = L.render_derivatives(tmp_path)
+    assert "the events can be scored in 2025" in text
+    assert "| funding rate (monthly files) | 2024-01 | 2025-01 | 13 |" in text
+    assert all(e in text for e in L.DERIV_EVENTS)
+
+
+def test_one_missing_series_day_removes_the_year_and_with_no_full_year_nothing_is_scored(tmp_path):
+    days = [str(d.date()) for d in pd.date_range("2024-01-01", "2024-12-31") if str(d.date()) != "2024-06-15"]
+    months = [f"2024-{m:02d}" for m in range(1, 13)]
+    touch_futures(tmp_path, months, days, perp_months=months)
+    assert L.full_years(L.futures_days(tmp_path)[1]) == []
+    text = L.render_derivatives(tmp_path)
+    assert "no calendar year in full, so no event has a previous year" in text
+    empty = tmp_path / "none"
+    assert "no calendar year in full" in L.render_derivatives(empty)               # a missing directory is an empty coverage, not an error
+
+
+def test_the_cache_key_has_no_dot_that_would_truncate_a_file_name():
+    assert "." not in L.code_key()

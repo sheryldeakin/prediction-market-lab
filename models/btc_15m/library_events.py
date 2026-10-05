@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import inspect
 import time
 import warnings
 from pathlib import Path
@@ -46,6 +47,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from models.btc_15m import derivatives
 from models.btc_15m.horizons import HORIZONS, MIN_FIRES, NULL_RUNS, labels, score_year, year_frame
 from models.btc_15m.horizons_vwap import cells as vwap_cells, vwap_labels
 from models.btc_15m.settlement import Vwap
@@ -232,9 +234,10 @@ def pool_cells(A: pd.DataFrame, V: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def cleared(G: pd.DataFrame) -> pd.Series:
-    """Cells whose search-wide adjusted p is at most 0.05 in every year they are scored."""
-    return G.years_adj_05 == G.years
+def cleared(G: pd.DataFrame, fraction: float = 1.0) -> pd.Series:
+    """Cells whose search-wide adjusted p is at most 0.05 in at least `fraction` of the years they
+    are scored (1.0: every year; a tiny fraction: at least one year)."""
+    return G.years_adj_05 >= np.maximum(fraction * G.years, 1)
 
 
 def held_all(G: pd.DataFrame) -> pd.Series:
@@ -244,25 +247,52 @@ def held_all(G: pd.DataFrame) -> pd.Series:
 def sentences(G: pd.DataFrame, null_all: np.ndarray, real_max_z: float, per_year_share: pd.DataFrame) -> list[str]:
     """The generated summary sentences the doc quotes."""
     ev_order = [name for _, name in TICK_EVENTS]
-    c, hd = cleared(G), held_all(G)
-    both = c & hd
+    c_all, c_half, c_any, hd = cleared(G), cleared(G, 0.5), cleared(G, 0.0), held_all(G)
+    strong = c_half & hd
     out = []
     names = lambda m: ", ".join(e for e in ev_order if e in set(G[m].event)) or "none"
-    out.append(f"Of {len(G)} cells ({G.event.nunique()} events at {len(HORIZONS)} horizons), {int(c.sum())} clear the search-wide null (adjusted p of at most 0.05 in every year in which the event fires enough to be scored) and {int(hd.sum())} hold their sign in every year; {int(both.sum())} do both.")
-    out.append(f"Events with at least one cell that clears the null: {names(c)}.")
+    out.append(f"Of {len(G)} cells ({G.event.nunique()} events at {len(HORIZONS)} horizons), {int(hd.sum())} hold their sign in every year. A search-wide adjusted p of at most 0.05 is reached in every scored year by {int(c_all.sum())} cells, in at least half of the scored years by {int(c_half.sum())} and in at least one year by {int(c_any.sum())}; {int(strong.sum())} cells hold their sign in every year and clear the null in at least half of the years.")
+    out.append(f"Events with at least one cell that holds its sign in every year and clears the null in at least half of the years: {names(strong)}.")
     out.append(f"Events with at least one cell that holds its sign in every year: {names(hd)}.")
-    r = G[both & ((G.lo > 0) | (G.hi < 0))].retained.dropna()
+    r = G[strong & ((G.lo > 0) | (G.hi < 0))].retained.dropna()
     if len(r):
-        out.append(f"Among the {len(r)} cells that do both and whose interval excludes zero, the VWAP label keeps a median of {r.median()*100:.0f}% of the last-print deviation (range {r.min()*100:.0f}% to {r.max()*100:.0f}%).")
+        out.append(f"Among those {len(r)} cells (interval excludes zero), the VWAP label keeps a median of {r.median()*100:.0f}% of the last-print deviation (range {r.min()*100:.0f}% to {r.max()*100:.0f}%).")
     out.append(f"The largest absolute pooled deviation is {G.deviation.abs().max()*100:.1f} points ({G.loc[G.deviation.abs().idxmax(), 'event']}, {int(G.loc[G.deviation.abs().idxmax(), 'horizon'])} minutes); {int((G.lo > 0).sum() + (G.hi < 0).sum())} of the {len(G)} pooled 95% intervals exclude zero.")
     for ev in ("trade-count climax", "large-trade burst"):
-        s = per_year_share[per_year_share.event == ev].share
-        out.append(f"'{ev}' fires on {s.min()*100:.2f}% of minutes in its quietest year and {s.max()*100:.2f}% in its busiest.")
+        s = per_year_share[per_year_share.event == ev].set_index("year").share
+        out.append(f"'{ev}' fires on {s.min()*100:.2f}% of minutes in its quietest year ({s.idxmin()}) and {s.max()*100:.2f}% in its busiest ({s.idxmax()}).")
     out.append(f"Null: the largest |z| across all events and horizons on rotated labels has median {np.median(null_all):.2f} and 95th percentile {np.quantile(null_all, 0.95):.2f}; the real search's largest |z| is {real_max_z:.2f}.")
     return out
 
 
-def render(G: pd.DataFrame, years: list[int], end: str, null_runs: int, null_all: np.ndarray, real_max_z: float, per_year_share: pd.DataFrame) -> str:
+# +1: the event follows a move down, so a reversal is up; -1: it follows a move up
+ORIENT = {"trade-count climax at a new 1h high": -1, "trade-count climax at a new 1h low": 1,
+          "net taker buying in each of the last 3 minutes": -1, "net taker selling in each of the last 3 minutes": 1,
+          "net taker buying in each of the last 5 minutes": -1, "net taker selling in each of the last 5 minutes": 1,
+          "large-trade burst with net large buying": -1, "large-trade burst with net large selling": 1}
+EFFECTS = [("A reversal from a price extreme on heavy trading", ["trade-count climax at a new 1h high", "trade-count climax at a new 1h low"]),
+           ("The same side of the flow for several minutes", [e for e in ORIENT if e.startswith("net taker")]),
+           ("Large-trade bursts split by the side of the large trades", ["large-trade burst with net large buying", "large-trade burst with net large selling"]),
+           ("Events with no side (deviation signed up)", ["large-trade burst", "trade-count climax", "trade-count climax with no new 1h high or low"])]
+EFFECT_HORIZONS = (5, 10, 15, 30)
+
+
+def effect_sentences(G: pd.DataFrame, scale: float | None = None) -> list[str]:
+    """One generated sentence per group of events: the range of the pooled deviation over 5 to 30
+    minutes, oriented so that a reversal is positive for events with a side."""
+    out = []
+    for label, evs in EFFECTS:
+        g = G[G.event.isin(evs) & G.horizon.isin(EFFECT_HORIZONS)]
+        dev = g.deviation * g.event.map(lambda e: ORIENT.get(e, 1))
+        excl = (g.lo > 0) | (g.hi < 0)
+        side = "reversal positive" if any(e in ORIENT for e in evs) else "up positive"
+        out.append(f"{label}: at {', '.join(str(h) for h in EFFECT_HORIZONS[:-1])} and {EFFECT_HORIZONS[-1]} minutes the pooled deviation runs from {dev.min()*100:+.1f} to {dev.max()*100:+.1f} points ({side}); {int(excl.sum())} of {len(g)} cells have an interval that excludes zero; cells holding their sign in every year: {int(held_all(g).sum())}.")
+    if scale is not None:
+        out.append(f"For scale, the largest deviation among the price-action library's cells that hold their sign in every year is {scale*100:.1f} points (price_action_summary.csv).")
+    return out
+
+
+def render(G: pd.DataFrame, years: list[int], end: str, null_runs: int, null_all: np.ndarray, real_max_z: float, per_year_share: pd.DataFrame, scale: float | None = None) -> str:
     """The markdown of results/btc_15m/library_ticks.md."""
     fam = {name: f for f, name in TICK_EVENTS}
     order = {name: k for k, (_, name) in enumerate(TICK_EVENTS)}
@@ -273,14 +303,69 @@ def render(G: pd.DataFrame, years: list[int], end: str, null_runs: int, null_all
     for r in G.itertuples():
         ret = f"{r.retained*100:.0f}%" if (r.lo > 0 or r.hi < 0) and not np.isnan(r.retained) else "-"
         lines.append(f"| {fam[r.event]} | {r.event} | {r.horizon} | {r.fires:,} | {r.share*100:.2f}% | {r.up_rate*100:.1f}% | {r.deviation*100:+.1f} [{r.lo*100:+.1f}, {r.hi*100:+.1f}] | {r.min_p_adj:.4f} | {r.years_held}/{r.years} | {r.years_adj_05}/{r.years} | {ret} |")
-    lines += [""] + [s + "\n" for s in sentences(G, null_all, real_max_z, per_year_share)]
+    lines += [""] + [s + "\n" for s in sentences(G, null_all, real_max_z, per_year_share) + effect_sentences(G, scale)]
+    return "\n".join(lines).rstrip() + "\n"
+
+
+# ---------------- derivatives: what the data hold ----------------
+
+FUTURES_SERIES = [("funding rate (monthly files)", r"-funding-(\d{4}-\d{2})\.csv$", "month"),
+                  ("open interest and positioning metrics (daily files)", r"-metrics-(\d{4}-\d{2}-\d{2})\.csv$", "day"),
+                  ("perpetual 1-minute klines (monthly files)", r"-perp-1m-(\d{4}-\d{2})\.csv$", "month"),
+                  ("perpetual 1-minute klines (daily files)", r"-perp-1m-(\d{4}-\d{2}-\d{2})\.csv$", "day")]
+
+
+def futures_days(cache: Path) -> tuple[pd.DataFrame, set]:
+    """Coverage of the futures files in `cache` (first stamp, last stamp, files per series) and the
+    set of days on which funding, metrics and perp klines are all present."""
+    import re
+    rows, days = [], {}
+    names = [p.name for p in cache.glob("*.csv")] if cache.exists() else []
+    for label, pat, unit in FUTURES_SERIES:
+        stamps = sorted(m.group(1) for n in names if (m := re.search(pat, n)))
+        rows.append({"series": label, "first": stamps[0] if stamps else "-", "last": stamps[-1] if stamps else "-", "files": len(stamps)})
+        got = set()
+        for s in stamps:
+            if unit == "month":
+                p = pd.Period(s, "M")
+                got |= {str(d.date()) for d in pd.date_range(p.start_time, p.end_time.normalize())}
+            else:
+                got.add(s)
+        days[label] = got
+    f, m = days[FUTURES_SERIES[0][0]], days[FUTURES_SERIES[1][0]]
+    return pd.DataFrame(rows), f & m & (days[FUTURES_SERIES[2][0]] | days[FUTURES_SERIES[3][0]])
+
+
+def full_years(days: set) -> list[int]:
+    """Calendar years in which every day is present."""
+    ys = sorted({int(d[:4]) for d in days})
+    return [y for y in ys if all(str(d.date()) in days for d in pd.date_range(f"{y}-01-01", f"{y}-12-31"))]
+
+
+def render_derivatives(cache: Path) -> str:
+    """The markdown of results/btc_15m/library_derivatives.md: the events, and whether the files held
+    allow them to be scored."""
+    cov, days = futures_days(cache)
+    full = full_years(days)
+    scorable = [y + 1 for y in full if any(d.startswith(f"{y + 1}-") for d in days)]
+    lines = ["Derivatives events for the price-action library: definitions and the coverage of the futures files held. Every cutoff is a percentile (decile) of the previous calendar year, so an event can be scored in year Y only if the files cover all of year Y-1. The events are defined and tested in models/btc_15m/library_events.py (`deriv_events`).", "",
+             "| series | first stamp | last stamp | files |", "|---|---|---|---|"]
+    lines += [f"| {r.series} | {r.first} | {r.last} | {r.files} |" for r in cov.itertuples()]
+    lines += ["", "| event |", "|---|"] + [f"| {e} |" for e in DERIV_EVENTS] + [""]
+    if scorable:
+        lines.append(f"Calendar years fully covered by funding, metrics and perp klines together: {', '.join(map(str, full))}; the events can be scored in {', '.join(map(str, scorable))}.")
+    else:
+        lines.append(f"The files cover {len(days)} days in total and no calendar year in full, so no event has a previous year to take its cutoffs from and none is scored.")
     return "\n".join(lines).rstrip() + "\n"
 
 
 # ---------------- one year ----------------
 
 def code_key() -> str:
-    return hashlib.sha1(Path(__file__).read_bytes()).hexdigest()[:10]
+    """Identifies the code that produces a year's cells (not the rendering), so a cached year is
+    reused when only the tables' wording changes."""
+    parts = (known_next, minute_table, tick_quantities, tick_cutoffs, reference_months, reference_cutoffs, streak, new_extremes, tick_events, run_year)
+    return hashlib.sha1("".join(inspect.getsource(f) for f in parts).encode()).hexdigest()[:10] + f"-{TICK_FIRST_MONTH}-p{round(P_EXTREME * 100)}-k{''.join(map(str, PERSIST))}"
 
 
 def read_month(month: str) -> pd.DataFrame:
@@ -338,13 +423,13 @@ def main():
     years = list(range(a.start, int(a.end[:4]) + 1))
     Rs, Vs, Ss, nulls = [], [], [], {}
     for year in years:
-        tag = CACHE / f"year-{year}-{a.end}-{a.null_runs}-{code_key()}"
-        if tag.with_suffix(".pkl").exists() and not a.refresh:
-            res = pd.read_pickle(tag.with_suffix(".pkl"))
+        cached = CACHE / f"year-{year}-{a.end}-{a.null_runs}-{code_key()}.pkl"
+        if cached.exists() and not a.refresh:
+            res = pd.read_pickle(cached)
         else:
             t0 = time.time()
             res = run_year(year, a.end, np.random.default_rng(year), a.null_runs)
-            pd.to_pickle(res, tag.with_suffix(".pkl"))
+            pd.to_pickle(res, cached)
             print(f"{year}: scored in {time.time() - t0:.0f}s", flush=True)
         Rs.append(res["R"]); Vs.append(res["V"]); Ss.append(res["shares"]); nulls[year] = res["max_z"]
         print(f"{year}: {res['R'].pattern.nunique()} events scored, max |z| {res['R'].z.abs().max():.2f}, null median {np.median(res['max_z']):.2f}; cutoffs {res['cuts']}", flush=True)
@@ -357,7 +442,14 @@ def main():
     shares.to_csv(out / "library_ticks_shares.csv", index=False)
     G = pool_cells(A, V)
     G.to_csv(out / "library_ticks.csv", index=False)
-    (out / "library_ticks.md").write_text(render(G, years, a.end, a.null_runs, null_all, float(A.z.abs().max()), shares), encoding="utf-8")
+    pa = OUT / "price_action_summary.csv"
+    scale = None
+    if pa.exists():
+        P = pd.read_csv(pa)
+        scale = float(P[(P.years_held == P.years) & (P.years >= 5)].deviation.abs().max())
+    (out / "library_ticks.md").write_text(render(G, years, a.end, a.null_runs, null_all, float(A.z.abs().max()), shares, scale), encoding="utf-8")
+    (out / "library_derivatives.md").write_text(render_derivatives(derivatives.CACHE), encoding="utf-8")
+    futures_days(derivatives.CACHE)[0].to_csv(out / "library_derivatives.csv", index=False)
     print(f"wrote library_ticks.md in {time.time() - t_all:.0f}s")
 
 
