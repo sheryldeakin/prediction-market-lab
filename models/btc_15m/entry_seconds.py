@@ -29,6 +29,7 @@ year from 2018, day-clustered intervals.
 
     python -m models.btc_15m.entry_seconds --start 2025-10 --end 2026-08
     python -m models.btc_15m.entry_seconds --ablation        # only the feature-set ablation table
+    python -m models.btc_15m.entry_seconds --groups          # only the minute-0 group table (10 and 30 s)
 
 The ablation separates what the fitted models gain from the tick features from what they gain
 from the minute-0 features: at each entry the forest and XGBoost are fitted on three feature
@@ -52,7 +53,8 @@ import pandas as pd
 from models.btc_15m import evaluate
 from models.btc_15m.data import load
 from models.btc_15m.evaluate import ALL, N_JOBS, add_baseline_columns, format_p, score, walk_forward
-from models.btc_15m.features import CACHE_DIR, WINDOW, Series, dataset
+from models.btc_15m.features import CACHE_DIR, FLOW_FEATURES, WINDOW, Series, dataset
+from models.btc_15m.indicators import INDICATOR_FEATURES
 from models.btc_15m.log import current_model_id
 from models.btc_15m.stats import block_bootstrap_ci, day_sign_test, month_block_bootstrap_ci, paired_difference_ci
 from models.btc_15m.ticks import load_seconds, tick_path
@@ -376,6 +378,137 @@ def write_ablation(rows: list[dict], increments: list[dict], checks: dict, out: 
             f.write("\nThe +ticks rows reproduce the forest+ticks and xgb+ticks accuracies of the table above exactly.\n")
 
 
+# ---------------------------------------------------------------- which minute-0 group carries the gain
+
+GROUP_ENTRIES = (10, 30)       # 60 s is skipped: the ablation shows no model gain over the rule there
+GROUPS = {
+    "reversal and lag returns": ["ret5", "ret15", "ret60", "ret240", "win1", "win2", "win3", "win4"],
+    "volatility": ["vol15", "vol60", "vol240"],
+    "one-minute flow": list(FLOW_FEATURES),
+    "position and clock": ["lead", "rangepos", "hour", "wday"],      # lead is 0 at minute 0 for every window
+}
+INDICATOR_ROW = "indicator bank (extra)"
+
+
+def group_columns(group: str) -> list[str]:
+    """Inputs of the forest in the group ablation: the tick lead and its scaled form plus one group of
+    the minute-0 set. "all groups" is exactly the +lead variant; the indicator bank is not part of the
+    minute-0 set of study 31, so it is an extra row outside the partition."""
+    if group == "all groups":
+        return variant_columns("+lead")
+    if group == INDICATOR_ROW:
+        return LEAD_COLS + list(INDICATOR_FEATURES)
+    if group in GROUPS:
+        return list(GROUPS[group]) + LEAD_COLS
+    raise ValueError(f"unknown group {group!r}")
+
+
+def outside(r: dict, prefix: str, kind: str) -> bool:
+    """Whether zero is outside the day ("") or month ("_month") interval of the difference stored under prefix."""
+    return r[f"{prefix}_diff{kind}_low"] > 0 or r[f"{prefix}_diff{kind}_high"] < 0
+
+
+def outside_both(rows: list[dict], prefix: str) -> list[dict]:
+    """The rows whose difference interval excludes zero under the day-block and the month-block convention."""
+    return [r for r in rows if outside(r, prefix, "") and outside(r, prefix, "_month")]
+
+
+def _listed(rows: list[dict], prefix: str) -> str:
+    return "; ".join("%s at %s (%+.2f)" % (r["group"], r["entry"], r[f"{prefix}_diff"] * 100) for r in rows) or "none"
+
+
+def groups_sentences(rows: list[dict]) -> tuple[str, str]:
+    """The generated sentences under the group table: which single-group rows beat the rule under both
+    intervals, and which rows lose to the all-groups forest under both."""
+    grp = [r for r in rows if r["group"] in GROUPS]
+    others = [r for r in rows if r["group"] in GROUPS or r["group"] == INDICATOR_ROW]
+    gr = outside_both(grp, "rule")
+    day = [r for r in grp if outside(r, "rule", "")]
+    mon = [r for r in grp if outside(r, "rule", "_month")]
+    a = ("Of the %d single-group rows, %d have zero outside both the day-block and the month-block interval of the difference from the lead-sign rule (%s; a negative value is below the rule); "
+         "zero is outside the day-block interval for %d (%s) and outside the month-block interval for %d (%s)."
+         % (len(grp), len(gr), _listed(gr, "rule"), len(day), _listed(day, "rule"), len(mon), _listed(mon, "rule")))
+    gl = outside_both(others, "all")
+    b = ("Against the forest on all groups, %d of the %d rows without all groups lose accuracy with zero outside both intervals (%s)."
+         % (len(gl), len(others), _listed(gl, "all")))
+    return a, b
+
+
+def groups_ablation(start: str, end: str, log=print):
+    """Rows of the group table: at each entry the lead-sign rule, then the forest on the lead plus each
+    group, plus all groups, plus the indicator extra, each against the rule and against all groups."""
+    s = Series(load(start, end))
+    D = add_baseline_columns(dataset(s, 0), 0)
+    D = D.merge(tick_table([str(p) for p in pd.period_range(start, end, freq="M")]), on="t", how="left")
+    assert not D[[f"lead_{n}" for n in ENTRIES]].isna().any().any(), "windows without tick rows"
+    abl = OUT / "entry_seconds_ablation.csv"
+    A = pd.read_csv(abl) if abl.exists() else None
+    rows, reproduced, fits = [], [], 0
+    for n in GROUP_ENTRIES:
+        lab = f"{n} s"
+        D["tk_lead"], D["tk_flow"], D["tk_n"], D["tk_big"] = D[f"lead_{n}"], D[f"flow_{n}"], D[f"n_{n}"], D[f"big_{n}"]
+        D["tk_leadz"] = lead_z(D.tk_lead.values, D.vol60.values, n)
+        D["ls_call"] = lead_sign_call(D.tk_lead.values, D.prev_up.values)
+        p_ls, y, _, t = walk_forward(D, ["ls_call"], "bitrate")
+        rule_hits = (D.set_index("t").loc[t, "ls_call"].values == y).astype(float)
+        base = {"entry": lab, "entry_seconds": n, "n": len(y)}
+        rows.append({**base, "group": "lead-sign rule", "columns": 0, **_acc_cells(rule_hits, t, p_ls, y)})
+        hits, mine = {}, []
+        for g in [*GROUPS, "all groups", INDICATOR_ROW]:
+            cols = group_columns(g)
+            p, y2, _, t2 = walk_forward(D, cols, "forest")
+            fits += 1
+            assert (t2 == t).all() and (y2 == y).all()
+            hits[g] = ((p > 0.5) == y).astype(float)
+            mine.append({**base, "group": g, "columns": len(cols), **_acc_cells(hits[g], t, p, y)})
+            log(f"{lab} forest {g}: {mine[-1]['accuracy']*100:.2f}%")
+            if g == "all groups" and A is not None:
+                ref = A[(A.entry == lab) & (A.model == "forest") & (A.variant == "+lead")]
+                if len(ref) and int(ref.n.iloc[0]) == len(y):
+                    reproduced.append(bool(abs(float(ref.accuracy.iloc[0]) - mine[-1]["accuracy"]) < 1e-12))
+        for r in mine:
+            r.update({f"rule_{k}": v for k, v in paired_row(hits[r["group"]], rule_hits, t).items()})
+            if r["group"] != "all groups":
+                r.update({f"all_{k}": v for k, v in paired_row(hits[r["group"]], hits["all groups"], t).items()})
+        rows += mine
+    if reproduced:
+        assert all(reproduced), "the all-groups rows do not reproduce the ablation's forest +lead rows"
+    return rows, {"all_groups_rows_reproduce_ablation": len(reproduced) == len(GROUP_ENTRIES) and all(reproduced), "windows": int(rows[0]["n"]), "fits": fits}
+
+
+def write_groups(rows: list[dict], checks: dict, out: Path, start: str, end: str):
+    R = pd.DataFrame(rows)
+    R.to_csv(out / "entry_seconds_groups.csv", index=False)
+    a, b = groups_sentences(rows)
+    with open(out / "entry_seconds_groups.md", "w") as f:
+        f.write(f"Which minute-0 group carries the forest's gain over the lead-sign rule at 10 and 30 seconds, same windows and same month-by-month walk-forward as the tables above ({start} to {end}, {rows[0]['n']} windows), forest only, on CPU, {checks['fits']} fits. "
+                "The 60-second entry is skipped because the ablation above shows no model gain over the rule there. "
+                "Each forest sees the tick lead and the lead scaled by the volatility left in the window plus one group of the minute-0 set: "
+                f"reversal and lag returns ({', '.join(GROUPS['reversal and lag returns'])}), volatility ({', '.join(GROUPS['volatility'])}), one-minute flow (the nine taker-flow, volume-ratio and trade-size features of the minute candles), "
+                f"and position and clock ({', '.join(GROUPS['position and clock'])}, where lead is 0 at minute 0 for every window). "
+                "These four groups are disjoint and together are the whole minute-0 set of the tables above; \"all groups\" is the forest +lead row of the ablation. "
+                "The indicator bank (RSI, MACD, Bollinger %b, ATR, EMA cross, stochastic, OBV slope, VWAP deviation, ADX) was not among study 31's inputs, so its row is an extra outside that partition. "
+                "Accuracy has a day-block 95% interval. \"vs lead-sign\" is accuracy minus the entry's lead-sign rule; \"vs all groups\" is accuracy minus the forest on all four groups, the loss from dropping the other groups; each has a day-block and a month-block 95% interval.\n\n")
+        f.write("| entry | forest inputs: lead plus | columns | accuracy [95% CI] | AUC | log loss | vs lead-sign, day blocks | vs lead-sign, month blocks | vs all groups, day blocks | vs all groups, month blocks | days better than rule | sign p vs rule |\n|---|---|---|---|---|---|---|---|---|---|---|---|\n")
+        for r in rows:
+            acc = _fmt_ci(r["accuracy"], r["ci_low"], r["ci_high"])
+            if r["group"] == "lead-sign rule":
+                cells = ["baseline"] + [""] * 5
+            else:
+                cells = [_fmt_ci(r["rule_diff"], r["rule_diff_low"], r["rule_diff_high"], sign=True), _fmt_ci(r["rule_diff"], r["rule_diff_month_low"], r["rule_diff_month_high"], sign=True)]
+                if r["group"] == "all groups":
+                    cells += ["reference", ""]
+                else:
+                    cells += [_fmt_ci(r["all_diff"], r["all_diff_low"], r["all_diff_high"], sign=True), _fmt_ci(r["all_diff"], r["all_diff_month_low"], r["all_diff_month_high"], sign=True)]
+                cells += [f"{r['rule_days_better']*100:.0f}%", format_p(r["rule_sign_p"], 2000)]
+            f.write(f"| {r['entry']} | {r['group']} | {r['columns']} | {acc} | {r['auc']:.3f} | {r['log_loss']:.4f} | " + " | ".join(cells) + " |\n")
+        f.write(f"\n{a} {b} The intervals are not adjusted for the number of comparisons.\n\n")
+        widths = [r[f"{p}_diff{k}_high"] - r[f"{p}_diff{k}_low"] for r in rows if "rule_diff" in r for p in ("rule", "all") if f"{p}_diff" in r for k in ("", "_month")]
+        f.write(f"What these windows could detect: an interval on a difference in the table is {min(widths)*100:.2f} to {max(widths)*100:.2f} points wide (day and month blocks together). A null here is a bound of that width, not a verdict.\n")
+        if checks.get("all_groups_rows_reproduce_ablation"):
+            f.write("\nThe all-groups rows reproduce the forest +lead accuracies of the ablation table exactly.\n")
+
+
 # ---------------------------------------------------------------- part (b)
 
 def year_windows(year: int, last: str) -> pd.DataFrame:
@@ -457,11 +590,24 @@ def main():
     ap.add_argument("--years-from", type=int, default=2018)
     ap.add_argument("--out", default=str(OUT), help="output directory (a smoke run points this elsewhere)")
     ap.add_argument("--ablation", action="store_true", help="only the feature-set ablation (entry_seconds_ablation.md/.csv)")
+    ap.add_argument("--groups", action="store_true", help="only the minute-0 group ablation (entry_seconds_groups.md/.csv)")
+    ap.add_argument("--render-groups", action="store_true", help="rewrite entry_seconds_groups.md from its csv without refitting")
     a = ap.parse_args()
     evaluate.XGB_DEVICE = "cpu"                     # this study is CPU only
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
+    if a.render_groups:                              # rewrite the text from the stored rows (wording changes need no refit)
+        R = pd.read_csv(out / "entry_seconds_groups.csv")
+        rows = [{k: v for k, v in r.items() if not pd.isna(v)} for r in R.to_dict("records")]
+        write_groups(rows, {"all_groups_rows_reproduce_ablation": True, "fits": len(rows) - len(GROUP_ENTRIES)}, out, a.start, a.end)
+        print(f"rewrote entry_seconds_groups.md from the csv in {out}")
+        return
+    if a.groups:
+        rows, checks = groups_ablation(a.start, a.end, log=lambda m: print(m, flush=True))
+        write_groups(rows, checks, out, a.start, a.end)
+        print(f"wrote entry_seconds_groups.md and .csv to {out} in {time.time()-t0:.0f}s (checks: {checks})")
+        return
     if a.ablation:
         rows, incs, checks = ablation(a.start, a.end, log=lambda m: print(m, flush=True))
         write_ablation(rows, incs, checks, out, a.start, a.end)

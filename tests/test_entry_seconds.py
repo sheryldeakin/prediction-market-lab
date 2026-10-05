@@ -89,6 +89,54 @@ def test_each_ablation_variant_has_exactly_its_intended_columns():
         es.variant_columns("everything")
 
 
+def test_groups_partition_the_minute_0_set_and_each_variant_has_exactly_its_columns():
+    from models.btc_15m.evaluate import ALL
+    from models.btc_15m.indicators import INDICATOR_FEATURES
+    flat = [c for g in es.GROUPS.values() for c in g]
+    assert len(flat) == len(set(flat))                                           # disjoint
+    assert set(flat) == set(ALL)                                                 # the union is the minute-0 set, nothing more
+    assert es.GROUPS["volatility"] == ["vol15", "vol60", "vol240"]
+    assert set(es.GROUPS["reversal and lag returns"]) == {"ret5", "ret15", "ret60", "ret240", "win1", "win2", "win3", "win4"}
+    assert set(es.GROUPS["position and clock"]) == {"lead", "rangepos", "hour", "wday"}
+    assert len(es.GROUPS["one-minute flow"]) == 9 and all(c.startswith(("flow", "vratio", "nratio", "size")) for c in es.GROUPS["one-minute flow"])
+    for g, cols in es.GROUPS.items():
+        got = es.group_columns(g)
+        assert got == cols + ["tk_lead", "tk_leadz"]                             # the lead features plus this group only
+        assert not set(got) & set(INDICATOR_FEATURES) and not {"tk_flow", "tk_n", "tk_big"} & set(got)
+    assert es.group_columns("all groups") == es.variant_columns("+lead")         # reproduces the +lead row, same order
+    assert es.group_columns(es.INDICATOR_ROW) == ["tk_lead", "tk_leadz"] + list(INDICATOR_FEATURES)
+    assert not set(INDICATOR_FEATURES) & set(ALL)                                # the bank was never in study 31's inputs
+    with pytest.raises(ValueError):
+        es.group_columns("everything")
+
+
+def test_group_sentences_name_only_rows_outside_both_intervals_and_write_groups_is_idempotent(tmp_path):
+    def row(entry, group, rd, rlo, rhi, rmlo, rmhi, ad=0.0, alo=-0.01, ahi=0.01, amlo=-0.01, amhi=0.01):
+        return {"entry": entry, "entry_seconds": 10, "n": 100, "group": group, "columns": 5, "accuracy": 0.55, "ci_low": 0.5, "ci_high": 0.6, "auc": 0.55, "log_loss": 0.69,
+                "rule_diff": rd, "rule_diff_low": rlo, "rule_diff_high": rhi, "rule_diff_month_low": rmlo, "rule_diff_month_high": rmhi, "rule_days_better": 0.55, "rule_sign_p": 0.01,
+                "all_diff": ad, "all_diff_low": alo, "all_diff_high": ahi, "all_diff_month_low": amlo, "all_diff_month_high": amhi}
+    rows = [{"entry": "10 s", "entry_seconds": 10, "n": 100, "group": "lead-sign rule", "columns": 0, "accuracy": 0.5, "ci_low": 0.45, "ci_high": 0.55, "auc": 0.5, "log_loss": 0.69},
+            row("10 s", "volatility", 0.01, 0.002, 0.02, 0.001, 0.03, -0.01, -0.02, -0.003, -0.02, -0.001),     # outside both, loses to all groups under both
+            row("10 s", "one-minute flow", 0.01, 0.002, 0.02, -0.01, 0.03),                                      # day blocks only
+            row("10 s", "reversal and lag returns", 0.0, -0.01, 0.01, -0.01, 0.01),
+            row("10 s", "position and clock", 0.0, -0.01, 0.01, -0.01, 0.01),
+            row("10 s", "all groups", 0.02, 0.005, 0.03, 0.001, 0.04),
+            row("10 s", es.INDICATOR_ROW, 0.0, -0.01, 0.01, -0.01, 0.01)]
+    a, b = es.groups_sentences(rows)
+    assert "Of the 4 single-group rows, 1 have zero outside both" in a and "(volatility at 10 s (+1.00); a negative value is below the rule)" in a
+    assert "day-block interval for 2 (volatility at 10 s (+1.00); one-minute flow at 10 s (+1.00))" in a and "month-block interval for 1 (volatility at 10 s (+1.00))" in a
+    assert "Against the forest on all groups, 1 of the 5 rows" in b and "volatility at 10 s (-1.00)" in b
+    checks = {"all_groups_rows_reproduce_ablation": True, "windows": 100, "fits": 6}
+    es.write_groups(rows, checks, tmp_path, "2025-10", "2026-08")
+    first = (tmp_path / "entry_seconds_groups.md").read_text()
+    es.write_groups(rows, checks, tmp_path, "2025-10", "2026-08")
+    assert (tmp_path / "entry_seconds_groups.md").read_text() == first           # a second write is a no-op
+    assert first.count("| 10 s |") == 7 and "60-second entry is skipped" in first and "not among study 31's inputs" in first
+    assert len(pd.read_csv(tmp_path / "entry_seconds_groups.csv")) == 7
+    table = [ln for ln in first.splitlines() if ln.startswith("|")]
+    assert len({ln.count("|") for ln in table}) == 1                              # every row, the rule's and the header included, has the same number of cells
+
+
 def test_paired_row_gives_both_intervals_and_the_month_interval_is_the_wider_one_on_month_level_differences():
     rng = np.random.default_rng(1)
     t = np.arange(0, 6 * 30 * 86400, 900)
