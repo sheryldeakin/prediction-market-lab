@@ -37,7 +37,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-CACHE = Path("data/binance_futures")
+from models.btc_15m.paths import DATA_ROOT
+
+CACHE = DATA_ROOT / "binance_futures"
 BASE = "https://data.binance.vision/data/futures/um"
 METRICS_DELAY = 300          # seconds after a metrics stamp before that row is known
 FUNDING_MAX_AGE = 9 * 3600   # funding settles every 8 hours; older than this means the file is missing

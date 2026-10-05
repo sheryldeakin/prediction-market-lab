@@ -31,11 +31,12 @@ import pandas as pd
 from models.btc_15m.data import load
 from models.btc_15m.evaluate import ALL, add_baseline_columns, make_model, walk_forward
 from models.btc_15m.features import PRICE_FEATURES, Series, dataset
+from models.btc_15m.paths import DATA_ROOT
 from models.btc_15m.stats import block_bootstrap_ci, paired_difference_ci
 
 warnings.filterwarnings("ignore")
 OUT = Path("results/btc_15m")
-CACHE = Path("data/venues")
+CACHE = DATA_ROOT / "venues"
 MAX_FILL = 3          # minutes without a candle that are filled with the last close (no trades); longer gaps are outages
 
 
