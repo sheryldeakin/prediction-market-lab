@@ -1,0 +1,280 @@
+import numpy as np
+import pandas as pd
+import pytest
+
+from models.btc_15m import library_events as L
+
+
+def quantities(n, big_n=None, svol=None, big_svol=None):
+    n = np.asarray(n, float)
+    z = np.zeros(len(n))
+    return L.tick_quantities({"n": n, "big_n": z if big_n is None else np.asarray(big_n, float),
+                              "svol": z if svol is None else np.asarray(svol, float),
+                              "big_svol": z if big_svol is None else np.asarray(big_svol, float)})
+
+
+def prices(n, seed=0):
+    c = 100.0 + np.random.default_rng(seed).normal(0, 0.05, n)         # continuous, so no ties with a rolling extreme
+    return c + 0.01, c - 0.01
+
+
+# ---------------- timing ----------------
+
+def test_an_event_in_minute_j_is_known_at_decision_minute_j_plus_one_only():
+    h, l = prices(30)
+    n = np.full(30, 10.0)
+    n[10] = 500.0
+    ev = L.tick_events(quantities(n), {"share": 0.5, "n": 100.0}, h, l)["trade-count climax"]
+    assert np.flatnonzero(ev).tolist() == [11]
+
+
+def test_tick_events_never_read_the_future():
+    rng = np.random.default_rng(3)
+    N, k = 400, 250
+    n = rng.integers(0, 40, N).astype(float)
+    big = np.minimum(rng.integers(0, 5, N), n).astype(float)
+    sv = rng.normal(0, 1, N)
+    bsv = rng.normal(0, 1, N) * (big > 0)
+    h, l = prices(N, 1)
+    cuts = {"share": 0.1, "n": 30.0}
+    full = L.tick_events(quantities(n, big, sv, bsv), cuts, h, l)
+    cut = L.tick_events(quantities(n[:k], big[:k], sv[:k], bsv[:k]), cuts, h[:k], l[:k])
+    for name in full:
+        assert (full[name][:k] == cut[name]).all(), name
+    assert sum(int(v.sum()) for v in cut.values()) > 0              # the comparison was not between empty arrays
+
+
+# ---------------- large-trade burst ----------------
+
+def test_burst_fires_only_above_the_cutoff_and_is_split_by_the_sign_of_large_volume():
+    n = np.full(10, 100.0)
+    big = np.array([1, 1, 5, 1, 9, 1, 1, 9, 1, 1], float)                 # shares 0.01 ... 0.09
+    bsv = np.array([0, 0, 1.0, 0, -1.0, 0, 0, 0.0, 0, 0])
+    h, l = prices(10)
+    ev = L.tick_events(quantities(n, big, big_svol=bsv), {"share": 0.05, "n": 1e9}, h, l)
+    assert np.flatnonzero(ev["large-trade burst"]).tolist() == [5, 8]        # minutes 4 and 7 (9%); minute 2 is 5%, not above 5%
+    assert np.flatnonzero(ev["large-trade burst with net large selling"]).tolist() == [5]
+    assert np.flatnonzero(ev["large-trade burst with net large buying"]).tolist() == []
+    ev2 = L.tick_events(quantities(n, big, big_svol=bsv), {"share": 0.04, "n": 1e9}, h, l)
+    assert np.flatnonzero(ev2["large-trade burst with net large buying"]).tolist() == [3]
+
+
+def test_a_minute_with_no_trades_is_never_a_burst():
+    q = quantities([0, 100, 0], [0, 0, 0])
+    assert np.isnan(q["share"][0])
+    h, l = prices(3)
+    ev = L.tick_events(q, {"share": -1.0, "n": 1e9}, h, l)["large-trade burst"]
+    assert not ev[1] and ev[2]                                    # minute 0 had no trades; minute 1 passes a cutoff below zero
+
+
+# ---------------- previous-year cutoffs ----------------
+
+def fake_month(month):
+    """100 trades a minute, minute m of the month has m % 50 large ones: the share runs 0 to 0.49."""
+    p = pd.Period(month, "M")
+    t0 = int(p.start_time.value // 10**9)
+    m = np.arange(p.days_in_month * 1440)
+    return pd.DataFrame({"sec": t0 + 60 * m, "n": 100.0, "big_n": (m % 50).astype(float), "svol": 1.0, "big_svol": 0.0})
+
+
+def test_cutoffs_come_from_the_previous_year_and_nothing_later():
+    asked = []
+
+    def reader(month):
+        asked.append(month)
+        assert month.startswith("2018"), f"asked for {month} while cutting for 2019"
+        return fake_month(month)
+
+    cuts = L.reference_cutoffs(2019, reader)
+    assert asked == [f"2018-{m:02d}" for m in range(1, 13)]
+    expected = np.concatenate([(np.arange(pd.Period(m, "M").days_in_month * 1440) % 50) / 100 for m in asked])
+    assert cuts["share"] == pytest.approx(np.quantile(expected, 0.99))
+    assert cuts["n"] == 100.0
+
+
+def test_the_first_year_takes_what_the_data_hold_of_the_year_before():
+    assert L.reference_months(2018) == ["2017-08", "2017-09", "2017-10", "2017-11", "2017-12"]
+    assert L.reference_months(2019)[0] == "2018-01" and len(L.reference_months(2019)) == 12
+    assert L.reference_months(2017) == []
+    with pytest.raises(ValueError):
+        L.reference_cutoffs(2017, fake_month)
+
+
+def test_a_busier_current_year_does_not_move_the_cutoff():
+    prev = quantities(np.arange(1, 1001))
+    cuts = L.tick_cutoffs(prev)
+    assert cuts["n"] == pytest.approx(np.quantile(np.arange(1, 1001), 0.99))
+    now = np.full(50, 5000.0)                                    # every minute far above last year's 99th percentile
+    h, l = prices(50)
+    ev = L.tick_events(quantities(now), cuts, h, l)["trade-count climax"]
+    assert ev[1:].all()                                           # fires on all of them, as the definition says; the cutoff is last year's
+    own = L.tick_cutoffs(quantities(now))
+    assert own["n"] == 5000.0 and not (now > own["n"]).any()      # a cutoff from this year's own data would never fire
+
+
+def test_a_missing_tick_file_is_an_error_and_not_a_download(tmp_path, monkeypatch):
+    monkeypatch.setattr(L, "tick_path", lambda m: tmp_path / f"{m}.parquet")
+    with pytest.raises(FileNotFoundError):
+        L.read_month("2020-01")
+
+
+# ---------------- imbalance persistence ----------------
+
+def test_persistence_needs_the_same_sign_in_every_one_of_the_last_k_minutes():
+    sv = np.array([1, 1, 1, -1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1], float)
+    n = np.full(len(sv), 10.0)
+    h, l = prices(len(sv))
+    ev = L.tick_events(quantities(n, svol=sv), {"share": 1.0, "n": 1e9}, h, l)
+    buy3 = np.flatnonzero(ev["net taker buying in each of the last 3 minutes"]).tolist()
+    assert buy3 == [3, 7, 8, 9, 13, 14, 15]                       # runs of three close at minutes 2, 6, 7, 8, 12, 13, 14; the sell at 3 and the zero at 9 break the runs
+    buy5 = np.flatnonzero(ev["net taker buying in each of the last 5 minutes"]).tolist()
+    assert buy5 == [9, 15]                                        # a run reaches five at minutes 8 and 14
+    sell = np.flatnonzero(ev["net taker selling in each of the last 3 minutes"]).tolist()
+    assert sell == []
+    assert np.flatnonzero(L.tick_events(quantities(n, svol=-sv), {"share": 1.0, "n": 1e9}, h, l)["net taker selling in each of the last 3 minutes"]).tolist() == buy3
+
+
+# ---------------- trade-count climax ----------------
+
+def test_climax_is_split_by_whether_the_minute_made_a_new_hourly_extreme():
+    N = 300
+    h, l = prices(N, 2)
+    a = 100
+    h[a] = 120.0                                                 # a new high
+    hi, lo = L.new_extremes(h, l)
+    assert hi[a]
+    b = next(j for j in range(150, N) if not hi[j] and not lo[j])
+    c = next(j for j in range(b + 1, N) if not hi[j] and not lo[j])
+    n = np.full(N, 10.0)
+    n[[a, b]] = 500.0
+    ev = L.tick_events(quantities(n), {"share": 1.0, "n": 100.0}, h, l)
+    assert np.flatnonzero(ev["trade-count climax"]).tolist() == [a + 1, b + 1]
+    assert np.flatnonzero(ev["trade-count climax at a new 1h high"]).tolist() == [a + 1]
+    assert np.flatnonzero(ev["trade-count climax with no new 1h high or low"]).tolist() == [b + 1]
+    assert np.flatnonzero(ev["trade-count climax at a new 1h low"]).tolist() == []
+    l2 = l.copy(); l2[c] = 80.0
+    n2 = np.full(N, 10.0); n2[c] = 500.0
+    ev2 = L.tick_events(quantities(n2), {"share": 1.0, "n": 100.0}, h, l2)
+    assert np.flatnonzero(ev2["trade-count climax at a new 1h low"]).tolist() == [c + 1]
+
+
+def test_new_extreme_compares_with_the_hour_before_and_not_the_minute_itself():
+    h = np.full(100, 10.0); l = np.full(100, 9.0)
+    h[70] = 11.0
+    hi, lo = L.new_extremes(h, l)
+    assert hi[70] and not hi[71]                                   # minute 71's high (10) is below the 11 now inside its hour
+    assert not hi[:60].any()                                       # no full hour behind yet
+
+
+# ---------------- derivatives definitions ----------------
+
+def deriv_arrays(n, **kw):
+    base = {k: np.full(n, np.nan) for k in ("funding_bp", "doi15", "doi60", "pvol_ratio5", "ret15")}
+    for k, v in kw.items():
+        base[k] = np.asarray(v, float)
+    return base
+
+
+def test_funding_and_open_interest_use_the_previous_years_deciles():
+    prev = deriv_arrays(101, funding_bp=np.linspace(-5, 5, 101), doi15=np.linspace(-2, 2, 101), doi60=np.linspace(-4, 4, 101),
+                        pvol_ratio5=np.linspace(0, 10, 101), ret15=np.linspace(-50, 50, 101))
+    cuts = L.decile_cuts(prev)
+    assert cuts["funding_bp"] == pytest.approx((-4.0, 4.0))
+    cur = deriv_arrays(6, funding_bp=[0, 4.5, -4.5, 3.9, -3.9, np.nan], doi15=[0, 0, 0, 1.7, -1.7, 0], doi60=[0, 0, 0, 0, 0, 0])
+    ev = L.deriv_events(cur, cuts)
+    names = L.DERIV_EVENTS
+    assert np.flatnonzero(ev[names[0]]).tolist() == [2]            # funding 4.5 at minute 1, known at decision minute 2
+    assert np.flatnonzero(ev[names[1]]).tolist() == [3]
+    assert np.flatnonzero(ev[names[2]]).tolist() == [4]            # open interest 1.7 > 1.6
+    assert np.flatnonzero(ev[names[3]]).tolist() == [5]
+    own = L.decile_cuts({"funding_bp": cur["funding_bp"]})
+    assert own["funding_bp"] != cuts["funding_bp"]                # this year's own deciles are not what the events use
+
+
+def test_unknown_values_never_fire():
+    cuts = {k: (-1.0, 1.0) for k in ("funding_bp", "doi15", "doi60", "pvol_ratio5", "ret15")}
+    ev = L.deriv_events(deriv_arrays(5), cuts)
+    assert not any(v.any() for v in ev.values())
+
+
+def test_liquidation_signature_needs_all_three_conditions():
+    cuts = {k: (-1.0, 1.0) for k in ("funding_bp", "doi15", "doi60", "pvol_ratio5", "ret15")}
+    long_, short_ = L.DERIV_EVENTS[6], L.DERIV_EVENTS[7]
+    # minute 0: all three for longs; 1: open interest not down; 2: price not extreme; 3: volume light; 4 and 5: price up hard
+    cur = deriv_arrays(6, doi15=[-2, 0, -2, -2, -2, -2], ret15=[-2, -2, 0, -2, 2, 2], pvol_ratio5=[2, 2, 2, 0, 2, 2], funding_bp=np.zeros(6), doi60=np.zeros(6))
+    ev = L.deriv_events(cur, cuts)
+    assert np.flatnonzero(ev[long_]).tolist() == [1]
+    assert np.flatnonzero(ev[short_]).tolist() == [5]              # minute 5's flag would be known at decision minute 6, outside the array
+
+
+def test_spot_return15_is_known_at_the_close_of_each_minute():
+    c = np.arange(1.0, 41.0)
+    r = L.spot_return15(c)
+    assert np.isnan(r[:15]).all()
+    assert r[20] == pytest.approx((c[20] / c[5] - 1) * 1e4)
+
+
+# ---------------- pooling and rendering ----------------
+
+def year_rows(year, diff, fires=1000, share=0.1, se=0.01, p_adj=0.01):
+    return {"year": year, "horizon": 5, "pattern": "e", "fires": fires, "share": share, "up_rate": 0.55, "base": 0.5, "diff": diff, "se": se, "z": diff / se, "p": 0.0, "p_adj": p_adj}
+
+
+def vwap_rows(year, dp, dv, fires=1000):
+    return {"year": year, "horizon": 5, "pattern": "e", "fires_print": fires, "diff_print": dp, "z_print": 1.0, "fires_vwap": fires, "diff_vwap": dv, "z_vwap": 1.0}
+
+
+def test_pooling_weights_years_by_firings_and_measures_from_the_unconditional_rate():
+    A = pd.DataFrame([year_rows(2020, 0.10, fires=1000, share=0.10), year_rows(2021, 0.02, fires=3000, share=0.30, p_adj=0.2), year_rows(2022, -0.01, fires=1000, share=0.10)])
+    V = pd.DataFrame([vwap_rows(2020, 0.10, 0.05), vwap_rows(2021, 0.02, 0.01, fires=3000), vwap_rows(2022, -0.01, 0.0)])
+    G = L.pool_cells(A, V).iloc[0]
+    w = np.array([1000, 3000, 1000]) / 5000
+    dev = (w * np.array([0.9 * 0.10, 0.7 * 0.02, 0.9 * -0.01])).sum()
+    assert G.deviation == pytest.approx(dev)
+    assert G.se == pytest.approx(np.sqrt(((w * np.array([0.9, 0.7, 0.9]) * 0.01) ** 2).sum()))
+    assert (G.years, G.years_held, G.years_adj_05, G.fires) == (3, 2, 2, 5000)
+    assert G.retained == pytest.approx((0.05 * 1000 + 0.01 * 3000 + 0.0) / (0.10 * 1000 + 0.02 * 3000 - 0.01 * 1000))
+    full = L.pool_cells(A, V)
+    assert not L.cleared(full).iloc[0] and not L.held_all(full).iloc[0]
+
+
+def test_rendering_twice_gives_the_same_document_and_one_row_per_cell():
+    names = [name for _, name in L.TICK_EVENTS]
+    rows, vrows = [], []
+    for k, name in enumerate(names):
+        for h in L.HORIZONS:
+            for y in (2020, 2021):
+                r = year_rows(y, 0.03 + 0.001 * k)
+                r.update({"pattern": name, "horizon": h})
+                rows.append(r)
+                v = vwap_rows(y, 0.03, 0.02)
+                v.update({"pattern": name, "horizon": h})
+                vrows.append(v)
+    G = L.pool_cells(pd.DataFrame(rows), pd.DataFrame(vrows))
+    shares = pd.DataFrame({"year": [2020, 2021] * len(names), "event": np.repeat(names, 2), "share": 0.01, "fires": 5})
+    null = np.array([1.0, 2.0, 3.0])
+    a = L.render(G, [2020, 2021], "2021-12", 3, null, 9.0, shares)
+    assert a == L.render(G, [2020, 2021], "2021-12", 3, null, 9.0, shares)
+    table = [ln for ln in a.splitlines() if ln.startswith("| ") and not ln.startswith("| family")]
+    assert len(table) == len(names) * len(L.HORIZONS)
+    assert "Of 66 cells (11 events at 6 horizons), 66 clear the search-wide null" in a
+    assert "Null: the largest |z|" in a
+
+
+def test_vwap_retention_is_shown_only_where_the_interval_excludes_zero():
+    rows, vrows = [], []
+    for name, diff in (("large-trade burst", 0.001), ("trade-count climax", 0.05)):
+        for y in (2020, 2021):
+            r = year_rows(y, diff, se=0.01)
+            r.update({"pattern": name, "horizon": 5})
+            rows.append(r)
+            v = vwap_rows(y, diff, diff / 2)
+            v.update({"pattern": name, "horizon": 5})
+            vrows.append(v)
+    G = L.pool_cells(pd.DataFrame(rows), pd.DataFrame(vrows))
+    shares = pd.DataFrame({"year": [2020, 2021] * 2, "event": np.repeat(["trade-count climax", "large-trade burst"], 2), "share": 0.01, "fires": 5})
+    a = L.render(G, [2020, 2021], "2021-12", 3, np.array([1.0]), 9.0, shares)
+    burst = next(ln for ln in a.splitlines() if "| large-trade burst |" in ln)
+    climax = next(ln for ln in a.splitlines() if "| trade-count climax |" in ln)
+    assert burst.rstrip().endswith("| - |")
+    assert climax.rstrip().endswith("| 50% |")
