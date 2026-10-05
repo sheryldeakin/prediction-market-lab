@@ -1,0 +1,5 @@
+series,first,last,files
+funding rate (monthly files),2020-01,2026-08,80
+open interest and positioning metrics (daily files),2020-09-01,2026-09-29,2220
+perpetual 1-minute klines (monthly files),2020-01,2026-08,80
+perpetual 1-minute klines (daily files),2026-09-01,2026-09-29,29

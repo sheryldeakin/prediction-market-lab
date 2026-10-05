@@ -1,0 +1,41 @@
+year,event,share,fires
+2022,funding rate in the top decile of the previous year,0.0,0
+2022,funding rate in the bottom decile of the previous year,0.41187214611872147,216480
+2022,open interest up over 15 minutes (top decile),0.037699771689497716,19815
+2022,open interest down over 15 minutes (bottom decile),0.049124809741248096,25820
+2022,open interest up over 60 minutes (top decile),0.036348934550989344,19105
+2022,open interest down over 60 minutes (bottom decile),0.04890601217656012,25705
+2022,"long liquidation signature (open interest down, price down hard, perp volume heavy)",0.005844748858447489,3072
+2022,"short liquidation signature (open interest down, price up hard, perp volume heavy)",0.004433028919330289,2330
+2023,funding rate in the top decile of the previous year,0.06320357390257261,33120
+2023,funding rate in the bottom decile of the previous year,0.010075932071424619,5280
+2023,open interest up over 15 minutes (top decile),0.08036891651288784,42115
+2023,open interest down over 15 minutes (bottom decile),0.08114369462292542,42521
+2023,open interest up over 60 minutes (top decile),0.08521605050179287,44655
+2023,open interest down over 60 minutes (bottom decile),0.08724077851841816,45716
+2023,"long liquidation signature (open interest down, price down hard, perp volume heavy)",0.007667631640716689,4018
+2023,"short liquidation signature (open interest down, price up hard, perp volume heavy)",0.007264976021953319,3807
+2024,funding rate in the top decile of the previous year,0.19398907103825136,102240
+2024,funding rate in the bottom decile of the previous year,0.08287795992714025,43680
+2024,open interest up over 15 minutes (top decile),0.09090391621129326,47910
+2024,open interest down over 15 minutes (bottom decile),0.09775349119611415,51520
+2024,open interest up over 60 minutes (top decile),0.0894144656952034,47125
+2024,open interest down over 60 minutes (bottom decile),0.08811475409836066,46440
+2024,"long liquidation signature (open interest down, price down hard, perp volume heavy)",0.01442964480874317,7605
+2024,"short liquidation signature (open interest down, price up hard, perp volume heavy)",0.010156724347298118,5353
+2025,funding rate in the top decile of the previous year,0.0,0
+2025,funding rate in the bottom decile of the previous year,0.17534246575342466,92160
+2025,open interest up over 15 minutes (top decile),0.06342275494672756,33335
+2025,open interest down over 15 minutes (bottom decile),0.06193873668188737,32555
+2025,open interest up over 60 minutes (top decile),0.07016742770167428,36880
+2025,open interest down over 60 minutes (bottom decile),0.06513508371385084,34235
+2025,"long liquidation signature (open interest down, price down hard, perp volume heavy)",0.009202815829528158,4837
+2025,"short liquidation signature (open interest down, price up hard, perp volume heavy)",0.005241628614916286,2755
+2026,funding rate in the top decile of the previous year,0.0,0
+2026,funding rate in the bottom decile of the previous year,0.25102880658436216,87840
+2026,open interest up over 15 minutes (top decile),0.08726280292638318,30535
+2026,open interest down over 15 minutes (bottom decile),0.08967764060356653,31380
+2026,open interest up over 60 minutes (top decile),0.09036351165980795,31620
+2026,open interest down over 60 minutes (bottom decile),0.09192101051668954,32165
+2026,"long liquidation signature (open interest down, price down hard, perp volume heavy)",0.011414037494284409,3994
+2026,"short liquidation signature (open interest down, price up hard, perp volume heavy)",0.009002057613168725,3150

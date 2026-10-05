@@ -430,39 +430,105 @@ Null: the largest |z| across all events and horizons on rotated labels has media
 
 ## Derivatives and tick events for the library
 
-The price-action library above is built from candles. This section adds events from two sources the candles do not carry: the per-second trade table (who was aggressive, how many trades, how many of them large) and the perpetual-futures series (funding rate, open interest). Eleven tick events were scored through the same machinery, every minute as a decision time, horizons 1 to 30, day-clustered intervals, the rotated-label search-wide null and the VWAP label. Eight derivatives events were defined and tested but could not be scored, for the reason the first table below states.
+The price-action library above is built from candles. This section adds events from two sources the candles do not carry: the per-second trade table (who was aggressive, how many trades, how many of them large) and the perpetual-futures series (funding rate, open interest). Eleven tick events and eight derivatives events were scored through the same machinery, every minute as a decision time, horizons 1 to 30, day-clustered intervals, the rotated-label search-wide null and the VWAP label. The derivatives events are scored only in the years for which the futures files cover the whole of the previous year, since every cutoff is a decile of that year; the first table below states which years those are.
 
 **Definitions (frozen before the nine-year run).** Each event at decision minute i reads only minutes up to i-1. Every cutoff is a percentile of the previous calendar year, so a year never defines its own extreme; the first year (2018) takes its cutoffs from the months before it that the tick data hold (from 2017-08), not from its own first quarter. Definitions are in `models/btc_15m/library_events.py`.
 
 - *Large-trade burst.* The share of the last minute's trades that were large (the per-second table's own flag: at or above the previous UTC day's 99th-percentile trade notional) is above the previous year's 99th percentile of that share over minutes with trades. Also split by the sign of the last minute's net large volume: net large buying (the aggressor was the buyer) and net large selling.
 - *Imbalance persistence.* Signed volume (aggressive buying minus aggressive selling, in notional) has the same sign in each of the last 3 minutes, and separately each of the last 5, for buying and for selling. A minute with no net flow breaks the run.
 - *Trade-count climax.* The last minute's trade count is above the previous year's 99th percentile of the per-minute count. Also with a price extreme (that minute's high was at least every high of the 60 minutes before it, or its low at most every such low) and without one.
-- *Funding, open interest, liquidation signature (not scored).* Funding rate in the top or bottom decile of the previous year; open-interest change over 15 or 60 minutes in the top (spike) or bottom (drop) decile; a liquidation signature, which the public futures files cannot show directly (they hold no liquidation orders), so it is inferred from three of their series: the 15-minute open-interest change in its bottom decile, the 15-minute spot return in its bottom decile (longs forced out) or top decile (shorts forced out), and the perp volume of the last 5 minutes against its 24-hour mean in its top decile.
+- *Funding, open interest, liquidation signature.* Funding rate in the top or bottom decile of the previous year; open-interest change over 15 or 60 minutes in the top (spike) or bottom (drop) decile; a liquidation signature, which the public futures files cannot show directly (they hold no liquidation orders), so it is inferred from three of their series: the 15-minute open-interest change in its bottom decile, the 15-minute spot return in its bottom decile (longs forced out) or top decile (shorts forced out), and the perp volume of the last 5 minutes against its 24-hour mean in its top decile. Each comparison at a cut is strict (strictly above the upper decile, strictly below the lower one), for the reason given in the method notes.
 
-**Method notes.** Each year is scored on its own, and an event with fewer than 500 firings in a year is not scored in it. The null covers this section's 11 events at 6 horizons only, so its adjusted p-values are not comparable with those of the 79-event table above. A one-year smoke run (2024, 5 null runs) came first and changed no event definition or threshold. Two reporting choices were made after seeing results and are recorded here: the first version of the summary counted only cells that clear the null in every scored year, which gave none, so the table now also counts cells clearing it in at least half of the years and in at least one; and the VWAP column is shown only where the pooled interval excludes zero, because a ratio of two near-zero deviations is not a meaningful retention.
+**Method notes.** Each year is scored on its own, and an event with fewer than 500 firings in a year is not scored in it. The null covers this section's 11 events at 6 horizons only, so its adjusted p-values are not comparable with those of the 79-event table above. A one-year smoke run (2024, 5 null runs) came first and changed no event definition or threshold. Two reporting choices were made after seeing results and are recorded here: the first version of the summary counted only cells that clear the null in every scored year, which gave none, so the table now also counts cells clearing it in at least half of the years and in at least one; and the VWAP column is shown only where the pooled interval excludes zero, because a ratio of two near-zero deviations is not a meaningful retention. The derivatives events were scored in a separate run with their own null over the eight events at the six horizons, so their adjusted p-values are comparable neither with the tick table's nor with the 79-event table's. Their one-year smoke run (2024, 5 null runs) changed one thing: the comparison at each cut went from at-or-beyond to strictly beyond, because the funding rate sits at the exchange default on a large share of minutes, so the previous year's upper decile was the default itself and the top-funding event fired on every minute at the default. The orientation of the funding and liquidation groups in the effect sentences was fixed before the run: funding is read against the crowd (top decile, a move down is the reversal), and a liquidation signature is followed by a reversal of the forced move.
 
 <!-- table:library_derivatives:start -->
 Derivatives events for the price-action library: definitions and the coverage of the futures files held. Every cutoff is a percentile (decile) of the previous calendar year, so an event can be scored in year Y only if the files cover all of year Y-1. The events are defined and tested in models/btc_15m/library_events.py (`deriv_events`).
 
 | series | first stamp | last stamp | files |
 |---|---|---|---|
-| funding rate (monthly files) | 2025-10 | 2026-08 | 11 |
-| open interest and positioning metrics (daily files) | 2025-10-01 | 2026-09-29 | 364 |
-| perpetual 1-minute klines (monthly files) | 2025-10 | 2026-08 | 11 |
+| funding rate (monthly files) | 2020-01 | 2026-08 | 80 |
+| open interest and positioning metrics (daily files) | 2020-09-01 | 2026-09-29 | 2220 |
+| perpetual 1-minute klines (monthly files) | 2020-01 | 2026-08 | 80 |
 | perpetual 1-minute klines (daily files) | 2026-09-01 | 2026-09-29 | 29 |
 
-| event |
-|---|
-| funding rate in the top decile of the previous year |
-| funding rate in the bottom decile of the previous year |
-| open interest up over 15 minutes (top decile) |
-| open interest down over 15 minutes (bottom decile) |
-| open interest up over 60 minutes (top decile) |
-| open interest down over 60 minutes (bottom decile) |
-| long liquidation signature (open interest down, price down hard, perp volume heavy) |
-| short liquidation signature (open interest down, price up hard, perp volume heavy) |
+Calendar years fully covered by funding, metrics and perp klines together: 2021, 2022, 2023, 2024, 2025; the events can be scored in 2022, 2023, 2024, 2025, 2026.
 
-The files cover 335 days in total and no calendar year in full, so no event has a previous year to take its cutoffs from and none is scored.
+Derivatives events for the price-action library, scored in 2022 to 2026-08, every minute as a decision time. Every cutoff is a decile of the previous calendar year of the futures series themselves, so a year never defines its own extreme. The columns are the same as in the tick table. The null covers these 8 events at the 6 horizons only (50 rotated-label runs per year; the smallest possible adjusted p is 0.0040). The comparison at each cut is strict, because the funding rate sits at the exchange default on a large share of minutes, so the previous year's upper decile can be the default itself; this was set after the one-year smoke run and is the only thing that run changed. The orientation of the funding and liquidation groups below was fixed before the run.
+
+| family | event | horizon (min) | fires | share | up-rate | deviation (points) [95% interval] | min adjusted p | years held | years p<=0.05 | VWAP retained |
+|---|---|---|---|---|---|---|---|---|---|---|
+| funding | funding rate in the top decile of the previous year | 1 | 135,360 | 12.86% | 50.9% | -0.6 [-1.0, -0.3] | 0.5578 | 2/2 | 0/2 | -10% |
+| funding | funding rate in the top decile of the previous year | 3 | 135,358 | 12.86% | 50.3% | -0.2 [-0.6, +0.1] | 0.9562 | 2/2 | 0/2 | - |
+| funding | funding rate in the top decile of the previous year | 5 | 135,356 | 12.86% | 50.3% | -0.1 [-0.5, +0.3] | 1.0000 | 2/2 | 0/2 | - |
+| funding | funding rate in the top decile of the previous year | 10 | 135,351 | 12.86% | 50.5% | +0.2 [-0.4, +0.7] | 1.0000 | 1/2 | 0/2 | - |
+| funding | funding rate in the top decile of the previous year | 15 | 135,346 | 12.86% | 50.7% | +0.2 [-0.5, +0.9] | 1.0000 | 1/2 | 0/2 | - |
+| funding | funding rate in the top decile of the previous year | 30 | 135,331 | 12.86% | 50.9% | +0.3 [-0.6, +1.2] | 1.0000 | 1/2 | 0/2 | - |
+| funding | funding rate in the bottom decile of the previous year | 1 | 445,440 | 18.62% | 50.6% | -0.2 [-0.4, -0.1] | 0.1833 | 3/5 | 0/5 | 15% |
+| funding | funding rate in the bottom decile of the previous year | 3 | 445,440 | 18.62% | 50.2% | +0.0 [-0.1, +0.2] | 1.0000 | 3/5 | 0/5 | - |
+| funding | funding rate in the bottom decile of the previous year | 5 | 445,440 | 18.62% | 50.1% | +0.1 [-0.1, +0.3] | 0.9960 | 3/5 | 0/5 | - |
+| funding | funding rate in the bottom decile of the previous year | 10 | 445,440 | 18.62% | 50.2% | +0.2 [-0.1, +0.5] | 0.9522 | 3/5 | 0/5 | - |
+| funding | funding rate in the bottom decile of the previous year | 15 | 445,440 | 18.62% | 50.4% | +0.3 [-0.0, +0.7] | 0.9841 | 4/5 | 0/5 | - |
+| funding | funding rate in the bottom decile of the previous year | 30 | 445,440 | 18.63% | 50.4% | +0.2 [-0.2, +0.7] | 1.0000 | 4/5 | 0/5 | - |
+| open interest | open interest up over 15 minutes (top decile) | 1 | 173,710 | 7.19% | 50.2% | -1.3 [-1.6, -1.1] | 0.0040 | 5/5 | 3/5 | 20% |
+| open interest | open interest up over 15 minutes (top decile) | 3 | 173,710 | 7.19% | 49.9% | -0.5 [-0.8, -0.2] | 0.3187 | 3/5 | 0/5 | 52% |
+| open interest | open interest up over 15 minutes (top decile) | 5 | 173,710 | 7.19% | 49.8% | -0.4 [-0.8, -0.0] | 0.4422 | 3/5 | 0/5 | 57% |
+| open interest | open interest up over 15 minutes (top decile) | 10 | 173,710 | 7.19% | 49.8% | -0.3 [-0.8, +0.2] | 0.9641 | 4/5 | 0/5 | - |
+| open interest | open interest up over 15 minutes (top decile) | 15 | 173,710 | 7.19% | 50.0% | -0.2 [-0.7, +0.4] | 0.6693 | 3/5 | 0/5 | - |
+| open interest | open interest up over 15 minutes (top decile) | 30 | 173,710 | 7.19% | 50.0% | -0.3 [-1.0, +0.4] | 0.5219 | 3/5 | 0/5 | - |
+| open interest | open interest down over 15 minutes (bottom decile) | 1 | 183,796 | 7.59% | 50.6% | -0.9 [-1.1, -0.7] | 0.0040 | 5/5 | 1/5 | 1% |
+| open interest | open interest down over 15 minutes (bottom decile) | 3 | 183,796 | 7.59% | 50.5% | +0.1 [-0.2, +0.4] | 0.9522 | 4/5 | 0/5 | - |
+| open interest | open interest down over 15 minutes (bottom decile) | 5 | 183,796 | 7.59% | 50.7% | +0.5 [+0.2, +0.9] | 0.3785 | 4/5 | 0/5 | 107% |
+| open interest | open interest down over 15 minutes (bottom decile) | 10 | 183,796 | 7.59% | 51.2% | +1.1 [+0.6, +1.6] | 0.5737 | 4/5 | 0/5 | 95% |
+| open interest | open interest down over 15 minutes (bottom decile) | 15 | 183,796 | 7.59% | 51.6% | +1.4 [+0.9, +2.0] | 0.1315 | 4/5 | 0/5 | 95% |
+| open interest | open interest down over 15 minutes (bottom decile) | 30 | 183,787 | 7.59% | 52.0% | +1.7 [+1.0, +2.3] | 0.1394 | 5/5 | 0/5 | 105% |
+| open interest | open interest up over 60 minutes (top decile) | 1 | 179,385 | 7.43% | 50.5% | -1.0 [-1.3, -0.8] | 0.0040 | 5/5 | 3/5 | 1% |
+| open interest | open interest up over 60 minutes (top decile) | 3 | 179,385 | 7.43% | 50.1% | -0.3 [-0.7, -0.0] | 0.1036 | 3/5 | 0/5 | 34% |
+| open interest | open interest up over 60 minutes (top decile) | 5 | 179,385 | 7.43% | 50.0% | -0.1 [-0.5, +0.2] | 0.5299 | 2/5 | 0/5 | - |
+| open interest | open interest up over 60 minutes (top decile) | 10 | 179,385 | 7.43% | 50.1% | +0.0 [-0.5, +0.5] | 0.8725 | 3/5 | 0/5 | - |
+| open interest | open interest up over 60 minutes (top decile) | 15 | 179,385 | 7.43% | 50.0% | -0.2 [-0.8, +0.5] | 0.9841 | 2/5 | 0/5 | - |
+| open interest | open interest up over 60 minutes (top decile) | 30 | 179,385 | 7.43% | 49.6% | -0.7 [-1.6, +0.1] | 0.4183 | 2/5 | 0/5 | - |
+| open interest | open interest down over 60 minutes (bottom decile) | 1 | 184,261 | 7.63% | 50.5% | -1.0 [-1.2, -0.7] | 0.0159 | 5/5 | 2/5 | -0% |
+| open interest | open interest down over 60 minutes (bottom decile) | 3 | 184,259 | 7.63% | 50.3% | -0.1 [-0.4, +0.2] | 0.3705 | 3/5 | 0/5 | - |
+| open interest | open interest down over 60 minutes (bottom decile) | 5 | 184,257 | 7.63% | 50.6% | +0.4 [-0.0, +0.7] | 0.4821 | 3/5 | 0/5 | - |
+| open interest | open interest down over 60 minutes (bottom decile) | 10 | 184,252 | 7.63% | 50.9% | +0.7 [+0.2, +1.2] | 0.4024 | 4/5 | 0/5 | 95% |
+| open interest | open interest down over 60 minutes (bottom decile) | 15 | 184,247 | 7.63% | 51.2% | +1.0 [+0.4, +1.6] | 0.5060 | 4/5 | 0/5 | 100% |
+| open interest | open interest down over 60 minutes (bottom decile) | 30 | 184,232 | 7.63% | 51.5% | +1.2 [+0.4, +2.0] | 0.6175 | 3/5 | 0/5 | 98% |
+| liquidation signature | long liquidation signature (open interest down, price down hard, perp volume heavy) | 1 | 23,526 | 0.97% | 51.8% | +0.4 [-0.2, +1.0] | 1.0000 | 4/5 | 0/5 | - |
+| liquidation signature | long liquidation signature (open interest down, price down hard, perp volume heavy) | 3 | 23,526 | 0.97% | 52.6% | +2.2 [+1.3, +3.1] | 0.0159 | 5/5 | 1/5 | 119% |
+| liquidation signature | long liquidation signature (open interest down, price down hard, perp volume heavy) | 5 | 23,526 | 0.97% | 53.4% | +3.2 [+2.1, +4.2] | 0.0040 | 4/5 | 2/5 | 108% |
+| liquidation signature | long liquidation signature (open interest down, price down hard, perp volume heavy) | 10 | 23,526 | 0.97% | 53.6% | +3.5 [+2.2, +4.8] | 0.0159 | 4/5 | 1/5 | 119% |
+| liquidation signature | long liquidation signature (open interest down, price down hard, perp volume heavy) | 15 | 23,526 | 0.97% | 54.3% | +4.1 [+2.7, +5.5] | 0.0040 | 4/5 | 1/5 | 112% |
+| liquidation signature | long liquidation signature (open interest down, price down hard, perp volume heavy) | 30 | 23,526 | 0.97% | 55.5% | +5.1 [+3.6, +6.7] | 0.0159 | 4/5 | 1/5 | 106% |
+| liquidation signature | short liquidation signature (open interest down, price up hard, perp volume heavy) | 1 | 17,395 | 0.72% | 47.0% | -4.4 [-5.2, -3.7] | 0.0040 | 5/5 | 5/5 | 90% |
+| liquidation signature | short liquidation signature (open interest down, price up hard, perp volume heavy) | 3 | 17,395 | 0.72% | 46.6% | -3.8 [-4.8, -2.8] | 0.0080 | 5/5 | 2/5 | 98% |
+| liquidation signature | short liquidation signature (open interest down, price up hard, perp volume heavy) | 5 | 17,395 | 0.72% | 45.9% | -4.3 [-5.5, -3.2] | 0.0159 | 5/5 | 1/5 | 89% |
+| liquidation signature | short liquidation signature (open interest down, price up hard, perp volume heavy) | 10 | 17,395 | 0.72% | 46.5% | -3.7 [-5.0, -2.3] | 0.3546 | 5/5 | 0/5 | 109% |
+| liquidation signature | short liquidation signature (open interest down, price up hard, perp volume heavy) | 15 | 17,395 | 0.72% | 45.8% | -4.4 [-5.9, -2.9] | 0.2390 | 5/5 | 0/5 | 107% |
+| liquidation signature | short liquidation signature (open interest down, price up hard, perp volume heavy) | 30 | 17,395 | 0.72% | 47.3% | -3.1 [-4.7, -1.4] | 0.9203 | 5/5 | 0/5 | 98% |
+
+Of 48 cells (8 events at 6 horizons), 15 hold their sign in every year. A search-wide adjusted p of at most 0.05 is reached in every scored year by 1 cells, in at least half of the scored years by 3 and in at least one year by 12; 3 cells hold their sign in every year and clear the null in at least half of the years.
+
+Events with at least one cell that holds its sign in every year and clears the null in at least half of the years: open interest up over 15 minutes (top decile), open interest up over 60 minutes (top decile), short liquidation signature (open interest down, price up hard, perp volume heavy).
+
+Events with at least one cell that holds its sign in every year: funding rate in the top decile of the previous year, open interest up over 15 minutes (top decile), open interest down over 15 minutes (bottom decile), open interest up over 60 minutes (top decile), open interest down over 60 minutes (bottom decile), long liquidation signature (open interest down, price down hard, perp volume heavy), short liquidation signature (open interest down, price up hard, perp volume heavy).
+
+Among those 3 cells (interval excludes zero), the VWAP label keeps a median of 20% of the last-print deviation (range 1% to 90%).
+
+The largest absolute pooled deviation is 5.1 points (long liquidation signature (open interest down, price down hard, perp volume heavy), 30 minutes); 27 of the 48 pooled 95% intervals exclude zero.
+
+'funding rate in the top decile of the previous year' fires on 0.00% of minutes in its quietest year (2022) and 19.40% in its busiest (2024).
+
+'long liquidation signature (open interest down, price down hard, perp volume heavy)' fires on 0.58% of minutes in its quietest year (2022) and 1.44% in its busiest (2024).
+
+Null: the largest |z| across all events and horizons on rotated labels has median 2.73 and 95th percentile 3.94; the real search's largest |z| is 7.34.
+
+Funding at an extreme, read against the crowd (top decile: down is the reversal): at 5, 10, 15 and 30 minutes the pooled deviation runs from -0.3 to +0.3 points (reversal positive); 0 of 8 cells have an interval that excludes zero; cells holding their sign in every year: 1.
+
+Liquidation signatures, a reversal of the forced move: at 5, 10, 15 and 30 minutes the pooled deviation runs from +3.1 to +5.1 points (reversal positive); 8 of 8 cells have an interval that excludes zero; cells holding their sign in every year: 4.
+
+Open interest moves (deviation signed up): at 5, 10, 15 and 30 minutes the pooled deviation runs from -0.7 to +1.7 points (up positive); 8 of 16 cells have an interval that excludes zero; cells holding their sign in every year: 1.
+
+For scale, the largest deviation among the price-action library's cells that hold their sign in every year is 9.0 points (price_action_summary.csv).
 <!-- table:library_derivatives:end -->
 
 <!-- table:library_ticks:start -->
@@ -571,7 +637,9 @@ For scale, the largest deviation among the price-action library's cells that hol
 - *Several minutes of one-sided flow run backwards, weakly.* After 3 or 5 minutes of net buying the next 5 to 30 minutes lean down, and after net selling they lean up, with the sign kept in most years and narrow intervals because the events fire on a large share of all minutes (the share column). The size is a small fraction of the probes' (the group sentences above give the ranges), and an event this common probably describes most of the minutes of "price recently rose" and "price recently fell" in the clusters above; the overlap was not measured. It agrees with the continuation stories running backwards, and it does not add a separate effect.
 - *Large trades matter by side, not by size.* The undirected large-trade burst has a deviation near zero. Split by the side of the large trades it leans toward reversal (net large selling then up, net large buying then down), but the events fire on a small share of minutes, fewer years reach 500 firings (the years column), and the sign holds in every year in only a minority of cells. The evidence is a lean, not a result.
 - *No cell clears the null in every year.* The years are scored separately, the early ones fire far less, and "adjusted p of at most 0.05 in every year" is a hard standard; the tiers in the summary above show how many clear it in half the years and in one. The cells that do are the climax events at a price extreme and the persistence events.
-- *The derivatives events have no result.* The futures files held here cover a single span shorter than a calendar year plus its predecessor (the coverage table above), so no event has a previous year to take its cutoffs from. The definitions stand; scoring them needs the futures history for earlier years (BACKLOG.md).
+- *The liquidation signatures reverse the forced move.* After the long signature (open interest down, price down hard, heavy perp volume) the next 5 to 30 minutes lean up, and after the short signature they lean down; the group sentence above gives the range and every pooled interval in the group excludes zero. The per-year rows (library_derivatives_years.csv) temper it: the long signature points the other way in the first scored year and clears the null in two later ones, and the short signature keeps its sign in every year but clears the null in few. Whether the signature adds anything to a hard 15-minute move on its own is not answered here; it is the same question the climax leaves open above (BACKLOG.md).
+- *Open interest rising into the top decile leans up, a little.* Both open-interest-up events have a cell that keeps its sign in every year and clears the null in at least half of the years (the summary sentences above); over 5 to 30 minutes the group's deviation is a small fraction of the probes' and few of its cells hold their sign in every year (the group sentence). The drop events show less.
+- *The funding events are a property of the year, as the plain trade-count climax was.* Funding's level shifts between years, so the previous year's decile marks a regime rather than an extreme: the top event fires on no minute at all in some scored years and the bottom one on a large share of another (the firing-share sentences above and library_derivatives_shares.csv), and in the years that do fire the deviation is near zero with every interval covering it. A level definition (funding against the exchange default, or against its own trailing year) would not have this problem; it was not run because the definition was frozen first (BACKLOG.md).
 
 ## Direction with magnitude
 
