@@ -9,6 +9,7 @@ from models.btc_15m.horizons import HORIZONS
 from models.btc_15m.stats import paired_cluster_se
 
 CONTROL_BLOCK_SECONDS = MI.CONTROL_BLOCK_MIN * 60
+Z95 = 1.96
 
 
 # ---------------- matching by stratum ----------------
@@ -257,7 +258,7 @@ def test_treated_quantile_bins_balance_the_move_size_where_population_quintiles_
     P, _, _ = MI.build_pairs(year=2024, contrast="B", side="high", population=population, treated=treated, move=move, D=D, n_series=n,
                              vol_edges=np.array([1.0, 2.0]), Lp=lab, Vw=lab, rng=np.random.default_rng(0))
     assert len(P) == treated.sum()
-    assert abs(MI.standardised_difference(P.move_t.values, P.move_c.values)) < MI.SMD_MAX
+    assert abs(MI.standardised_difference(P.move_t.values, P.move_c.values)) < 0.10                  # a stricter bar than the support gate, which is looser since the adjustment was added
     assert P.move_c.min() >= move[treated].min() and P.move_c.max() <= move[treated].max()           # controls lie inside the treated minutes' move-size range
     # the same matching with the bins taken from the population: every treated minute lands in the top bin, whose controls are smaller moves
     quint, _ = MI.move_quintiles(move, population)
@@ -266,7 +267,7 @@ def test_treated_quantile_bins_balance_the_move_size_where_population_quintiles_
     key = MI.stratum_key(D.hour.values, MI.vol_terciles(D.vol60.values, np.array([1.0, 2.0])), quint)
     ctrl, _ = M.match_by_stratum(key, np.where(treated)[0], eligible, np.random.default_rng(0))
     assert (ctrl >= 0).all()
-    assert abs(MI.standardised_difference(move[treated], move[ctrl])) > 5 * MI.SMD_MAX
+    assert abs(MI.standardised_difference(move[treated], move[ctrl])) > 2 * MI.SMD_MAX
 
 
 def test_the_balance_table_reports_means_and_standardised_differences_per_year_and_pooled(monkeypatch):
@@ -327,17 +328,46 @@ def test_the_rule_has_four_outcomes():
 
 def test_a_cell_whose_controls_do_not_balance_the_move_is_not_resolved_whatever_the_intervals():
     strong = cell((1, 5), (0.5, 6), (0.2, 4), (0.1, 5))
-    assert MI.decide(strong, smd=0.05)[0] == "adds something" and MI.decide(strong, smd=-0.10)[0] == "adds something"      # at the threshold is balanced
-    assert MI.decide(strong, smd=0.11)[0] == "not resolved (support)" and MI.decide(strong, smd=-0.2)[0] == "not resolved (support)"
-    assert MI.decide(cell((-1.0, 1.0), (-1.5, 1.5), (-0.5, 1.9), (-1.0, 1.0)), smd=0.5)[0] == "not resolved (support)"
+    # The gate was 0.10 and is now 0.25: treated minutes are deeper than any available control, and the smoke runs of 2026-10-06 showed
+    # standardised differences of about 0.1 to 0.2 after treated-quantile bins and the trim. The adjusted estimate corrects up to the gate.
+    assert MI.SMD_MAX == 0.25
+    assert MI.decide(strong, smd=0.2)[0] == "adds something" and MI.decide(strong, smd=-0.25)[0] == "adds something"      # at the gate: the adjusted intervals decide
+    assert MI.decide(cell((-1.0, 1.0), (-1.5, 1.5), (-0.5, 1.9), (-1.0, 1.0)), smd=0.2)[0] == "adds nothing measurable"
+    assert MI.decide(strong, smd=0.3)[0] == "not resolved (support)" and MI.decide(strong, smd=-0.3)[0] == "not resolved (support)"
+    assert MI.decide(cell((-1.0, 1.0), (-1.5, 1.5), (-0.5, 1.9), (-1.0, 1.0)), smd=0.3)[0] == "not resolved (support)"
+
+
+def adjustment_pairs(n=6000, seed=0, effect=0.0, deeper=1.0, slope=0.10):
+    """Pairs whose outcome rises with the move size: control moves are exponential, treated ones are deeper by `deeper`."""
+    g = np.random.default_rng(seed)
+    move_c = g.exponential(1.0, n)
+    move_t = move_c + deeper + g.normal(0, 1.0, n)
+    vol_c, vol_t = g.random(n), g.random(n)
+    return pd.DataFrame({"day": np.arange(n) // 20, "episode": np.arange(n) // 5, "move_t": move_t, "move_c": move_c, "vol_t": vol_t, "vol_c": vol_c,
+                         "lp15_t": slope * move_t + effect + g.normal(0, 0.3, n), "lp15_c": slope * move_c + g.normal(0, 0.3, n)})
+
+
+def test_the_adjustment_removes_the_bias_from_deeper_treated_minutes_and_leaves_a_true_effect():
+    P = adjustment_pairs()                                                                # no treatment effect, treated minutes a full unit deeper, outcome 0.1 per unit
+    e = MI.pair_estimate(P, "lp", 15)
+    assert e["est"] > 8 and e["est"] / e["se_day"] > 5                                    # raw: about 10 points, far from zero
+    assert abs(e["est_adj"]) < Z95 * e["se_day_adj"] and abs(e["est_adj"]) < Z95 * e["se_ep_adj"]      # adjusted: inside its interval of zero
+    Q = adjustment_pairs(effect=0.05, deeper=0.0, seed=1)                                 # a true effect of 5 points and no covariate difference
+    q = MI.pair_estimate(Q, "lp", 15)
+    assert abs(q["est"] - 5.0) < 1.0 and abs(q["est_adj"] - q["est"]) < 0.5 and q["est_adj"] - Z95 * q["se_day_adj"] > 0
+    assert MI.adjusted_differences(np.array([1.0, 2.0]), np.zeros((2, 2))).tolist() == [1.0, 2.0]       # too few pairs: unchanged
+    d = np.array([1.0, 3.0, 2.0, 6.0, 5.0, 4.0]); dx = np.arange(12.0).reshape(6, 2) ** 1.1
+    assert MI.adjusted_differences(d, dx).mean() == pytest.approx(np.linalg.lstsq(np.column_stack([np.ones(6), dx]), d, rcond=None)[0][0])      # the mean is the intercept
 
 
 def test_holm_and_the_cell_p_follow_the_stated_definitions():
     assert MI.holm([0.01, 0.04, 0.03, 0.2]) == pytest.approx([0.04, 0.09, 0.09, 0.2])
-    row = {"lp_est": 2.0, "vw_est": 2.0, "lp_se_day": 1.0, "lp_se_ep": 0.5, "vw_se_day": 0.5, "vw_se_ep": 0.5}
+    row = {"lpa_est": 2.0, "vwa_est": 2.0, "lpa_se_day": 1.0, "lpa_se_ep": 0.5, "vwa_se_day": 0.5, "vwa_se_ep": 0.5}
     from scipy.stats import norm
-    assert MI.cell_p(row) == pytest.approx(2 * (1 - norm.cdf(2.0)))                       # the largest of the four two-sided p-values
-    assert MI.cell_p({**row, "vw_est": -0.1}) == 1.0                                      # one estimate not above zero: the claim is not supported
+    assert MI.cell_p(row) == pytest.approx(2 * (1 - norm.cdf(2.0)))                       # the largest of the four two-sided p-values, on the adjusted estimates
+    assert MI.cell_p({**row, "vwa_est": -0.1}) == 1.0                                     # one estimate not above zero: the claim is not supported
+    raw = {k.replace("lpa", "lp").replace("vwa", "vw"): v for k, v in row.items()}
+    assert MI.cell_p(raw, prefix="") == pytest.approx(2 * (1 - norm.cdf(2.0)))             # the raw estimates remain readable
 
 
 # ---------------- the pre-registration block ----------------

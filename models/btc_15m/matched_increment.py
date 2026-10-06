@@ -69,7 +69,11 @@ REL_WINDOW = 1440               # minutes in the mean the relative trade count i
 BLOCK_HOURS = 4
 N_TERC = 3
 N_QUINT = 5
-SMD_MAX = 0.10                  # a primary cell whose matched controls differ from the treated by more than this (standardised, move size) is 'not resolved (support)'
+# The support gate was 0.10 in the first design. Treated minutes are deeper moves than any control available to them: after treated-quantile
+# bins and the common-support trim the smoke runs of 2026-10-06 still showed standardised differences of about 0.1 to 0.2. The matched
+# difference is therefore bias-corrected by regression on the covariate differences, and the gate is set at the distance beyond which
+# the correction cannot be trusted to extrapolate.
+SMD_MAX = 0.25                  # a primary cell whose matched controls differ from the treated by more than this (standardised, move size) is 'not resolved (support)'
 
 # (contrast, side) -> +1 when the move was a fall (reversal is up), -1 when it was a rise
 SIDES = {("A", "long"): 1, ("A", "short"): -1, ("B", "low"): 1, ("B", "high"): -1, ("B2", "low"): 1, ("B2", "high"): -1}
@@ -323,7 +327,7 @@ def code_key() -> str:
     """Identifies the code that produces a year's pairs (not the rendering), so a cached year is reused
     when only the tables' wording changes."""
     parts = (shifted, legs, a_sets, relative_count, overshoot, b_sets, relative_reference_cutoff, vol_terciles, move_quintiles, stratum_key, episode_ids, vol_tercile_edges,
-             build_pairs, subset_masks, run_year, M.match_by_stratum, M.recent_any, M.orient, L.deriv_events, L.known_next, L.decile_cuts, L.spot_return15, L.deriv_year_arrays,
+             pair_estimate, adjusted_differences, build_pairs, subset_masks, run_year, M.match_by_stratum, M.recent_any, M.orient, L.deriv_events, L.known_next, L.decile_cuts, L.spot_return15, L.deriv_year_arrays,
              L.deriv_reference_cutoffs, L.tick_events, L.new_extremes, L.reference_cutoffs, L.minute_table, L.tick_quantities, labels, vwap_labels)
     consts = f"{EPISODE_GAP_MIN}-{CONTROL_BLOCK_MIN}-{REL_WINDOW}-{BLOCK_HOURS}-{N_TERC}-{N_QUINT}-{L.P_EXTREME}-{L.EXTREME_WINDOW}-{MIN_FIRES}-treatedbins"
     return hashlib.sha1((consts + "".join(inspect.getsource(f) for f in parts)).encode()).hexdigest()[:10]
@@ -337,11 +341,28 @@ def pair_estimate(P: pd.DataFrame, lab: str, h: int) -> dict:
     tr, ct = P[f"{lab}{h}_t"].values, P[f"{lab}{h}_c"].values
     ok = ~(np.isnan(tr) | np.isnan(ct))
     n = int(ok.sum())
+    nan = float("nan")
     if n < 2:
-        return {"n": n, "est": float("nan"), "se_day": float("nan"), "se_ep": float("nan"), "treated_rate": float("nan"), "control_rate": float("nan")}
+        return {"n": n, "est": nan, "se_day": nan, "se_ep": nan, "est_adj": nan, "se_day_adj": nan, "se_ep_adj": nan, "treated_rate": nan, "control_rate": nan}
     d = (tr[ok] - ct[ok]) * 100.0
-    return {"n": n, "est": float(d.mean()), "se_day": paired_cluster_se(d, P.day.values[ok]), "se_ep": paired_cluster_se(d, P.episode.values[ok]),
+    d_adj = adjusted_differences(d, np.column_stack([(P.move_t.values - P.move_c.values)[ok], (P.vol_t.values - P.vol_c.values)[ok]]))
+    day, ep = P.day.values[ok], P.episode.values[ok]
+    return {"n": n, "est": float(d.mean()), "se_day": paired_cluster_se(d, day), "se_ep": paired_cluster_se(d, ep),
+            "est_adj": float(d_adj.mean()), "se_day_adj": paired_cluster_se(d_adj, day), "se_ep_adj": paired_cluster_se(d_adj, ep),
             "treated_rate": float(tr[ok].mean()), "control_rate": float(ct[ok].mean())}
+
+
+def adjusted_differences(d: np.ndarray, dx: np.ndarray) -> np.ndarray:
+    """Bias-corrected pair differences: d minus beta times the pair's covariate differences dx (move size
+    and volatility, treated minus control), where beta is the slope of the least-squares regression of d
+    on dx with an intercept, over the pairs of the cell. The mean of the result is the intercept: the
+    treated-minus-control difference at zero covariate difference. With fewer pairs than coefficients the
+    raw differences are returned."""
+    if len(d) <= dx.shape[1] + 1:
+        return np.asarray(d, float)
+    X = np.column_stack([np.ones(len(d)), dx])
+    beta = np.linalg.lstsq(X, d, rcond=None)[0]
+    return d - dx @ beta[1:]
 
 
 def standardised_difference(a: np.ndarray, b: np.ndarray) -> float:
@@ -382,20 +403,23 @@ def year_cells(pairs: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def pool(g: pd.DataFrame) -> dict:
+def pool(g: pd.DataFrame, adjusted: bool = False) -> dict:
     """Pool the year rows of one (contrast, side, horizon, label) by pairs, as library_events.pool_cells
     pools by firings: the estimate is the pair-weighted mean of the year estimates and its error
-    combines the years as independent. Years with an unknown or infinite error are left out."""
-    g = g[np.isfinite(g.est) & np.isfinite(g.se_day) & np.isfinite(g.se_ep) & (g.n > 0)]
+    combines the years as independent. Years with an unknown or infinite error are left out. With
+    adjusted=True the bias-corrected estimates (est_adj, se_day_adj, se_ep_adj) are pooled the same way."""
+    sfx = "_adj" if adjusted else ""
+    e, sd, se_ = g[f"est{sfx}"], g[f"se_day{sfx}"], g[f"se_ep{sfx}"]
+    g = g[np.isfinite(e) & np.isfinite(sd) & np.isfinite(se_) & (g.n > 0)]
     if not len(g):
         return {"years": 0, "n": 0}
     w = g.n / g.n.sum()
-    est = float((w * g.est).sum())
-    out = {"years": len(g), "n": int(g.n.sum()), "est": est, "held": int((np.sign(g.est) == np.sign(est)).sum()),
+    est = float((w * g[f"est{sfx}"]).sum())
+    out = {"years": len(g), "n": int(g.n.sum()), "est": est, "held": int((np.sign(g[f"est{sfx}"]) == np.sign(est)).sum()),
            "treated_rate": float((w * g.treated_rate).sum()), "control_rate": float((w * g.control_rate).sum()),
-           "yr_min": float(g.est.min()), "yr_max": float(g.est.max())}
+           "yr_min": float(g[f"est{sfx}"].min()), "yr_max": float(g[f"est{sfx}"].max())}
     for key, _ in CLUSTERS:
-        se = float(np.sqrt(((w * g[f"se_{key}"]) ** 2).sum()))
+        se = float(np.sqrt(((w * g[f"se_{key}{sfx}"]) ** 2).sum()))
         out[f"se_{key}"], out[f"lo_{key}"], out[f"hi_{key}"] = se, est - Z95 * se, est + Z95 * se
     return out
 
@@ -410,8 +434,9 @@ def main_table(Y: pd.DataFrame, stats: pd.DataFrame) -> pd.DataFrame:
         for h in HORIZONS:
             row = {"contrast": contrast, "side": side, "horizon": h, "matched_without_replacement": nonrepl, "years_total": int(len(s))}
             for lab, _ in LABELS:
-                p = pool(Y[(Y.contrast == contrast) & (Y.side == side) & (Y.horizon == h) & (Y.label == lab)])
-                row.update({f"{lab}_{k}": v for k, v in p.items()})
+                cell = Y[(Y.contrast == contrast) & (Y.side == side) & (Y.horizon == h) & (Y.label == lab)]
+                row.update({f"{lab}_{k}": v for k, v in pool(cell).items()})
+                row.update({f"{lab}a_{k}": v for k, v in pool(cell, adjusted=True).items()})      # lpa, vwa: the bias-corrected estimates
             rows.append(row)
     return pd.DataFrame(rows)
 
@@ -456,14 +481,15 @@ def holm(p: list[float]) -> list[float]:
     return adj.tolist()
 
 
-def cell_p(row) -> float:
+def cell_p(row, prefix: str = "a") -> float:
     """The p-value of the 'adds something' claim for one pooled cell: the largest two-sided p over the four
-    (label, error) estimates, taken as 1 if any estimate is not above zero (the claim is an intersection)."""
+    (label, error) estimates of the adjusted differences (prefix 'a'; '' reads the raw ones), taken as 1 if
+    any estimate is not above zero (the claim is an intersection)."""
     from scipy.stats import norm
     ps = []
     for lab, _ in LABELS:
         for key, _ in CLUSTERS:
-            est, se = row[f"{lab}_est"], row[f"{lab}_se_{key}"]
+            est, se = row[f"{lab}{prefix}_est"], row[f"{lab}{prefix}_se_{key}"]
             ps.append(1.0 if not (np.isfinite(est) and se > 0 and est > 0) else float(2 * (1 - norm.cdf(est / se))))
     return max(ps)
 
@@ -474,11 +500,11 @@ def verdicts(G: pd.DataFrame, bal: pd.DataFrame | None = None) -> list[dict]:
     out = []
     for contrast, side in PRIMARY:
         r = G[(G.contrast == contrast) & (G.side == side) & (G.horizon == H_PRIMARY)]
-        if not len(r) or not r.iloc[0].get("lp_years", 0):
+        if not len(r) or not r.iloc[0].get("lpa_years", 0) or not r.iloc[0].get("vwa_years", 0):
             out.append({"contrast": contrast, "side": side, "verdict": "not scored", "reason": "no year had pairs", "p": 1.0})
             continue
         r = r.iloc[0]
-        c = {"lp": cell_interval(r, "lp"), "vw": cell_interval(r, "vw"), "held_lp": int(r.lp_held), "held_vw": int(r.vw_held), "years": int(min(r.lp_years, r.vw_years))}
+        c = {"lp": cell_interval(r, "lpa"), "vw": cell_interval(r, "vwa"), "held_lp": int(r.lpa_held), "held_vw": int(r.vwa_held), "years": int(min(r.lpa_years, r.vwa_years))}
         smd = None
         if bal is not None:
             b = bal[(bal.year.astype(str) == "all") & (bal.contrast == contrast) & (bal.side == side)]
@@ -515,12 +541,13 @@ def prereg_block(years_a: pd.DataFrame, years_b: pd.DataFrame, lib_a: pd.DataFra
         mdi[f"{contrast}-{side}"] = {"se_points": se * 100, "detectable_points": Z95 * se * 100, "years": n}
     lines = [f"Pre-registration of the matched-increment study, written {stamp} at commit {commit[:10]} from existing data only, before any matched result was computed. It is generated by `python -m models.btc_15m.matched_increment --prereg` and is not edited afterwards.", "",
              f"**Increment of interest.** {INCREMENT_POINTS:.1f} points at the {H_PRIMARY}-minute horizon, in the oriented difference (treated reversal rate minus control reversal rate, in points). The rule that sets it: half of the pooled liquidation deviation at {H_PRIMARY} minutes in library_derivatives.csv, which is {dev['long']:+.1f} points for the long signature and {dev['short']:+.1f} points for the short signature (reversal positive), so half of them is {dev['long'] / 2:.2f} and {dev['short'] / 2:.2f} points; the constant is set to {INCREMENT_POINTS:.1f}.", "",
-             f"**Minimum detectable increment.** For each primary cell the paired difference's standard error is taken as the square root of two times the treated cell's per-year standard error at {H_PRIMARY} minutes (library_derivatives_years.csv for contrast A, library_ticks_years.csv for contrast B), combined over the years by firings as the library's pooled cells are; the detectable increment is {Z95} times that error.", ""]
+             f"**Minimum detectable increment.** For each primary cell the paired difference's standard error is taken as the square root of two times the treated cell's per-year standard error at {H_PRIMARY} minutes (library_derivatives_years.csv for contrast A, library_ticks_years.csv for contrast B), combined over the years by firings as the library's pooled cells are; the detectable increment is {Z95} times that error. The adjusted estimate (below) is taken to have the same standard error as the raw one for this power statement.", ""]
     for contrast, side in PRIMARY:
         m = mdi[f"{contrast}-{side}"]
         rel = "above" if INCREMENT_POINTS > m["detectable_points"] else "below"
         lines.append(f"- {CONTRAST_NAME[contrast]}, {SIDE_NAME[(contrast, side)]}: the detectable increment is {m['detectable_points']:.2f} points over {m['years']} years, so the increment of interest ({INCREMENT_POINTS:.2f} points) is {rel} it.")
-    lines += ["", f"**Decision rule.** The condition 'adds something' at a horizon only if the pooled treated-minus-control difference has a day-clustered AND an episode-clustered {100 - 100 * LEVEL:.0f}% interval above zero under BOTH labels (last print and VWAP) and the sign holds in a majority of years under both labels. It 'adds nothing measurable' only if both intervals under both labels lie below the increment of interest ({INCREMENT_POINTS:.1f} points). Otherwise the result is 'not resolved', and is stated as such. Before any of this, a primary cell whose matched controls do not balance the size of the move, a standardised difference (difference of the treated and control means over the pooled standard deviation, pooled over the scored years) above {SMD_MAX:.2f} in absolute value, is 'not resolved (support)' regardless of the intervals.", "",
+    lines += ["", f"**Adjusted estimate.** Matching leaves the treated minutes deeper moves than their controls, so within each (contrast, side, year, horizon, label) cell the pair difference d is regressed, by ordinary least squares with an intercept, on the pair's covariate differences (the move size and the trailing 60-minute volatility, treated minus control); the adjusted pair difference is d minus the fitted slopes times those differences, so its mean is the intercept, the treated-minus-control difference at zero covariate difference. Years are pooled by pairs exactly as the raw differences are, and both clustered intervals (day and episode) are computed on the adjusted pair differences. The adjusted estimate is the primary estimate for the decision rule and the Holm test; the raw matched difference is shown beside it under both labels.", "",
+              f"**Decision rule.** The condition 'adds something' at a horizon only if the pooled adjusted treated-minus-control difference has a day-clustered AND an episode-clustered {100 - 100 * LEVEL:.0f}% interval above zero under BOTH labels (last print and VWAP) and the sign holds in a majority of years under both labels. It 'adds nothing measurable' only if both intervals under both labels lie below the increment of interest ({INCREMENT_POINTS:.1f} points). Otherwise the result is 'not resolved', and is stated as such. Before any of this, a primary cell whose matched controls differ from the treated minutes in the size of the move by a standardised difference (difference of the treated and control means over the pooled standard deviation, pooled over the scored years) above {SMD_MAX:.2f} in absolute value is 'not resolved (support)' regardless of the intervals, because the adjustment cannot be trusted to extrapolate that far; below that the adjusted estimate decides. The balance table and the standardised differences are reported as diagnostics.", "",
               f"**Primary cells.** The {H_PRIMARY}-minute horizon for the four cells {', '.join(f'{c}-{s}' for c, s in PRIMARY)}, with Holm's step-down adjustment across the four at level {LEVEL} (each cell's p is the largest two-sided p of its four estimates, so it rejects only when the rule's intervals are all above zero). Every other horizon and the relative-count contrast (B2) are descriptive. The subsets of the three legs of contrast A are a descriptive table only.", "",
               f"**Design in one sentence.** Each treated minute is matched within its year and side to one control from the rest of its population, in the same four-hour block, the same tercile of trailing 60-minute volatility (edges from the previous year) and the same bin of the move's size, where the five bins are the quintiles of the TREATED minutes' move size in that year and side (so each holds about a fifth of the treated, because the treated sit far out in the population's tail); a control whose move is smaller than the smallest treated move or larger than the largest is not eligible (the outermost bins are open-ended, and controls beyond the treated range would unbalance them); a treated minute in a bin with no eligible control is left unmatched and counted; controls exclude the {CONTROL_BLOCK_MIN} minutes after any treated minute; episodes merge treated minutes less than {EPISODE_GAP_MIN} minutes apart.", "",
               f"**Scored years.** As in the library's tables, a year with fewer than {MIN_FIRES} matched pairs in a cell is not scored for that cell and does not enter its pool; the results state in how many of the years each cell was scored."]
@@ -559,25 +586,25 @@ def render_main(G: pd.DataFrame, stats: pd.DataFrame, V: list[dict], years: dict
              f"Contrast A, {', '.join(map(str, ya)) or 'no year'}: the liquidation signature against the hard 15-minute move (return strictly beyond the previous year's 10th or 90th percentile). "
              f"Contrast B, {years['B'][0]} to {years['B'][-1]}: a trade count above the previous year's 99th percentile at a new 1-hour extreme, against new 1-hour extremes without it; B2 uses the count relative to the previous {REL_WINDOW} minutes. "
              f"Each treated minute has one control in the same year and side, the same four-hour block, the same tercile of trailing 60-minute volatility (previous-year edges) and the same bin of the move's size (the five bins are the quintiles of the treated minutes' move size in that year and side, and controls outside the range of the treated minutes' move size are not eligible); a year with fewer than {MIN_FIRES} matched pairs in a cell is not scored for it; controls exclude the {CONTROL_BLOCK_MIN} minutes after any treated minute. "
-             f"The difference is the mean over pairs of (treated outcome minus control outcome) in points, under the last-print label and the 60-second VWAP label, with {100 - 100 * LEVEL:.0f}% intervals from errors clustered by UTC day and by episode (treated minutes less than {EPISODE_GAP_MIN} minutes apart form one), years pooled by pairs as the library tables pool by firings. "
-             f"Reversal rate is the share of oriented outcomes that point back against the move. Years held: years whose difference has the pooled sign, under the last print and under the VWAP label. The per-year range is shown at {H_PRIMARY} minutes, last print and VWAP.")
-    lines = [intro, "", "| contrast | side | horizon (min) | pairs | drawn without replacement | treated reversal rate | control reversal rate | difference, last print (points) | difference, VWAP (points) | years held (last print, VWAP) | per-year range at 15 min (last print; VWAP) |", "|---|---|---|---|---|---|---|---|---|---|---|"]
+             f"The difference is the mean over pairs of (treated outcome minus control outcome) in points, under the last-print label and the 60-second VWAP label, with {100 - 100 * LEVEL:.0f}% intervals from errors clustered by UTC day and by episode (treated minutes less than {EPISODE_GAP_MIN} minutes apart form one), years pooled by pairs as the library tables pool by firings. The adjusted difference regresses each cell-year's pair differences on the pair's differences in move size and volatility (ordinary least squares with an intercept) and takes the intercept, the difference at zero covariate difference; it is the primary estimate, and the raw matched difference follows it. "
+             f"Reversal rate is the share of oriented outcomes that point back against the move. Years held: years whose difference has the pooled sign, under the last print and under the VWAP label. Years held and the per-year range (shown at {H_PRIMARY} minutes, last print and VWAP) are those of the adjusted estimate.")
+    lines = [intro, "", "| contrast | side | horizon (min) | pairs | drawn without replacement | treated reversal rate | control reversal rate | difference adjusted, last print (points) [day interval] [episode interval] | difference adjusted, VWAP (points) | difference raw, last print (points) | difference raw, VWAP (points) | years held, adjusted (last print, VWAP) | per-year range, adjusted, at 15 min (last print; VWAP) |", "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     order = {k: n for n, k in enumerate(SIDES)}
     for r in sorted(G.itertuples(index=False), key=lambda r: (order[(r.contrast, r.side)], r.horizon)):
         d = r._asdict()
-        if not d.get("lp_years", 0):
+        if not d.get("lp_years", 0) or not d.get("lpa_years", 0):
             continue
-        rng = f"{d['lp_yr_min']:+.1f} to {d['lp_yr_max']:+.1f}; {d['vw_yr_min']:+.1f} to {d['vw_yr_max']:+.1f}" if r.horizon == H_PRIMARY and d.get("vw_years", 0) else "-"
+        rng = f"{d['lpa_yr_min']:+.1f} to {d['lpa_yr_max']:+.1f}; {d['vwa_yr_min']:+.1f} to {d['vwa_yr_max']:+.1f}" if r.horizon == H_PRIMARY and d.get("vwa_years", 0) else "-"
         lines.append(f"| {r.contrast} | {SIDE_NAME[(r.contrast, r.side)]} | {r.horizon} | {int(d['lp_n']):,} | {d['matched_without_replacement']*100:.1f}% | {d['lp_treated_rate']*100:.1f}% | {d['lp_control_rate']*100:.1f}% | "
-                     f"{_diff(d, 'lp')} | {_diff(d, 'vw')} | {int(d['lp_held'])}/{int(d['lp_years'])}, {int(d.get('vw_held', 0))}/{int(d.get('vw_years', 0))} | {rng} |")
+                     f"{_diff(d, 'lpa')} | {_diff(d, 'vwa')} | {_diff(d, 'lp')} | {_diff(d, 'vw')} | {int(d['lpa_held'])}/{int(d['lpa_years'])}, {int(d.get('vwa_held', 0))}/{int(d.get('vwa_years', 0))} | {rng} |")
     lines.append("")
     for v in V:
         g = G[(G.contrast == v["contrast"]) & (G.side == v["side"]) & (G.horizon == H_PRIMARY)]
         extra = f" Standardised difference of the move size after matching {v['move_smd']:+.3f}." if v.get("move_smd") is not None else ""
-        if len(g) and g.iloc[0].get("lp_years", 0):
+        if len(g) and g.iloc[0].get("lpa_years", 0) and g.iloc[0].get("vwa_years", 0):
             r = g.iloc[0]
-            extra += f" Last print {_diff(r, 'lp')}; VWAP {_diff(r, 'vw')}; years held {int(r.lp_held)}/{int(r.lp_years)} and {int(r.vw_held)}/{int(r.vw_years)}."
-        lines.append(f"{CONTRAST_NAME[v['contrast']]}, {SIDE_NAME[(v['contrast'], v['side'])]}, {H_PRIMARY} minutes, by the pre-registered rule: {v['verdict']} ({v['reason']}).{extra}\n")
+            extra += f" Adjusted estimate, last print {_diff(r, 'lpa')}; VWAP {_diff(r, 'vwa')}; years held {int(r.lpa_held)}/{int(r.lpa_years)} and {int(r.vwa_held)}/{int(r.vwa_years)}. Raw matched difference, last print {_diff(r, 'lp')}; VWAP {_diff(r, 'vw')}."
+        lines.append(f"{CONTRAST_NAME[v['contrast']]}, {SIDE_NAME[(v['contrast'], v['side'])]}, {H_PRIMARY} minutes, by the pre-registered rule applied to the adjusted estimate: {v['verdict']} ({v['reason']}).{extra}\n")
     rej = sum(x["p_holm"] <= LEVEL for x in V)
     adj = ", ".join("{}-{} {:.3f}".format(x["contrast"], x["side"], x["p_holm"]) for x in V)
     lines.append(f"Holm across the four primary cells at level {LEVEL}: {rej} of {len(V)} rejected (adjusted p {adj}).\n")
@@ -591,9 +618,9 @@ def render_main(G: pd.DataFrame, stats: pd.DataFrame, V: list[dict], years: dict
         lines.append(f"{CONTRAST_NAME[contrast]}, {SIDE_NAME[(contrast, side)]}: {m:,} of {tr:,} treated minutes matched, {(1 - s.with_replacement.sum() / m) * 100 if m else float('nan'):.1f}% of the pairs drawn without replacement; {int(s.unmatched.sum()):,} treated minutes unmatched, of which {int(s.unmatched_no_support.sum()):,} fall in a move-size bin with no eligible control.\n")
     for v in V:
         g = G[(G.contrast == v["contrast"]) & (G.side == v["side"]) & (G.horizon == H_PRIMARY)]
-        if len(g) and g.iloc[0].get("lp_years", 0):
+        if len(g) and g.iloc[0].get("lpa_years", 0) and g.iloc[0].get("vwa_years", 0):
             r = g.iloc[0]
-            lines.append(f"{CONTRAST_NAME[v['contrast']]}, {SIDE_NAME[(v['contrast'], v['side'])]}: per year at {H_PRIMARY} minutes the difference runs from {r.lp_yr_min:+.1f} to {r.lp_yr_max:+.1f} points under the last print and from {r.vw_yr_min:+.1f} to {r.vw_yr_max:+.1f} under the VWAP label, over {int(r.lp_years)} year{'s' if int(r.lp_years) != 1 else ''}.\n")
+            lines.append(f"{CONTRAST_NAME[v['contrast']]}, {SIDE_NAME[(v['contrast'], v['side'])]}: per year at {H_PRIMARY} minutes the adjusted difference runs from {r.lpa_yr_min:+.1f} to {r.lpa_yr_max:+.1f} points under the last print and from {r.vwa_yr_min:+.1f} to {r.vwa_yr_max:+.1f} under the VWAP label, over {int(r.lpa_years)} year{'s' if int(r.lpa_years) != 1 else ''}.\n")
     return "\n".join(lines).rstrip() + "\n"
 
 
