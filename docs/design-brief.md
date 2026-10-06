@@ -35,7 +35,7 @@ One model: BTC 15-minute direction. Data since 2026-09-01, about 96 windows a da
 
 - **More models** in other categories. The same sections repeat; the category matters only in the switcher and the header.
 - **A comparison view**: several models' cumulative accuracy on one chart, each against its own baseline. Categorical hues in a fixed order, at most six.
-- **A trade record**: what the owner actually traded against what the models said. Separate section or page; different visual weight (money, not accuracy).
+- **A trade record**: what the owner traded against what the models said. Separate section or page; different visual weight (money, not accuracy).
 - **Model report links**: each model's `docs/<model>.md` rendered as a page in the same system.
 
 ## Design system to produce

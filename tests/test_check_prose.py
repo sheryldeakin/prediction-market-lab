@@ -95,6 +95,9 @@ def test_two_hyphen_dash_and_other_pivots_and_start_positions():
     "The resamples yield the interval.",
     "In the test, the test confirms the shape.",
     "We demonstrate the interface in the page.",
+    "The coverage guarantee holds at every target.",     # conformal prediction's defined property
+    "A threshold that guarantees a coverage rate.",
+    "Reclaims, retests, confirmed breaks and the confirmed breakout.",   # library phrase names
 ])
 def test_technical_register_exemptions_do_not_fire(line):
     assert cp.check_text(line) == []

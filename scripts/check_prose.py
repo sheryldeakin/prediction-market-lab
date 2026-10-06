@@ -34,6 +34,11 @@ EXEMPT = [
     r"\btests? confirms?\b",
     # the one sanctioned use of demonstrate.
     r"\bdemonstrate the interface\b",
+    # conformal prediction's coverage guarantee is the method's defined property.
+    r"\bcoverage guarantee\b",
+    r"\bguarantees a coverage\b",
+    # "confirmed breakout" and "confirmed break" are price-action phrase names in the library.
+    r"\bconfirmed break(?:out|s)?\b",
 ]
 # Not listed because word boundaries already protect them: "confirmation"
 # (confirm), "every" (very), "quiet" (quite).
