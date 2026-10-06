@@ -1,12 +1,18 @@
 # BTC 15-minute direction: a boundary reversal, and what models add to it
 
-Everything the model was tested on, in the order it was done, regenerated on 2026-10-01 after an outside review (studies 20 to 29 are the review's questions, the sequence comparison and the hidden Markov predictors). Every table is generated into `results/btc_15m/` and spliced here by `scripts/update_readme.py`; the prose is written against those tables and checked before each commit. Bugs found on the way, and the decisions behind each study, are in [process.md](process.md).
+This report asks whether a model can predict, better than a simple rule, whether Bitcoin closes a quarter-hour window at or above its open. The answer it reaches: consecutive windows tend to reverse, a one-bit rule captures that reversal, and the fitted models add little or nothing beyond it.
+
+- **A one-bit rule is the number to beat at the open.** The rule calls the opposite of the previous window's direction; the first bullet under "What the tables and charts say" gives its accuracy and each model's gain over it.
+- **After the open, the lead over the open does the work.** The bullet on the lead in that list gives the accuracy it reaches at each minute; no model beats it.
+- **The probabilities at the open are too extreme.** The last bullet in that list gives the calibration slope.
+
+Everything the model was tested on is here in the order it was done, regenerated on 2026-10-01 after an outside review (studies 20 to 29 are the review's questions, the sequence comparison and the hidden Markov predictors). Every table is generated into `results/btc_15m/` and spliced here by `scripts/update_readme.py`. The prose is written against those tables and checked before each commit. [process.md](process.md) records the bugs found on the way and the decisions behind each study.
 
 ## The problem
 
-Predicts whether Bitcoin closes a 15-minute window (aligned to the quarter hour) at or above where it opened. Data is free public 1-minute candles from Binance, including the taker-buy volume that gives a per-minute measure of order flow.
+The model predicts whether Bitcoin closes a 15-minute window (aligned to the quarter hour) at or above where it opened. The data are free public 1-minute candles from Binance, including the taker-buy volume, a per-minute measure of order flow.
 
-The question is asked at several points inside the window: at the open (minute 0, nothing of the window seen yet) and 1, 3, 5 and 8 minutes in. Every model is compared with a one-feature baseline that knows the one thing most worth knowing at that minute. At the open that is the previous window's direction (back-to-back windows share a boundary print, so a reversal between them is the first thing to rule out). After the open it is the current lead over the open, scaled by the volatility expected over the minutes that remain. A model that cannot beat its one-feature baseline has found nothing the obvious thing does not already say.
+The question is asked at the open (minute 0, nothing of the window seen yet) and at 1, 3, 5 and 8 minutes in. Every model is compared with a one-feature baseline that holds the most useful single fact at that minute. At the open the baseline is the previous window's direction. Back-to-back windows share a boundary print, so a reversal between them is the first thing to rule out. After the open the baseline is the current lead over the open, scaled by the volatility expected over the minutes that remain. A model that cannot beat its one-feature baseline has found nothing the baseline does not already say.
 
 Evaluation is walk-forward by calendar month: each test month is predicted by a model trained only on earlier months. The first three months are training only.
 
@@ -25,7 +31,19 @@ Evaluation is walk-forward by calendar month: each test month is predicted by a 
 | xgb-price | XGBoost, depth 3 (GPU when available) | 15 price features |
 | xgb-all | XGBoost, depth 3 | 15 price + 9 order-flow features |
 
-Price features: lead over the open, returns over the prior 5/15/60/240 minutes, the last four windows' returns, realised volatility at three horizons, position in the 4-hour range, hour and weekday. Order-flow features: taker-buy share of volume over 1/3/5/15/60 minutes, volume and trade-count ratios to the 24-hour average, mean trade size ratio.
+The features fall into two groups.
+
+- Price features:
+  - lead over the open
+  - returns over the prior 5, 15, 60 and 240 minutes
+  - the last four windows' returns
+  - realised volatility at three horizons
+  - position in the 4-hour range
+  - hour and weekday
+- Order-flow features:
+  - taker-buy share of volume over 1, 3, 5, 15 and 60 minutes
+  - volume and trade-count ratios to the 24-hour average
+  - mean trade size ratio
 
 ## Main results
 
@@ -85,16 +103,16 @@ Walk-forward results, 2025-10 to 2026-08, test months after the first three.
 
 What the tables and charts say:
 
-- At the open the thing to beat is one bit: consecutive windows tend to go opposite ways, and calling the opposite of the previous window is right 52.2% of the time (the prev-window row). Earlier versions of this report compared the models with the 50.1% majority rate and called the forest's 53% a 3-point signal; against the one-bit rule it is +0.44 points, with intervals of [-0.25, +1.18] on day blocks and [-0.30, +1.04] on month blocks, the forest beating the rule on 54% of days (sign-test p 0.10); the best of the five fitted models, the logistic regression, is +0.69 [-0.01, +1.37], and +0.52 [-0.17, +1.21] after the selection correction of study 23. Studies 20 to 26 show that the one bit is the stable part and the increment is not.
-- What the models add is simple. Logistic regression on the same features does as well as the tree models at the open, and with the indicator bank (study 1) every model lands about a point above the one-bit rule; nothing a linear model misses is being found.
-- The reversal is not noise in the shared boundary print. Measuring the label from one minute in leaves 51.9% for the model, but study 21 relabels every window from 60-second volume-weighted prices with no shared trades and the reversal rule still scores 52.5%.
-- Once the window is under way, the current lead over the open, scaled by the volatility left in the window, explains the accuracy: 66.4% at minute 3 and 77.5% at minute 8 from that one number. No model beats it, and the direction of the remaining path is a coin flip (study 10). The tree models improve the probabilities (lower log loss) but not the direction calls.
+- At the open the number to beat is one bit: consecutive windows tend to go opposite ways, and calling the opposite of the previous window is right 52.2% of the time (the prev-window row). Earlier versions of this report compared the models with the 50.1% majority rate and called the forest's 53% a 3-point signal. Against the one-bit rule the forest is +0.44 points, with intervals of [-0.25, +1.18] on day blocks and [-0.30, +1.04] on month blocks, and it beats the rule on 54% of days (sign-test p 0.10). The best of the five fitted models, the logistic regression, is +0.69 [-0.01, +1.37], and +0.52 [-0.17, +1.21] after the selection correction of study 23. Studies 20 to 26 show that the one bit is the stable part and the increment is not.
+- Logistic regression on the same features does as well as the tree models at the open. With the indicator bank (study 1) every model lands about a point above the one-bit rule. Nothing a linear model misses is being found.
+- The reversal survives removing the shared boundary print. Measuring the label from one minute in leaves 51.9% for the model. Study 21 relabels every window from 60-second volume-weighted prices with no shared trades, and the reversal rule still scores 52.5%.
+- Once the window is under way, the current lead over the open, scaled by the volatility left in the window, explains the accuracy: 66.4% at minute 3 and 77.5% at minute 8 from that one number. No model beats it. The direction of the remaining path is a coin flip (study 10). The tree models improve the probabilities (lower log loss) but not the direction calls.
 - Minute-level order flow (the taker-buy share) adds a few tenths of a point at the open with intervals across zero; the indicator bank is the only feature addition whose interval excludes zero on day blocks (study 1).
 - The probabilities at the open are too extreme: the calibration slope is 0.63 [0.52, 0.76] where 1 is calibrated (study 12), so a raw 0.55 does not mean 55%. Platt scaling fixes the slope. At minute 3 the raw probabilities are calibrated (slope 0.99).
 
 ## Forward log
 
-The backtest above can be re-run and tuned; the forward log cannot. `models/btc_15m/log.py` freezes models trained through a cutoff month and scores every later window as Binance publishes its daily files, appending each window to `results/btc_15m/predictions.csv` under a hash chain (`--verify` checks it) with a manifest of what the frozen models are. September 2026 is an out-of-time holdout rather than a forward month: the log was first written after the month had passed. The frozen models were re-fitted on the same training months after the review's bug fixes (the weekday feature had been coded wrong), and September was scored again under the new model id beside the earlier rows, not over them; the block below reads the current models' rows. The forward log proper begins with October 2026, one model, no revisions.
+The backtest above can be re-run and tuned; the forward log cannot. `models/btc_15m/log.py` freezes models trained through a cutoff month and scores every later window as Binance publishes its daily files. It appends each window to `results/btc_15m/predictions.csv` under a hash chain (`--verify` checks it), with a manifest of what the frozen models are. September 2026 is an out-of-time holdout rather than a forward month, because the log was first written after the month had passed. After the review's bug fixes (the weekday feature had been coded wrong), the frozen models were re-fitted on the same training months. September was scored again under the new model id, beside the earlier rows and not over them. The block below reads the current models' rows. The forward log proper begins with October 2026: one model, no revisions.
 
 ![forward log](../results/btc_15m/forward_log.png)
 
@@ -117,19 +135,19 @@ Forward log (from October 2026): 2026-10-01 to 2026-10-05.
 
 <!-- forward:end -->
 
-On September's 2,880 windows the re-fitted frozen forest scored 50.9% at the open, below the one-bit rule's backtest level, while the stable event rules of study 19 kept their direction in 562 of 666 cases (study 20 gives the null for that count) and the strongest-event rule of study 17 scored 52.4% [50.6, 54.4]. An earlier version of this report read that as "signal intact, model unstable"; the review pointed out that the rules were selected on data through August and the portfolio built after the 50.4% was known, so the reading was made in the direction the author hoped. The adopted reading: September failed to reject the one-bit reversal and the fitted forest failed to show an increment over it, which is what the 2025 holdout (study 26) and the phase study (study 22) also say. The minute-3 model is where the backtest said it would be, which is where the lead puts it.
+On September's 2,880 windows the re-fitted frozen forest scored 50.9% at the open, below the one-bit rule's backtest level. The stable event rules of study 19 kept their direction in 562 of 666 cases (study 20 gives the null for that count), and the strongest-event rule of study 17 scored 52.4% [50.6, 54.4]. An earlier version of this report read that as "signal intact, model unstable". The review pointed out that the rules were selected on data through August and the portfolio was built after the 50.4% was known, so the reading had been made in the direction the author hoped. The adopted reading: September failed to reject the one-bit reversal, and the fitted forest failed to show an increment over it. The 2025 holdout (study 26) and the phase study (study 22) say the same. The minute-3 model is where the backtest said it would be, which is where the lead puts it.
 
 ## Checks the numbers pass
 
 - **No lookahead.** Features are pure functions of past candles. `tests/test_features.py` multiplies every candle from the entry minute onward by three and asserts the features do not change, at five different entry minutes.
-- **Uncertainty that respects time.** Windows in one day share conditions and neighbouring windows are correlated, so every interval resamples whole days (and, for the headline, whole months), the model-against-baseline test works on daily differences with random sign flips, and the significance test rotates the label sequence within each month rather than shuffling it. `tests/test_stats.py` checks that the day bootstrap widens when a day's windows are identical, that the month bootstrap is wider when months differ, and that the rotation test gives no credit for the labels' own runs. (A within-day label permutation was used until 2026-10-01; it ignored the dependence between neighbouring windows and was retired.)
+- **Uncertainty that respects time.** Windows in one day share conditions, and neighbouring windows are correlated. So every interval resamples whole days (and, for the headline, whole months). The model-against-baseline test works on daily differences with random sign flips. The significance test rotates the label sequence within each month rather than shuffling it. `tests/test_stats.py` checks that the day bootstrap widens when a day's windows are identical, that the month bootstrap is wider when months differ, and that the rotation test gives no credit for the labels' own runs. (A within-day label permutation was used until 2026-10-01; it ignored the dependence between neighbouring windows and was retired.)
 - **One-feature baselines at the same moment.** Every model is reported next to the previous window's direction at the open and the lead z-score after it, on the same windows.
 - **Shared-boundary check.** The label is re-measured from one minute in, and study 21 re-measures it from 60-second volume-weighted prices, to see how much of the open-of-window signal is boundary noise (little: the reversal survives both).
 - **Numbers come from scripts.** The tables in this file are spliced from `results/` by `scripts/update_readme.py`; the charts are drawn from the same CSVs.
 
 ## Follow-up experiments
 
-Six follow-ups, each with the reason it was worth running and what it found; all tables carry the one-feature baseline on the same windows. Tables are generated into `results/btc_15m/` and spliced here.
+Six follow-ups, each with the reason it was worth running and what it found. All tables carry the one-feature baseline on the same windows. The tables are generated into `results/btc_15m/` and spliced here.
 
 **1. Feature sets, including an indicator bank and tick-level order flow.** Do classic indicators or tick-level order flow add anything to price features? At the open the indicator bank adds a small gain and tick flow adds nothing reliable; three minutes in, nothing beats the lead.
 
@@ -822,7 +840,19 @@ The learned trees say the same thing in one line: the root split in six of eight
 
 Three minutes in, the strongest "events" are the lead in disguise (a spike up in the last five minutes, which then lies inside the window, is followed by an up close 82% of the time). The conditions that were reversal signals at the open have flipped sign for that reason.
 
-**17. Acting only when a strong event fires, and the September check.** The stable events from study 16 turned into three rules (act on any stable event with the strongest deciding; only events with a 5-point deviation or more; only when every firing event agrees), scored in-sample on the backtest and then on September 2026, which the event search never saw. The rules were selected, signed and thresholded on data through August; September tests whether they held, not whether they were found honestly, and a rule chosen from a stable set is not "a rule with no fitted parameters", as an earlier version of this report called it.
+**17. Acting only when a strong event fires, and the September check.** This study asked whether acting only when a strong event fires beats acting on every window, and whether such rules still worked on a month the event search never saw. The reversal pattern held in September, but the rules show nothing beyond the one-bit reversal.
+
+- **The reversal pattern held in September.** The "held?" column of the second table marks which stable events kept their direction, and the paragraph under the tables counts them.
+- **The rules are the one-bit reversal with extra conditions, and September's intervals are wide.** The interval columns of the first table show the width; the paragraph under the tables gives the reading.
+- **September tests whether the rules persisted.** They were chosen using data through August.
+
+The stable events from study 16 became three rules, scored in-sample on the backtest and then on September 2026, which the event search never saw:
+
+- act on any stable event, with the strongest deciding;
+- act only on events with a 5-point deviation or more;
+- act only when every firing event agrees.
+
+The rules were selected, signed and thresholded on data through August. September tests whether they held, not whether they were found honestly. A rule chosen from a stable set is not "a rule with no fitted parameters", as an earlier version of this report called it.
 
 <!-- table:event_portfolio:start -->
 Acting only when a stable event fires. Stable events are found on 2025-10 to 2026-08 (so the backtest rows are in-sample); the forward rows are 2026-09-01 to 2026-09-30, never seen by the event search. Under a hypothetical cost model (buy the favoured side at 0.5 plus half a 1c spread, pay a 1.75c fee, receive 1 if right) the break-even accuracy is 52.25%. These are sensitivity figures, not a backtest of trades: no venue settles on a Binance last print, and the price model is an assumption. Last column: accuracy minus break-even, in points.
@@ -872,9 +902,15 @@ Each stable event on its own: the deviation of the up-rate from the base rate in
 | 0 | low volatility (vol60 in bottom decile) | up | +1.1 | 593 | -1.2 | flipped |
 <!-- table:event_portfolio:end -->
 
-Two results. First, the reversal structure held in September: 25 of the 30 stable events kept their direction, and the rule that acts only on events with a 5-point deviation scored 54.7% [51.1, 58.5] on the 21% of September windows it selected, against 56.0% in-sample. Second, the plain "act on every window, strongest event decides" rule scored 52.4% [50.6, 54.4] on all of September, while the re-fitted frozen forest scored 50.9% on the same windows. An earlier version read that as the signal surviving where the model did not; the honest reading is narrower. The rule portfolio is the one-bit reversal with extra conditions, its September interval includes everything from 50.6% to 54.4%, and the forest's miss is one month of a model whose increment over the one bit was never established (studies 22, 23 and 26). What September does say, with the null of study 20 behind it, is that the reversal did not go away.
+The reversal structure held in September: 25 of the 30 stable events kept their direction, and the rule that acts only on events with a 5-point deviation scored 54.7% [51.1, 58.5] on the 21% of September windows it selected, against 56.0% in-sample. The plain "act on every window, strongest event decides" rule scored 52.4% [50.6, 54.4] on all of September, while the re-fitted frozen forest scored 50.9% on the same windows. An earlier version read that as the signal surviving where the model did not. The reading that holds is narrower. The rule portfolio is the one-bit reversal with extra conditions, its September interval includes everything from 50.6% to 54.4%, and the forest's miss is one month of a model whose increment over the one bit was never established (studies 22, 23 and 26). September shows, with the null of study 20 behind it, that the reversal did not go away.
 
-**18. Patterns a person would not name: rules mined from a forest, and shapes of the recent path.** A random forest fit on the first five months is read leaf by leaf: each leaf is a rule of two to four conditions. Leaves with at least 300 training windows and a lift of three points become candidates and are scored on the last six months, which the forest never saw, with the same correction, and a stability check that compares each scoring month with the direction the rule had when it was mined. Separately, the last 60 minutes before each open are scaled by their own volatility and clustered into 24 shapes on the first five months, and each shape is scored on the last six.
+**18. Patterns a person would not name: rules mined from a forest, and shapes of the recent path.** This study asked whether rules read out of a random forest, and shapes of the last hour of price, hold up on months the forest never saw. The mined rules hold their direction and are sharper than single events, but they restate the reversal effect; the shapes found nothing that holds its mined direction.
+
+- **The mined rules are the reversal effect with several conditions required at once.** The "vs base" and "verdict" columns of the first table show the size and stability; the first paragraph under the tables gives the reading.
+- **Each rule fires on few windows, and overlapping rules are not independent chances.** The "share" column shows how few; the null-search study below measures what chance alone produces.
+- **The shapes of the last hour found nothing that holds its direction.** The second table's "months agreeing" and "verdict" columns show it.
+
+A random forest fit on the first five months is read leaf by leaf: each leaf is a rule of two to four conditions. Leaves with at least 300 training windows and a lift of three points become candidates. They are scored on the last six months, which the forest never saw, with a false-discovery correction and a stability check that compares each scoring month with the direction the rule had when it was mined. Separately, the last 60 minutes before each open are scaled by their own volatility and clustered into 24 shapes on the first five months, and each shape is scored on the last six.
 
 <!-- table:patterns:start -->
 Rules mined from a random forest fit on 2025-10 to 2026-02, scored on 2026-03 to 2026-08 (never seen by the forest). Up-rate when the rule fires, day-block 95% interval, p for firing against non-firing windows with day-clustered errors, false-discovery correction across all 419 candidate rules, and month-by-month stability (at least three quarters of months agreeing). Only rules that survive the correction are listed.
@@ -939,11 +975,23 @@ Shapes of the last 60 minutes before the open (24 clusters found on the search m
 | shape 8: net -0.6 sd; first quarter down, second up, third flat, last quarter flat | 625 | 3.5% | 49.6% [45.7, 53.4] | -0.0 | 0.985 |  | 3/6 | -3.3 -7.2 +4.4 +5.2 +0.3 -0.3 |  |
 <!-- table:patterns:end -->
 
-The mined rules are sharper than any single event. Of 419 candidates, 262 survive the correction and 244 hold their mined direction month by month; the strongest, "price above its Bollinger midline, taker buying dominant, hour-RSI above 55 and trades larger than usual", is followed by an up window only 35% of the time on the 3% of windows it selects. Half the stable rules mention the hour-RSI and more than half mention order flow: they are the reversal effect of study 16 sharpened by requiring two or three of its signs at once, which is what a forest is for. They come at a cost the table shows: each fires on 2% to 8% of windows, and 244 overlapping rules are not 244 independent chances (study 20 puts a number on that).
+The mined rules are sharper than any single event. Of 419 candidates, 262 survive the correction and 244 hold their mined direction month by month. The strongest, "price above its Bollinger midline, taker buying dominant, hour-RSI above 55 and trades larger than usual", is followed by an up window only 35% of the time, on the 3% of windows it selects. Half the stable rules mention the hour-RSI and more than half mention order flow. They are the reversal effect of study 16 sharpened by requiring two or three of its signs at once. The cost shows in the table: each rule fires on 2% to 8% of windows, and 244 overlapping rules are not 244 independent chances (study 20 puts a number on that).
 
-The shapes found nothing that holds its mined direction. One shape (a path that rose, paused, rose again and fell in the last quarter) is followed by fewer up windows in every scoring month, but the mining half had it the other way, so it fails the stability check as now defined; it is the "just went up" pattern in another costume either way. The shape of the last hour on its own carries less than the indicators built from it.
+The shapes found nothing that holds its mined direction. One shape (a path that rose, paused, rose again and fell in the last quarter) is followed by fewer up windows in every scoring month. The mining half had it the other way, so it fails the stability check as now defined. Either way it is the "just went up" pattern in another form. The shape of the last hour on its own carries less than the indicators built from it.
 
-**19. A wider event search, and one model built from the good bits.** Two follow-ups to the rule work. The search was widened to 1,506 candidates: threshold sweeps (RSI at four levels each side, range position at three, spikes at four sizes, and so on), every pair of the frequent events, and every event restricted to one trading session. All were corrected as one family, stability-checked, and re-scored on September. Then the "good bits" were combined the only honest way: for each test month a forest mined on earlier months supplies rules, the hand-named events are added, and an L1-regularised logistic regression on those on/off columns plus the raw features is fit on earlier months, so nothing about the test month is used before it is scored.
+**19. A wider event search, and one model built from the good bits.** This study asked whether a wider search for event rules finds sharper conditions, and whether one model built from the rules and events beats the forest. The wider search finds sharper conditions that are one reversal effect seen many ways, and the combined model does not beat the forest.
+
+- **The wider search finds many surviving conditions, and they are one effect seen through overlapping conditions.** The sentence above the first table gives the counts; the paragraph under the second table gives the reading.
+- **Most stable conditions kept their direction in September.** The "held?" column of the first table marks each one.
+- **The combined model does not beat the forest at the open and matches it at the later entry minute.** The "vs forest" column of the second table gives the differences.
+
+The search was widened to 1,506 candidates of three kinds:
+
+- threshold sweeps (RSI at four levels each side, range position at three, spikes at four sizes, and so on);
+- every pair of the frequent events;
+- every event restricted to one trading session.
+
+All candidates were corrected as one family, stability-checked, and re-scored on September. The rules and events were then combined into one model without using the test month. For each test month a forest mined on earlier months supplies rules, the hand-named events are added, and an L1-regularised logistic regression on those on/off columns plus the raw features is fit on earlier months. The model is then scored on the test month.
 
 <!-- table:events2:start -->
 Wider event search at minute 0: 1506 candidates (threshold sweeps, pairs of frequent events, session-conditioned events), 913 with at least 300 firings, 823 surviving Benjamini-Hochberg at 10%, 745 also stable month by month. Search period 2025-10 to 2026-08; forward column is 2026-09-01 to 2026-09-30, never seen by the search. Of the stable survivors with enough September firings, 573 kept their direction and 91 flipped. Top 40 by deviation.
@@ -1026,15 +1074,35 @@ What the regularisation kept, per test month: candidate rule and event columns, 
 | 3 | 2026-08 | 609 | 141 | rule: atr14 <= 6.54 and lead > 13.2 (+0.42); rule: 5.93 < lead <= 23.4 and vol15 <= 6.56 (+0.21); rule: flow3 > 0.218 and lead > 4.64 and ret5 > -0.996 (+0.20); rule: bb_pctb > 0.787 and lead > 13 and win1 <= 5.18 (+0.18); rule: atr14 <= 4.69 and -11.6 < lead <= -4.82 (-0.18) |
 <!-- table:rulefit:end -->
 
-The wider search finds sharper conditions, at a cost. Of 913 candidates with enough firings, 823 survive the correction and 745 are stable, which is itself the tell: these are not 745 findings but one reversal effect seen through hundreds of overlapping conditions (study 20 re-runs this search on rotated labels and finds a median of zero survivors, so the effect is real and the count is inflated by overlap, both at once). The sharpest pairs sit at 34% to 38% up (hour-RSI above 60 with taker buying dominant; RSI14 above 65 with hour-RSI above 60; price at its range top with a spike or with large trades), but each fires on 1% to 2.5% of windows, so September gives them only 30 to 80 windows each. Across the stable survivors with enough September firings, 573 kept their direction and 91 flipped; study 20 gives the null for that count.
+The wider search finds sharper conditions, at a cost. Of 913 candidates with enough firings, 823 survive the correction and 745 are stable. These are not 745 findings but one reversal effect seen through hundreds of overlapping conditions. Study 20 re-runs this search on rotated labels and finds a median of zero survivors, so the effect is real and the count is inflated by overlap, both at once.
 
-Combining the good bits does not beat the forest: 52.5% against 53.5% at the open, and the difference is on the wrong side of zero (-0.93, interval -1.52 to -0.40). Three minutes in, it matches the forest and the lead z-score. The regularisation keeps 71 to 168 of several hundred candidate columns each month and the largest weights are the same reversal rules every month, so the model is sensible; it is simply a restricted version of the forest it was mined from, and a restriction cannot add information. The value of the rule work is that the signal now has a readable form and a mechanism, not a better number.
+The sharpest pairs sit at 34% to 38% up:
+
+- hour-RSI above 60 with taker buying dominant
+- RSI14 above 65 with hour-RSI above 60
+- price at its range top with a spike or with large trades
+
+Each pair fires on 1% to 2.5% of windows, so September gives each only 30 to 80 windows. Across the stable survivors with enough September firings, 573 kept their direction and 91 flipped; study 20 gives the null for that count.
+
+Combining the rules and events does not beat the forest: 52.5% against 53.5% at the open, and the difference is below zero (-0.93, interval -1.52 to -0.40). Three minutes in, it matches the forest and the lead z-score. The regularisation keeps 71 to 168 of several hundred candidate columns each month, and the largest weights are the same reversal rules every month, so the model is sensible. It is a restricted version of the forest it was mined from, and a restriction cannot add information. The rule work gives the signal a readable form and a mechanism, not a better number.
 
 ## After the review
 
-An outside review of the repo (three independent readers, 2026-09-30) found fifteen bugs, none of them a lookahead in the features or the label, and three problems with the argument: the baseline at the open was too weak, the permutation test ignored the dependence between neighbouring windows, and the September result had been read in the direction the author hoped. Everything above was regenerated after the fixes; the studies below were added to answer the review's questions. The bugs and what each changed are in [process.md](process.md).
+An outside review of the repo (three independent readers, 2026-09-30) found fifteen bugs, none of them a lookahead in the features or the label, and three problems with the argument:
 
-**20. The event search against a null that finds nothing.** The wide search of study 19 tests about 900 overlapping candidates, and a false-discovery correction assumes they are independent or positively dependent, which hundreds of pairs of the same events are not. So the whole search was re-run 200 times on labels rotated within each month (each month keeps its base rate and its runs of up and down windows; only the alignment with the features is broken), and the real counts are compared with that distribution. The single-step max-T adjustment, which holds under any dependence, gives each candidate a search-wide p.
+- The baseline at the open was too weak.
+- The permutation test ignored the dependence between neighbouring windows.
+- The September result had been read in the direction the author hoped.
+
+Everything above was regenerated after the fixes. The studies below were added to answer the review's questions. The bugs and what each changed are in [process.md](process.md).
+
+**20. The event search against a null that finds nothing.** This study asked whether a wide search over hundreds of overlapping event rules finds more than chance would. It does: the same search on labels with the link to the features broken finds almost nothing, so the reversal structure is not an artefact of the search.
+
+- **Chance alone finds almost no surviving rules.** The "null median" and "null 95th percentile" columns of the table show it against the "real" column.
+- **The real search lies far outside the chance range.** The last column of the table, and its last row, show how rarely chance reaches the real values.
+- **Most rules also kept their direction in September, well above what rotated labels give.** The paragraph under the table compares the two counts.
+
+A false-discovery correction assumes the candidates are independent or positively dependent, and hundreds of pairs of the same events are not. So the wide search of study 19, about 900 overlapping candidates, was re-run 200 times on labels rotated within each month. Each month keeps its base rate and its runs of up and down windows; only the alignment with the features is broken. The real counts are compared with the distribution over those runs. The single-step max-T adjustment, which holds under any dependence, gives each candidate a search-wide p.
 
 <!-- table:search_null:start -->
 The wide event search at minute 0 (913 candidates with at least 300 firings, 2025-10 to 2026-08) re-run 200 times on labels rotated within each month, which keeps each month's base rate and runs but breaks the link to the features. The rows compare the real search with that null distribution.
@@ -1050,9 +1118,18 @@ Adjusted for the whole search (single-step max-T over 200 null runs, valid under
 September (2026-09-01 to 2026-09-30): of the 745 stable survivors, 666 fired at least 30 times and 562 kept their direction. With September's labels rotated within the month (effects gone, overlap between candidates kept) the held count has median 330 and 95th percentile 492 over 1000 draws; 0.4% of draws reach 562. If every effect had kept its backtest size, about 604 would hold (this expectation treats windows as independent, so it is approximate).
 <!-- table:search_null:end -->
 
-The reversal structure is not a search artefact. The null search finds a median of zero survivors and a 95th percentile of three (one extreme run reached 640 surviving and 147 stable); the real search finds 823 surviving and 745 stable, and the largest z in the real search is far outside the null range. Hundreds of candidates survive a correction that holds under any dependence. September is the same story told forward: 562 of 666 rules kept their direction, where rotated September labels give a median of 330 and effects at full backtest size would give about 604. The structure is one effect described hundreds of ways, but the effect is there and it persisted.
+The null search finds a median of zero survivors and a 95th percentile of three (one extreme run reached 640 surviving and 147 stable). The real search finds 823 surviving and 745 stable, and its largest z is far outside the null range. Hundreds of candidates survive a correction that holds under any dependence. September gives the same result forward: 562 of 666 rules kept their direction, where rotated September labels give a median of 330 and effects at full backtest size would give about 604. The structure is one effect described hundreds of ways, but the effect is there and it persisted.
 
-**21. A label someone could settle on.** The main label compares two prints, the first minute's open and the last minute's close, and consecutive windows share the boundary print. If the reversal were noise in that shared print, a label built from averaged prices would remove it. Every window was relabelled from 60-second volume-weighted prices in the tick data, two ways: VWAPs ending at each boundary (the previous window's close reference is this window's open reference, like a settlement average taken before the boundary), and VWAPs inside the window's first and last minute, which share no trades at all with the neighbours.
+**21. A label someone could settle on.** This study asked whether the reversal is noise in the boundary print that consecutive windows share. It is not: relabelling every window from averaged prices leaves the reversal in place.
+
+- **The reversal survives a label with no shared trades.** The table compares the three labels, and the first sentence under it gives the result.
+- **The forest's gain over the rule is similar under every label, and its day intervals touch zero.** The last column of the table shows it.
+- **The effect belongs to Bitcoin's price path across quarter-hour boundaries, not to Binance's last print.**
+
+The main label compares two prints, the first minute's open and the last minute's close, and consecutive windows share the boundary print. If the reversal were noise in that shared print, a label built from averaged prices would remove it. Every window was relabelled from 60-second volume-weighted average prices (VWAPs) in the tick data, two ways:
+
+- VWAPs ending at each boundary: the previous window's close reference is this window's open reference, like a settlement average taken before the boundary;
+- VWAPs inside the window's first and last minute, which share no trades at all with the neighbours.
 
 <!-- table:settlement:start -->
 Minute-0 accuracy under three labels, 2025-10 to 2026-08, walk-forward by month. 'Last print' is the main label; the VWAP labels use 60-second volume-weighted prices from the tick data, either ending at each boundary or inside the window's first and last minute. 'Own previous label' calls the opposite of (or the same as, whichever the training months favour) the previous window's label under the same definition. Intervals: day blocks, then month blocks. The last column is the forest minus the own-previous-label baseline, day-block interval, and the share of days the forest wins.
@@ -1070,9 +1147,15 @@ Minute-0 accuracy under three labels, 2025-10 to 2026-08, walk-forward by month.
 | vwap_in | 93.0% | 49.7% | forest | 23328 | 53.18% [52.51, 53.82] [52.57, 53.82] | +0.63 [-0.06, +1.37], days better 53% |
 <!-- table:settlement:end -->
 
-The reversal survives both. Under the label with no shared trades the one-bit rule (call the opposite of the previous window's label under the same definition) is 52.5%, against 52.2% for the main label. So the effect is a property of Bitcoin's price path across 15-minute boundaries, not of Binance's last print. The forest's increment over the rule is 0.6 to 0.7 points under every label, with day intervals that touch zero.
+The reversal survives both. Under the label with no shared trades the one-bit rule (call the opposite of the previous window's label under the same definition) is 52.5%, against 52.2% for the main label. The effect is a property of Bitcoin's price path across 15-minute boundaries, not of Binance's last print. The forest's increment over the rule is 0.6 to 0.7 points under every label, with day intervals that touch zero.
 
-**22. Where the edge is, in minutes and in grid position.** Each window's call at the open signs every minute's return, so the mean signed return per minute says which minutes move the way the call said. The same comparison was then run with the 15-minute grid shifted 1 to 14 minutes off the quarter hour.
+**22. Where the edge is, in minutes and in grid position.** This study asked in which minutes of the window the call at the open is right, and whether the quarter-hour grid itself matters. The forest knows more than the one-bit rule only in the first two minutes after the open, and the reversal holds at every grid position.
+
+- **The forest's knowledge beyond the rule sits in the first two minutes after the open.** The signed-return column of the per-minute table shows it, and the first paragraph under the tables gives the reading.
+- **Late in the window both calls are on the wrong side of the move more often than not.** The "moved with the call" column of the same table shows it.
+- **The reversal holds at every grid position, so it is not tied to the quarter hour.** The phase table's prev-window column shows it.
+
+Each window's call at the open signs every minute's return, so the mean signed return per minute says which minutes move the way the call said. The same comparison was then run with the 15-minute grid shifted by 1 to 14 minutes off the quarter hour.
 
 <!-- table:boundary:start -->
 Where the minute-0 edge lives, 2025-10 to 2026-08, walk-forward by month. Each window's call at the open (forest on price + flow, and the prev-window baseline) signs every minute's return: positive means the minute moved the way the call said. Minute 1 runs from the open price to the first close. Mean signed return in basis points with a day-block 95% interval, and the share of windows in which that minute moved with the call.
@@ -1138,9 +1221,15 @@ By phase: windows starting this many minutes after the quarter hour (0 is the cl
 | 14 | 23327 | 52.13% [51.52, 52.74] | 52.41% [51.79, 52.99] | +0.28 [-0.41, +0.99] | 52% |
 <!-- table:boundary:end -->
 
-What the forest knows beyond the one-bit rule is in the first two minutes after the open (about 0.2 and 0.1 basis points of signed return) and nowhere else; from minute 8 on, both the forest and the rule are on the wrong side of the move more often than not, which is the window's own mean reversion. The boundary-gap split is empty: Binance candles open at the previous close by construction, so it cannot separate boundary noise from the rest, and the VWAP study above does that job. The phase table is the one that settles the review's question. The reversal rule scores between 51.3% and 52.7% at every one of the 15 grid positions, so this is a property of any 15-minute boundary, not of the quarter hour where markets settle. And the forest's increment at phase 0, +0.44 points, is not special: across the 15 phases it runs from -0.4 to +1.0 with no pattern, which is what an increment of about zero looks like when measured 15 times.
+The forest knows more than the one-bit rule only in the first two minutes after the open (about 0.2 and 0.1 basis points of signed return). From minute 8 on, both the forest and the rule are on the wrong side of the move more often than not, which is the window's own mean reversion. The boundary-gap split is empty: Binance candles open at the previous close by construction, so the split cannot separate boundary noise from the rest. Study 21 (the VWAP labels) does that job. The phase table answers the review's question. The reversal rule scores between 51.3% and 52.7% at every one of the 15 grid positions, so the effect belongs to any 15-minute boundary, not to the quarter hour where markets settle. The forest's increment at phase 0, +0.44 points, is not special: across the 15 phases it runs from -0.4 to +1.0 with no pattern, which is what an increment of about zero looks like when measured 15 times.
 
-**23. The headline corrected for picking the best model.** The model reported as best was chosen from several, and the best of several noisy estimates is biased upward. Resampling days, re-picking the winner in each resample and measuring how far it sits above its own original value estimates that bias directly.
+**23. The headline corrected for picking the best model.** This study asked how much of the best fitted model's gain over the one-bit rule comes from picking the best of several. The correction removes part of the gain and leaves what remains indistinguishable from zero.
+
+- **The corrected gain at the open is smaller than the raw gain.** The table lists both, and the first paragraph under it states them.
+- **The corrected gain's interval still includes zero.**
+- **Later in the window the best model is level with the lead score before and after the correction.**
+
+The model reported as best was chosen from several, and the best of several noisy estimates is biased upward. Resampling days, re-picking the winner in each resample and measuring how far it sits above its own original value estimates that bias directly.
 
 <!-- table:shrinkage:start -->
 The best model's accuracy increment over the one-feature baseline, corrected for having picked the best of several models. Selection bias is estimated by resampling days, re-picking the best model in each resample, and measuring how far that winner sits above its own original increment. Points of accuracy; the interval is day-block bootstrap on the corrected value.
@@ -1151,9 +1240,15 @@ The best model's accuracy increment over the one-feature baseline, corrected for
 | 3 | lead-z | 5 | hgb-all | +0.00 | 0.05 | -0.05 [-0.34, +0.24] |
 <!-- table:shrinkage:end -->
 
-Of the five fitted models at the open, the logistic regression is best at +0.69 points over the one-bit rule; the estimated selection bias is 0.16 points, so the corrected increment is +0.52 [-0.17, +1.21]. At minute 3 the best model is level with the lead z-score before and after the correction (-0.05 [-0.34, +0.24]).
+Of the five fitted models at the open, the logistic regression is best at +0.69 points over the one-bit rule. The estimated selection bias is 0.16 points, so the corrected increment is +0.52 [-0.17, +1.21]. At minute 3 the best model is level with the lead z-score before and after the correction (-0.05 [-0.34, +0.24]).
 
-**24. Entering a few seconds after the open.** Nothing trades at the boundary print. A driftless market that saw the lead at N seconds and the trailing volatility would price "up" at Phi(lead / sigma over the remaining time); buying the call's side at that price measures what the call knows that the first N seconds of price do not already say. No fees or spread: this is about information, not a trade.
+**24. Entering a few seconds after the open.** This study asked what the call at the open is worth if the entry comes a few seconds after the open, against the price a market would set from the lead alone. The call's value barely changes as the entry moves later, for the rule and the forest alike.
+
+- **The rule and the forest earn nearly the same return at every entry second tested.** The table shows the return by entry second.
+- **Both calls know only the previous window, which a price built from the lead and volatility ignores.** The first paragraph under the table gives the reasoning.
+- **The result is an upper bound, before costs.** It is the most a one-bit effect could be worth against a market that ignores it.
+
+Nothing trades at the boundary print. A driftless market that saw the lead at N seconds and the trailing volatility would price "up" at Phi(lead / sigma over the remaining time). Buying the call's side at that price measures what the call knows that the first N seconds of price do not already say. No fees or spread: this is about information, not a trade.
 
 <!-- table:delayed_entry:start -->
 Entering N seconds after the open at the price a driftless market would set from the lead so far and the trailing volatility, 2025-10 to 2026-08, walk-forward calls made at the open. Return per window in cents per $1 contract, buying the side the call favours, no fees or spread; intervals from day blocks then month blocks. The fourth column is how far the implied price has already moved from 0.5, on average, in cents.
@@ -1170,9 +1265,14 @@ Entering N seconds after the open at the price a driftless market would set from
 | 30 | forest | 23328 | 6.18 | +2.45 [+1.83, +3.13] [+1.95, +2.86] |
 <!-- table:delayed_entry:end -->
 
-The return barely moves between 0 and 30 seconds, for the rule and for the forest alike, because what both know is the previous window, and a market that priced only the lead and the volatility would not price the reversal. A market that priced the reversal would, so this is the upper bound a one-bit effect could ever be worth, before costs, against a market that ignores it. Study 6 gives the break-even accuracy under hypothetical costs.
+The return barely moves between 0 and 30 seconds, for the rule and for the forest alike. What both know is the previous window, and a market that priced only the lead and the volatility would not price the reversal. A market that priced the reversal would, so this is the upper bound a one-bit effect could ever be worth, before costs, against a market that ignores it. Study 6 gives the break-even accuracy under hypothetical costs.
 
-**25. Other venues, other coins.** One-minute candles from Coinbase and Bitstamp (no taker-side volume, so price features only), each venue labelled by its own prints and restricted to the windows Binance also has; and a forest trained on Bitcoin's earlier months scoring ETH and SOL in time order, against each coin's own-history forest and its own reversal rule.
+**25. Other venues, other coins.** This study asked whether the reversal, and the forest's gain over it, appear on other venues and other coins. The reversal replicates on both; the forest's gain does not.
+
+- **The reversal replicates on both other venues and on both other coins.** The tables below give each rule's accuracy, and the first sentence under them states it.
+- **The forest's gain over the rule does not replicate.** The sentence under the tables reports every interval across zero.
+
+The study has two parts: one-minute candles from Coinbase and Bitstamp (no taker-side volume, so price features only), each venue labelled by its own prints and restricted to the windows Binance also has; and a forest trained on Bitcoin's earlier months scoring ETH and SOL in time order, against each coin's own-history forest and its own reversal rule.
 
 <!-- table:venues:start -->
 The boundary reversal on other venues, 2025-10 to 2026-08, minute 0, walk-forward by month. Each venue's windows are labelled by its own candles; Coinbase and Bitstamp are restricted to windows Binance also has. Coinbase and Bitstamp candles carry no taker-side volume, so the forest uses price features only. Last column: minus prev-window on the same windows, day-block 95% interval.
@@ -1200,7 +1300,20 @@ Transfer in time order: a forest trained on Bitcoin's earlier months (Binance, p
 
 The reversal replicates on both venues (52.0% and 52.1%) and on both coins (52.8% for ETH, 52.0% for SOL). The forest's increment over it does not: +0.3 on Coinbase, zero on Bitstamp, +0.3 to +0.5 on ETH and about zero on SOL, every interval across zero. The 2025 holdout below is the same test in time rather than across venues.
 
-**26. Nine months no study had loaded.** January to September 2025 come from the same Binance files but were never opened by any study above. They were scored once with the frozen forward models (trained on 2025-10 to 2026-08), the baselines fitted on the same months, the forest with indicators that the ablation credits with the largest increment, and the stable event rules of study 19. The script refuses to run again without a flag, and the one re-run (to add the indicator forest) is recorded in the process log.
+**26. Nine months no study had loaded.** This study asked whether the results hold on nine months of data no earlier study had loaded. The reversal held, and the fitted models' gain over it is small or absent.
+
+- **The reversal rule held before the study period.**
+- **The stable event rules kept their direction almost without exception.**
+- **The fitted models' gain over the rule is small or absent in this holdout.** The table gives each model's accuracy and its comparison with the rule, and the paragraph under it states them.
+
+January to September 2025 come from the same Binance files but were never opened by any study above. Four things were scored on those months, once:
+
+- the frozen forward models (trained on 2025-10 to 2026-08);
+- the baselines fitted on the same months;
+- the forest with indicators, which the ablation credits with the largest increment;
+- the stable event rules of study 19.
+
+The script refuses to run again without a flag. The one re-run (to add the indicator forest) is recorded in the process log.
 
 <!-- table:holdout_2025:start -->
 Second holdout: 2025-01 to 2025-09, months no study had loaded, scored on 2026-10-01 04:37 UTC at commit a19e3fb4e8. Frozen models dbba22d74696 trained on 2025-10 to 2026-08; baselines fitted on the same months; the indicator forest is fit once on the same months (see the process log for why it was added in a second run). Accuracy with day-block then month-block 95% intervals; the last column is minus the baseline on the same windows (day-block interval, share of days better, sign-flip p).
@@ -1216,9 +1329,23 @@ Second holdout: 2025-01 to 2025-09, months no study had loaded, scored on 2026-1
 Stable event rules from the wide search: 745 of 745 fired at least 30 times in the holdout, and 737 of those kept the direction they had in the search.
 <!-- table:holdout_2025:end -->
 
-Before the study period the reversal rule scores 51.6%, the frozen forest 51.6% (+0.08 over the rule), the indicator forest 52.0% (+0.40, interval across zero, sign-test p 0.11), and the minute-3 model is level with the lead z-score. The event rules held almost perfectly: 737 of 745 kept their direction. Read with the venues, the phases and the VWAP labels, this is the result of the project: the one-bit reversal is stable in time, across venues and across coins, and the fitted models' increment over it is small in the backtest and absent out of sample.
+Before the study period the reversal rule scores 51.6% and the frozen forest 51.6% (+0.08 over the rule). The indicator forest scores 52.0% (+0.40, interval across zero, sign-test p 0.11). The minute-3 model is level with the lead z-score. The event rules held almost perfectly: 737 of 745 kept their direction. Together with the venue, phase and VWAP results, this gives the project's main result. The one-bit reversal is stable in time, across venues and across coins, and the fitted models' increment over it is small in the backtest and absent out of sample.
 
-**27. Inputs from the perpetual-futures market.** Basis, funding, perp order flow, open-interest changes and positioning ratios from Binance's public futures files, added to price, flow and indicators. A first run of this study produced a false 65% at the open: the 5-minute positioning rows describe the period starting at their stamp, and reading them at the stamp let the model see the first five minutes of the window it was predicting. The rows are now delayed by their period, every external series is checked for when it is known before it is used, and the corrected table is below.
+**27. Inputs from the perpetual-futures market.** This study asked whether inputs from the perpetual-futures market improve the forest. Once a timing error was fixed, they add nothing.
+
+- **The corrected derivatives inputs add nothing at the open or later in the window.** The table shows the forest with and without them, and the sentence under it gives the differences.
+- **A first run showed a false gain, caused by reading a series before it was known.** The method paragraph below describes the error and the fix.
+- **The forward check leaves out columns Binance had not yet published.** The sentence under the table says so.
+
+The inputs come from Binance's public futures files and were added to price, flow and indicators:
+
+- basis;
+- funding;
+- perp order flow;
+- open-interest changes;
+- positioning ratios.
+
+A first run of this study produced a false 65% at the open. The 5-minute positioning rows describe the period starting at their stamp, and reading them at the stamp let the model see the first five minutes of the window it was predicting. The rows are now delayed by their period, and every external series is checked for when it is known before it is used. The corrected table is below.
 
 <!-- table:derivatives:start -->
 Perpetual-futures inputs (basis, its change, perp taker flow, perp volume ratio, funding rate, open-interest change over 15 and 60 minutes, top-trader and all-account long/short ratios, taker buy/sell ratio) added to price + flow + indicators. Walk-forward by month; last column is accuracy with minus without, on the same windows, day-block 95% interval.
@@ -1302,7 +1429,19 @@ Permutation importance of each derivative feature on the held-out months (accura
 
 Corrected, the derivatives add nothing: -0.4 points at the open and flat at minute 3, with intervals across zero. The forward check leaves out the columns Binance had not yet published for the whole of September and says so.
 
-**28. Sequence models compared properly.** GRU, dilated causal TCN and a two-layer transformer over the last 30, 120 or 480 minutes of return, volume ratio and taker-buy share, with lead and hour as side inputs. Hidden size and learning rate are chosen for each test month on the month before it (never on the test month), the winner is refit on all earlier months, and early stopping uses the last tenth of the training rows. Runs on the GPU; the overnight queue carries it.
+**28. Sequence models compared properly.** This study asked whether neural sequence models over the raw minute series, tuned without touching the test month, beat the one-bit rule. They do not: every sequence model at the open is at or below the rule.
+
+- **No sequence model beats the one-bit rule at the open.** The table lists each configuration, and the paragraph under it counts how many fall below the rule.
+- **Later in the window every sequence model is below the lead score.**
+- **Longer context does not help.** The transformer gets worse as the sequence grows.
+
+Three architectures were compared:
+
+- a GRU;
+- a dilated causal TCN;
+- a two-layer transformer.
+
+Each reads the last 30, 120 or 480 minutes of return, volume ratio and taker-buy share, with lead and hour as side inputs. Hidden size and learning rate are chosen for each test month on the month before it (never on the test month). The winner is refit on all earlier months, and early stopping uses the last tenth of the training rows. The models run on the GPU; the overnight queue carries them.
 
 <!-- table:sequence2:start -->
 Sequence models with honest tuning: hidden size and learning rate chosen per test month on the month before it, then refit on all earlier months. GRU, dilated causal TCN and a two-layer transformer over the last L minutes of return, volume ratio and taker-buy share, plus lead and hour. Last column: accuracy minus the simple baseline on the same windows, day-block 95% interval; 'chosen h' lists the hidden size picked for each test month.
@@ -1329,9 +1468,16 @@ Sequence models with honest tuning: hidden size and learning rate chosen per tes
 | 3 | transformer | 480 | 23328 | 66.20% [65.62, 66.81] | 0.714 | 0.6231 | -0.15 [-0.44, +0.13] vs lead-z | 32,32,64,16,32,64,64,32 |
 <!-- table:sequence2:end -->
 
-Every sequence model at the open is at or below the one-bit rule: eight of nine configurations are 0.7 to 1.5 points below it with intervals that exclude zero, and the ninth (the transformer over 30 minutes) is level with it. Three minutes in, all nine are below the lead z-score. Longer context does not help; the transformer gets worse as the sequence grows. Given 23,000 windows and a one-bit effect, a model that must discover the previous window's direction from 480 raw returns is at a disadvantage against a rule that is handed it, and this table measures that disadvantage. The chosen hidden sizes change from month to month, which says the validation month does not pin the architecture down.
+Every sequence model at the open is at or below the one-bit rule: eight of nine configurations are 0.7 to 1.5 points below it with intervals that exclude zero, and the ninth (the transformer over 30 minutes) is level with it. Three minutes in, all nine are below the lead z-score. Longer context does not help; the transformer gets worse as the sequence grows. With 23,000 windows and a one-bit effect, a model must discover the previous window's direction from 480 raw returns, while the rule is handed it. This table measures that disadvantage. The chosen hidden sizes change from month to month, which says the validation month does not pin the architecture down.
 
-**29. Hidden Markov models as predictors.** Two rows. A three-state Gaussian HMM on the minute series (return, log volume ratio, taker share), fit on the training months and filtered forward, predicts with each state's training up-rate mixed by the filtered probabilities at the last closed minute. A Markov-switching version of the one-feature baseline refits the baseline's logistic coefficient in each state and mixes the same way. Both are also scored on the magnitude label against a logistic on `vol60`.
+**29. Hidden Markov models as predictors.** This study asked whether hidden Markov models can predict the window's direction on their own. They cannot: neither beats its one-feature baseline, because the states carry volatility rather than the previous window or the lead.
+
+- **The state model is below the one-bit rule at the open and below the lead score later in the window.** The table lists both models, and the first paragraph under it gives the gaps.
+- **The Markov-switching baseline makes the rule's calls exactly at the open.** A binary feature with per-state coefficients changes the probabilities, not the side.
+- **On the magnitude label the states lose to volatility alone.**
+- **The size of the reversal depends on the volatility state, while its sign does not.** The coefficient table shows it.
+
+Two models are scored, one per row. A three-state Gaussian hidden Markov model (HMM) on the minute series (return, log volume ratio, taker share), fit on the training months and filtered forward, predicts with each state's training up-rate mixed by the filtered probabilities at the last closed minute. A Markov-switching version of the one-feature baseline refits the baseline's logistic coefficient in each state and mixes the same way. Both are also scored on the magnitude label against a logistic on `vol60`.
 
 <!-- table:hmm_models:start -->
 Hidden Markov models as predictors, walk-forward by month, 2025-10 to 2026-08. hmm-state: a 3-state Gaussian HMM on the minute series (return, log volume ratio, taker share) fit on the training months, filtered forward, each state's training up-rate mixed by the filtered probabilities at the last closed minute. ms-baseline: the one-feature baseline refit per state and mixed the same way. Direction label and the magnitude label (window moves at least 10 bp). Last column: accuracy minus the baseline on the same windows, day-block 95% interval, share of days better.
@@ -1373,9 +1519,21 @@ Markov-switching baseline: the baseline feature's logistic coefficient in each s
 | direction | 2026-08 | 3 | 1.618 | 0.295 | 1.684 | 1.831 | 0.354 | 0.431 | 1.655 | 0.351 | 0.438 |
 <!-- table:hmm_models:end -->
 
-Neither helps. The state model is two points below the one-bit rule at the open and ten below the lead z-score at minute 3: its states carry volatility, not the previous window or the lead. The switching baseline makes the rule's calls exactly at the open (a binary feature with per-state coefficients changes the probabilities, not the side) and is level with the lead z-score at minute 3. On the magnitude label the HMM's states lose to `vol60` alone by 6.5 points at the open, because three states are a coarse version of a continuous volatility measure. The one informative line is in the coefficient table: the reversal coefficient is about twice as large in the calmest minute-scale state as in the others, so the size of the reversal depends on the volatility state while its sign does not, the opposite of what the regime study in [horizons.md](horizons.md) first found at the daily scale, where the high-volatility state carried the larger effect until the within-era table showed that to be the era (2020 to 2022 was both the volatile period and the period of larger effects).
+The state model is two points below the one-bit rule at the open and ten below the lead z-score at minute 3: its states carry volatility, not the previous window or the lead. The switching baseline makes the rule's calls exactly at the open (a binary feature with per-state coefficients changes the probabilities, not the side) and is level with the lead z-score at minute 3. On the magnitude label the HMM's states lose to `vol60` alone by 6.5 points at the open, because three states are a coarse version of a continuous volatility measure. The coefficient table has the one informative line: the reversal coefficient is about twice as large in the calmest minute-scale state as in the others. The size of the reversal depends on the volatility state while its sign does not. That is the opposite of what the regime study in [horizons.md](horizons.md) first found at the daily scale. There the high-volatility state carried the larger effect, until the within-era table showed that to be the era (2020 to 2022 was both the volatile period and the period of larger effects).
 
-**30. Hidden Markov models, round two: states inside the models that work.** Study 29 asked the states to predict on their own. Here they enter the forest on price, flow and indicators, walk-forward by month on the same windows, three ways: the three filtered state probabilities of the minute-scale HMM at the last closed minute as extra columns; the previous day's filtered state from the daily HMM of the regime study, one-hot; and a forest fit separately on the training windows of each minute-scale state, its predictions mixed by the filtered probabilities (a mixture of experts). Each variant is compared with the same forest without the extra columns on the same windows, paired by day.
+**30. Hidden Markov models, round two: states inside the models that work.** This study asked whether hidden-state estimates help when they enter the forest as inputs. They do not: the extra columns change nothing, and fitting a separate forest per state is worse.
+
+- **State probabilities as extra columns do not move the forest.** The table compares each variant with the same forest without them, and the first paragraph under it gives the sizes.
+- **A separate forest per state, mixed by the state probabilities, is worse at the open.** Its interval excludes zero.
+- **This closes the hidden Markov question for the window label on the current data.** The last sentences under the table say what has not been tried.
+
+Study 29 asked the states to predict on their own. Here they enter the forest on price, flow and indicators, walk-forward by month on the same windows, in three ways:
+
+- the three filtered state probabilities of the minute-scale hidden Markov model (HMM) at the last closed minute, as extra columns;
+- the previous day's filtered state from the daily HMM of the regime study, one-hot;
+- a forest fit separately on the training windows of each minute-scale state, its predictions mixed by the filtered probabilities (a mixture of experts).
+
+Each variant is compared with the same forest without the extra columns on the same windows, paired by day.
 
 <!-- table:hmm_models2:start -->
 Hidden Markov models, round two (forest on price + flow + indicators, walk-forward by month, 2025-10 to 2026-08). '+minute states': the filtered probabilities of a 3-state HMM on the minute series added as features; '+daily regime': the previous day's filtered state from the regime study, one-hot; 'per-state forest': a forest fit per minute-scale state, mixed by the filtered probabilities. 'vs without' is accuracy minus the same model without the extra columns on the same windows, day-block 95% interval and share of days better; the last column is against the one-feature baseline.
@@ -1394,9 +1552,29 @@ Hidden Markov models, round two (forest on price + flow + indicators, walk-forwa
 | 3 | per-state forest | 23328 | 66.29% [65.67, 66.92] | 0.719 | 0.6163 | +0.15 [-0.09, +0.42], days better 53% | -0.06 [-0.35, +0.24] vs lead-z |
 <!-- table:hmm_models2:end -->
 
-Nothing changes. At the open the state probabilities move the forest by a tenth of a point in either direction with intervals across zero, and the mixture of experts is seven tenths worse with an interval that excludes zero: three forests, each fit on the windows of one state, lose more to the smaller training sets than they gain from fitting one state at a time. At minute 3 every variant is within two tenths of the base forest and all of them, like the base forest, sit level with or just below the lead z-score. The states carry volatility, the forest already has `vol60` and the indicator bank, and a one-hot of the previous day's regime is a coarser copy of the same thing. This closes the HMM question for the window label on the current data: as a detector the states are volatility states (regime study), as predictors they lose (study 29), and as features they add nothing (this study). What has not been tried is a different observable for the HMM (order-flow imbalance rather than returns) or a non-homogeneous transition matrix; both are listed under open items in [horizons.md](horizons.md).
+At the open the state probabilities move the forest by a tenth of a point in either direction, with intervals across zero. The mixture of experts is seven tenths worse, with an interval that excludes zero: three forests, each fit on the windows of one state, lose more to the smaller training sets than they gain from fitting one state at a time. At minute 3 every variant is within two tenths of the base forest, and all of them, like the base forest, sit level with or just below the lead z-score. The states carry volatility, the forest already has `vol60` and the indicator bank, and a one-hot of the previous day's regime is a coarser copy of the same thing. This closes the HMM question for the window label on the current data. As a detector the states are volatility states (regime study), as predictors they lose (study 29), and as features they add nothing (this study). Not yet tried: a different observable for the HMM (order-flow imbalance rather than returns) and a non-homogeneous transition matrix. Both are listed under open items in [horizons.md](horizons.md).
 
-**31. Entry seconds after the open.** Study 24 priced an entry a few seconds after the open at the odds a driftless market would set from the lead so far. This study asks what the call itself is worth there, from the per-second trade aggregates. At 10, 30 and 60 seconds after the open the window's lead is the volume-weighted price of the second just before the entry against the volume-weighted price of the first traded second, in basis points; when that second had no trades the last earlier price is used, and the coverage table counts how often. Four calls are made at each entry: a one-bit rule (up when the lead is above the open, down when below, the previous-window rule when it is exactly zero), the one-feature logistic on the lead scaled by the volatility left in the window, and the forest and XGBoost on the minute-0 features plus the tick features (lead, signed-volume share, trade count, large-trade count, scaled lead). The first table is the study period of the main table, walk-forward by month on the same windows, with the open and minute 3 rows read from the stored predictions so the whole ladder is in one place; every model is compared with its entry's one-bit rule by day blocks. The second table is an ablation of the fitted models' inputs on the same windows (the minute-0 set plus the lead only, plus all tick features, and the tick features alone), compared with the rule by day blocks and month blocks, with the tick increment proper as the last comparison. The third table is the one-bit rules alone, year by year since 2018, next to the previous-window rule at the open and the same sign rule on the candle lead at minutes 1 and 3. Nothing here is priced: no spread, no fee, no contract price.
+**31. Entry seconds after the open.** This study asked what the call itself is worth when the entry comes seconds after the open, using per-second trade data. The lead becomes informative within seconds, its sign carries nearly all of it, and the fitted models gain a little over the sign rule at the earliest entries.
+
+- **The lead becomes informative within seconds of the open, and its sign carries nearly all of it.** The entry table gives accuracy at each entry, and the first paragraph under the tables gives the reading.
+- **The fitted models gain over the sign rule at the earliest entries and not at the latest.** The ablation table shows where.
+- **The gain needs the lead and the minute-0 features together; flow, count and large-trade features are not where it comes from.** The ablation and group tables show it.
+- **The early lead is not equally informative across years, but the reversal at the open does not move with it.** The year-by-year table shows it.
+
+Study 24 priced an entry a few seconds after the open at the odds a driftless market would set from the lead so far. This study asks what the call itself is worth there, from the per-second trade aggregates. At 10, 30 and 60 seconds after the open, the window's lead is the volume-weighted price of the second just before the entry against the volume-weighted price of the first traded second, in basis points. When that second had no trades the last earlier price is used, and the coverage table counts how often. Four calls are made at each entry:
+
+- a one-bit rule: up when the lead is above the open, down when below, the previous-window rule when it is exactly zero;
+- the one-feature logistic on the lead scaled by the volatility left in the window;
+- the forest on the minute-0 features plus the tick features (lead, signed-volume share, trade count, large-trade count, scaled lead);
+- XGBoost on the same inputs as the forest.
+
+The tables are:
+
+- The entry table: the study period of the main table, walk-forward by month on the same windows. The open and minute 3 rows are read from the stored predictions, so every entry from the open to minute 3 is in one place. Every model is compared with its entry's one-bit rule by day blocks.
+- The ablation table: the fitted models' inputs on the same windows (the minute-0 set plus the lead only, plus all tick features, and the tick features alone). Each is compared with the rule by day blocks and month blocks, with the tick increment proper as the last comparison.
+- The year-by-year table: the one-bit rules alone, year by year since 2018, next to the previous-window rule at the open and the same sign rule on the candle lead at minutes 1 and 3.
+
+The group table, described below, fits the forest on the lead plus one group of inputs at a time. Nothing here is priced: no spread, no fee, no contract price.
 
 <!-- table:entry_seconds:start -->
 The window call by entry time, walk-forward by month, 2025-10 to 2026-08, test months after the first three (the windows of the main table). Open and minute 3 are the stored out-of-fold predictions of the main table on the same windows. Entries at 10, 30 and 60 seconds: lead-sign calls up when the lead at that second is above the open, down when below, and the previous-window rule when exactly zero (its AUC and log loss use the training up-rate of each call); lead-z is the one-feature logistic on the lead scaled by the volatility left in the window; forest+ticks and xgb+ticks are the minute-0 feature set plus the tick features at that second (lead, signed-volume share, trades, large trades, lead-z), on CPU. Accuracy has a day-block 95% interval. The last columns are accuracy minus the entry's one-bit rule on the same windows (named in the cell; at minute 3 it is the lead z-score, as in checks.md), day-block interval, share of days better, sign-flip p.
@@ -1536,17 +1714,59 @@ Spread across years for each column: the year with the lowest and the year with 
 In 9 of the 9 years the accuracy rises at every step from 10 s to 30 s, 60 s, minute 1 and minute 3.
 <!-- table:entry_seconds_years:end -->
 
-The lead becomes informative within seconds, and the sign of the lead carries nearly all of it. In the study period the one-bit rule gains accuracy at every step of the ladder, and by minute 3 it is level with the lead z-score. The same ordering holds in every year since 2018, and the tick lead at 60 seconds and the candle lead at minute 1 give almost the same accuracy, so the two readings of the lead agree. Scaling the lead by the volatility left in the window does not change the call at any entry in a way the intervals can see; it improves AUC and log loss because it ranks large leads above small ones, which is confidence, not direction.
+The lead becomes informative within seconds, and the sign of the lead carries nearly all of it. In the study period the one-bit rule gains accuracy at every later entry, and by minute 3 it is level with the lead z-score. The same ordering holds in every year since 2018, and the tick lead at 60 seconds and the candle lead at minute 1 give almost the same accuracy, so the two readings of the lead agree. Scaling the lead by the volatility left in the window does not change the call at any entry in a way the intervals can see. It improves AUC and log loss because it ranks large leads above small ones, which is confidence, not direction.
 
-The fitted models' gain over the rule survives both interval conventions, and the ablation says where it comes from. At 10 seconds both models are above the sign rule, and at 30 seconds the forest is, with the day-block and the month-block interval both excluding zero; at 60 seconds, where the rule is already strong, neither is distinguishable from it. Giving the models only the minute-0 features and the lead (no signed-volume share, trade count or large-trade count) reproduces the gain at the same entries, and adding those three tick features moves accuracy by an amount that no day-block interval separates from zero in any model and entry pair. The variant without the minute-0 features does not reach the rule: it is below it at every entry, with intervals that exclude zero in several rows, and the lead-z logistic on the lead alone is level with it. So the gain needs the lead and the minute-0 features together, and the flow, count and large-trade features are not where it comes from. The sentence under the ablation table lists which comparisons exclude zero under each interval, including any month-block interval for the tick increment that does; with that many comparisons and no adjustment for them, such an interval is not read as a finding. The group table then fits the forest on the lead plus one group of the minute-0 set at a time (reversal and lag returns, volatility, one-minute flow, position and clock) at 10 and 30 seconds; 60 seconds is skipped because no model beats the rule there. No single group reproduces the gain: none is above the rule under either interval, volatility at 10 seconds is below it under both, and the forest on all four groups is above it at both entries. Each single group loses to the all-groups forest, with both intervals excluding zero for volatility and one-minute flow at both entries and for reversal and lag returns at 30 seconds; position and clock is the nearest, with day-block intervals that include zero (the sentence under the group table lists the rows and their sizes). So the gain needs more than one group, and intervals of the width stated under that table cannot say which pair. The indicator bank, which was not among study 31's inputs, matches the all-groups forest at 10 seconds with the lead alone beside it and does not at 30 seconds, so at 10 seconds the gain is not tied to the minute-0 set itself. Three limits remain. The ablation separates the tick features from the minute-0 features but not the lead from them, because every variant that beats the rule contains both, and the group table narrows the minute-0 side only to more than one group; whether they act through the previous window's reversal, through volatility, or through an interaction with the lead is not settled. The intervals are not adjusted for the number of comparisons. And a null on the tick increment is a bound: the widths stated under the ablation table are the smallest increments these windows could have shown, so a gain from flow, count or large trades below that is not excluded.
+The fitted models' gain over the rule survives both interval conventions, and the ablation says where it comes from. At 10 seconds both models are above the sign rule, and at 30 seconds the forest is, with the day-block and the month-block interval both excluding zero. At 60 seconds, where the rule is already strong, neither is distinguishable from it.
 
-Across years the early lead is not equally informative. The spread table gives the lowest and highest year for each column, and for every column the two years' intervals do not overlap. The columns that read the lead are lowest in the middle years and highest in the most recent two, so what moves is how much of the window's direction is already in the first seconds, not only how fast it arrives. The reversal at the open does not move with them. The cause was not tested: volatility, trading activity and the share of seconds without a trade all differ by year, and the earliest years carry many windows with no trade yet at second 10, where the lead is zero and the call is the previous-window rule, so their 10-second column is partly the open rule. The tick lead is measured against the first traded second's price instead of the candle open, which changes the sign of a minority of leads at 10 seconds (the coverage table gives the share); the candle-open version was not scored. Whether any of this is tradable depends on the contract price at the second of entry, which this repository does not have.
+The ablation shows three things:
 
-**32. HMM round two, the tabled variants.** Studies 29 and 30 closed the hidden-Markov line for the window label on returns and listed variants that would reopen it (an order-flow observable, time-of-day transitions, explicit durations). This study runs the ones that fit the existing inputs, each as extra columns or a mixture for the forest on price, flow and indicators, walk-forward by month on the windows of the main table, with the HMM refit for every test month on the minutes (or windows) of the months before it and filtered forward, never smoothed.
+- Giving the models only the minute-0 features and the lead (no signed-volume share, trade count or large-trade count) reproduces the gain at the same entries.
+- Adding those three tick features moves accuracy by an amount that no day-block interval separates from zero in any model and entry pair.
+- The variant without the minute-0 features does not reach the rule. It is below it at every entry, with intervals that exclude zero in several rows, and the lead-z logistic on the lead alone is level with it.
 
-Pre-registered success, written before the full run and before the results table existed: a variant counts as adding something when its day-block AND its month-block 95% paired interval over the one-feature baseline on the same windows (the previous-window rule at minute 0, the lead z-score at minute 3) lie entirely above zero. A variant that does not meet this closes with the upper end of its intervals. The paired comparison with the forest that has no HMM column is also in the table, but it is not the pre-registered test: the forest alone may already sit above the baseline, and that comparison is what says whether a gain comes from the states.
+So the gain needs the lead and the minute-0 features together, and the flow, count and large-trade features are not where it comes from. The sentence under the ablation table lists which comparisons exclude zero under each interval, including any month-block interval for the tick increment that does. With that many comparisons and no adjustment for them, such an interval is not read as a finding.
 
-The variants. (a) A five-state Gaussian HMM whose emissions are the window features, one observation per window: the 34 columns the forest reads, standardised on the training windows, clipped, and reduced to eight whitened principal components (the raw set was not used: ten of the columns are indicators that are near copies of the price columns, and the clock columns are integers, which a diagonal Gaussian would treat as independent evidence), with the best of five restarts kept because single EM runs on planted clusters landed in a poor optimum in the tests. The filtered posterior enters the forest as five columns, and separately a forest is fit per state and the experts are mixed by the posterior. (b) A non-homogeneous HMM, implemented as a time-bucketed transition matrix rather than a logistic transition model: twelve buckets (four six-hour blocks of the UTC day by terciles of the volatility of the preceding hour, cut points from the training minutes), each with its own transition matrix estimated by EM with the emissions held at the homogeneous fit and every bucket shrunk toward the pooled matrix. A bucket matrix has a closed-form M step, which keeps the estimator small enough to test against the homogeneous filter; a logistic transition would need a gradient step inside EM and has no more data to learn from than the buckets do. (c) A hidden semi-Markov model by duration-augmented state expansion over the same three states (no semi-Markov library is installed and none was added): each state carries an elapsed-minutes counter up to a cap, with a hazard per elapsed minute estimated from the run lengths of the training path and one geometric tail beyond the cap, and the forest reads the state posterior and the filtered expected elapsed minutes. (d) The previous day's regime from the daily HMM of the regime study together with the minute-scale state: study 30's concatenation, re-scored here against the baseline with month blocks, and the joint products (the minute-scale posterior routed into the day's regime). The daily regime series is the stored output of the regime study, fit per calendar year on earlier years, so it uses nothing from a test month. The control row is study 30's three-state homogeneous minute-scale HMM refit through the end of the month before each test month; the reference row is the forest with no HMM column and should reproduce study 30's base row. An HMM on order-flow imbalance alone was not run: the minute series already contains the taker-buy share (study 29), and an imbalance-only emission is the same information in fewer columns. Entry minutes 0 and 3 only; the intervals are not adjusted for the number of comparisons.
+The group table fits the forest on the lead plus one group of the minute-0 set at a time, at 10 and 30 seconds. The groups are:
+
+- reversal and lag returns;
+- volatility;
+- one-minute flow;
+- position and clock.
+
+The 60-second entry is skipped because no model beats the rule there. No single group reproduces the gain: none is above the rule under either interval, volatility at 10 seconds is below it under both, and the forest on all four groups is above it at both entries. Each single group loses to the all-groups forest. Both intervals exclude zero for volatility and one-minute flow at both entries and for reversal and lag returns at 30 seconds. Position and clock is the nearest, with day-block intervals that include zero (the sentence under the group table lists the rows and their sizes). So the gain needs more than one group, and intervals of the width stated under that table cannot say which pair. The indicator bank, which was not among this study's inputs, matches the all-groups forest at 10 seconds with the lead alone beside it. It does not at 30 seconds, so at 10 seconds the gain is not tied to the minute-0 set itself.
+
+Three limits remain:
+
+- The ablation separates the tick features from the minute-0 features but not the lead from them, because every variant that beats the rule contains both. The group table narrows the minute-0 side only to more than one group. Whether they act through the previous window's reversal, through volatility, or through an interaction with the lead is not settled.
+- The intervals are not adjusted for the number of comparisons.
+- A null on the tick increment is a bound: the widths stated under the ablation table are the smallest increments these windows could have shown, so a gain from flow, count or large trades below that is not excluded.
+
+Across years the early lead is not equally informative. The spread table gives the lowest and highest year for each column, and for every column the two years' intervals do not overlap. The columns that read the lead are lowest in the middle years and highest in the most recent two, so what moves is how much of the window's direction is already in the first seconds, not only how fast it arrives. The reversal at the open does not move with them. The cause was not tested. Volatility, trading activity and the share of seconds without a trade all differ by year. The earliest years carry many windows with no trade yet at second 10, where the lead is zero and the call is the previous-window rule, so their 10-second column is partly the open rule. The tick lead is measured against the first traded second's price instead of the candle open, which changes the sign of a minority of leads at 10 seconds (the coverage table gives the share). The candle-open version was not scored. Whether any of this is tradable depends on the contract price at the second of entry, which this repository does not have.
+
+**32. HMM round two, the tabled variants.** This study asked whether the variants that would reopen the hidden Markov line add anything to the forest. None does: the rows that pass the pre-registered test pass only because the forest alone already does.
+
+- **None of the four variants adds anything beyond the forest on these windows.** The table compares each variant with the forest without hidden-state columns, and the first paragraph under it states the result.
+- **At the later entry no row, the forest included, is above the lead score.**
+- **The null is a bound, not a case of a variant that never ran.** The last paragraph lists what engaged and what was not tried.
+
+Studies 29 and 30 closed the hidden Markov model (HMM) line for the window label on returns. They listed three variants that would reopen it:
+
+- an order-flow observable;
+- time-of-day transitions;
+- explicit durations.
+
+This study runs the ones that fit the existing inputs, each as extra columns or a mixture for the forest on price, flow and indicators, walk-forward by month on the windows of the main table. The HMM is refit for every test month on the minutes (or windows) of the months before it and filtered forward, never smoothed.
+
+The success criterion was pre-registered: written before the full run and before the results table existed. A variant counts as adding something when both its day-block and its month-block 95% paired intervals over the one-feature baseline on the same windows lie entirely above zero. The baseline is the previous-window rule at minute 0 and the lead z-score at minute 3. A variant that does not meet this closes with the upper end of its intervals. The table also holds the paired comparison with the forest that has no HMM column. That comparison is not the pre-registered test, but it is what says whether a gain comes from the states, because the forest alone may already sit above the baseline.
+
+The four variants:
+
+- (a) The window-feature HMM: a five-state Gaussian HMM whose emissions are the window features, one observation per window. The 34 columns the forest reads are standardised on the training windows, clipped, and reduced to eight whitened principal components. The raw set was not used: ten of the columns are indicators that are near copies of the price columns, and the clock columns are integers, which a diagonal Gaussian would treat as independent evidence. The best of five restarts is kept, because single EM runs on planted clusters landed in a poor optimum in the tests. The filtered posterior enters the forest as five columns, and separately a forest is fit per state and the experts are mixed by the posterior.
+- (b) A non-homogeneous HMM, implemented as a time-bucketed transition matrix rather than a logistic transition model. There are twelve buckets: four six-hour blocks of the UTC day by terciles of the volatility of the preceding hour, with cut points from the training minutes. Each bucket has its own transition matrix, estimated by EM with the emissions held at the homogeneous fit, and every bucket is shrunk toward the pooled matrix. A bucket matrix has a closed-form M step, which keeps the estimator small enough to test against the homogeneous filter. A logistic transition would need a gradient step inside EM and has no more data to learn from than the buckets do.
+- (c) A hidden semi-Markov model by duration-augmented state expansion over the same three states (no semi-Markov library is installed and none was added). Each state carries an elapsed-minutes counter up to a cap, with a hazard per elapsed minute estimated from the run lengths of the training path and one geometric tail beyond the cap. The forest reads the state posterior and the filtered expected elapsed minutes.
+- (d) The previous day's regime from the daily HMM of the regime study together with the minute-scale state: study 30's concatenation, re-scored here against the baseline with month blocks, and the joint products (the minute-scale posterior routed into the day's regime). The daily regime series is the stored output of the regime study, fit per calendar year on earlier years, so it uses nothing from a test month.
+
+The control row is study 30's three-state homogeneous minute-scale HMM refit through the end of the month before each test month. The reference row is the forest with no HMM column and should reproduce study 30's base row. An HMM on order-flow imbalance alone was not run: the minute series already contains the taker-buy share (study 29), and an imbalance-only emission is the same information in fewer columns. Entry minutes 0 and 3 only. The intervals are not adjusted for the number of comparisons.
 
 <!-- table:hmm_models3:start -->
 Hidden Markov models, round three: the tabled variants (forest on price + flow + indicators, walk-forward by month, 2025-10 to 2026-08, test months after the first three). Each test month's HMM is fit on the minutes (b, c, d and the control) or the windows (a) of earlier months only and filtered forward. (a) a 5-state Gaussian HMM on the window features, reduced to 8 whitened principal components; (b) the minute-scale HMM with a transition matrix for each of 12 buckets of UTC six-hour block and trailing-hour volatility tercile; (c) the same HMM expanded to (state, elapsed minutes) pairs with a discrete hazard per minute up to 60 and a geometric tail; (d) the daily regime of the regime study with the minute-scale state, concatenated and as joint products. Accuracy has a day-block 95% interval. "vs baseline" is accuracy minus the one-feature baseline on the same windows (prev-window at minute 0, lead-z at minute 3) with a day-block and a month-block interval, the share of days better and the sign-flip p. "vs forest without HMM" is accuracy minus the forest with no HMM column, day blocks.
@@ -1585,16 +1805,41 @@ What these windows could detect: across the variant rows a day-block interval on
 What the fits did: the window HMM did not converge in 0 of 16 fits; the per-state forests fell back to the base forest for 0 of 80 state-fits (a state with under 500 training windows); the bucketed transition matrices differ across buckets by up to 24.0 points in a state's stay probability (smallest month 17.3).
 <!-- table:hmm_models3:end -->
 
-By the rule written beforehand, the variants that meet the test do so only at minute 0, and none does at minute 3. That result is not evidence for the states. The forest with no HMM column meets the same test at minute 0, because it is already above the previous-window rule (study 30), and no variant row differs from that forest by an amount either the day-block or the month-block interval could separate from zero, in either direction, at either entry. The rows that meet the test are the forest's own increment carried through, so the answer to the question asked is that none of the four variants adds anything beyond the forest on these windows. At minute 3 no row, the forest included, is above the lead z-score, and each closes with the bound printed under the table.
+By the rule written beforehand, the variants that meet the test do so only at minute 0, and none does at minute 3. That result is not evidence for the states. The forest with no HMM column meets the same test at minute 0, because it is already above the previous-window rule (study 30). No variant row differs from that forest by an amount that either the day-block or the month-block interval could separate from zero, in either direction, at either entry. The rows that meet the test are the forest's own increment carried through, so none of the four variants adds anything beyond the forest on these windows. At minute 3 no row, the forest included, is above the lead z-score, and each closes with the bound printed under the table.
 
-The window-feature HMM is the only variant whose minute-0 rows sit visibly below the forest, with intervals that include zero. Posteriors from a model fit to the forest's own columns re-encode information the forest already reads, and the per-state forest repeats study 30's finding that splitting the training windows costs more than a state-specific fit returns. The mechanisms did engage: the bucketed transition matrices differ across buckets (the line under the table gives how much), the duration expansion tracks elapsed time in the state, the window HMM converged in every fit and used more than one state, and no per-state forest fell back to the base model. So the null is a bound, not a case of a variant that never ran, and the bound is the detectable-increment sentence above: an increment smaller than about half the printed interval width could not have been told from zero with these windows. What was not tried: an HMM on order-flow imbalance alone, a logistic transition model in place of buckets, a state count other than five, hazards estimated from something other than the training path, and entry minutes other than 0 and 3. With studies 29 and 30 this closes the HMM line for the window label on these data, to that bound.
+The window-feature HMM is the only variant whose minute-0 rows sit visibly below the forest, with intervals that include zero. Posteriors from a model fit to the forest's own columns re-encode information the forest already reads. The per-state forest repeats study 30's finding that splitting the training windows costs more than a state-specific fit returns.
+
+The mechanisms did engage:
+
+- the bucketed transition matrices differ across buckets (the line under the table gives how much);
+- the duration expansion tracks elapsed time in the state;
+- the window-feature HMM converged in every fit and used more than one state;
+- no per-state forest fell back to the base model.
+
+So the null is a bound, not a case of a variant that never ran. The bound is the detectable-increment sentence under the table: an increment smaller than about half the printed interval width could not have been told from zero with these windows.
+
+Not tried:
+
+- an HMM on order-flow imbalance alone;
+- a logistic transition model in place of buckets;
+- a state count other than five;
+- hazards estimated from something other than the training path;
+- entry minutes other than 0 and 3.
+
+With studies 29 and 30 this closes the HMM line for the window label on these data, to that bound.
 
 ## What remains open
 
-- The forward log from October 2026 is the only test of the frozen models that nobody can revise. The question it answers is narrow: does the forest's increment over the one-bit rule, about half a point in the backtest and absent in 2025, show up at all. If it stays absent, the report already says what the project found.
-- The reversal itself is the result, and its cause is not established. It holds at every grid position, on three venues and four coins, under averaged prices, and before and after the study period. It sits in the first two minutes after a boundary. Microstructure explanations (inventory unwinding after a move, order-book replenishment) are testable with the tick data; nothing here tests them.
-- Tick-level flow was tested at 5 to 300 seconds before entry. The published quarter-hour result concerns horizons of hours, which this model does not target.
-- The scheduled-news calendar and a cross-venue lead-lag at the tick level are the external inputs not yet tried. Funding, open interest and positioning were tried (study 27) and add nothing.
+- **Whether the forest's increment over the one-bit rule exists is decided by the forward log.** The forward log from October 2026 is the only test of the frozen models that nobody can revise. It answers one narrow question: does the increment, about half a point in the backtest and absent in 2025, show up at all. If it stays absent, the report already says what the project found.
+- **The reversal is the result, and its cause is not established.** It holds at every grid position, on three venues and four coins, under averaged prices, and before and after the study period. It sits in the first two minutes after a boundary. Microstructure explanations (inventory unwinding after a move, order-book replenishment) are testable with the tick data; nothing here tests them.
+- **Tick-level flow was tested at 5 to 300 seconds before entry.** The published quarter-hour result concerns horizons of hours, which this model does not target.
+- **The scheduled-news calendar and a cross-venue lead-lag at the tick level are the external inputs not yet tried.** Funding, open interest and positioning were tried (study 27) and add nothing.
 
-Reported accuracies of 80% or more for Bitcoin direction in the literature are almost always at daily or longer horizons, use overlapping labels, or leak information at decision time; a diagnostic study that toggles one evaluation convention at a time finds that centred features and same-day execution alone produce large, stable inflation. Nothing here should be compared with those numbers.
+Reported accuracies of 80% or more for Bitcoin direction in the literature almost always have at least one of three problems:
+
+- the horizon is daily or longer;
+- the labels overlap;
+- information leaks at decision time.
+
+A diagnostic study that toggles one evaluation convention at a time finds that centred features and same-day execution alone produce large, stable inflation. Nothing here should be compared with those numbers.
 
