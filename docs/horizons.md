@@ -663,7 +663,18 @@ For scale, the largest deviation among the price-action library's cells that hol
 
 ## Does the condition add anything to the move?
 
-The library's one robust effect is a reversal after a sharp move, and two events in the derivatives and tick sections sit on top of such a move and reverse too. The question is whether their extra condition adds anything to the move they contain. Contrast A compares the liquidation signature (open interest falling and heavy perp volume, on top of a 15-minute return beyond the previous year's 10th or 90th percentile) with the hard 15-minute move alone. Contrast B compares a trade-count climax at a new 1-hour high or low with new 1-hour highs and lows without the climax, and B2 does the same with the count taken relative to the previous day's mean. The outcome is the reversal, positive when the price goes back against the move.
+The library's one robust effect is a reversal after a sharp move, and two newer events sit on top of such a move and reverse too: the liquidation signature (open interest falling and heavy perp volume beside a 15-minute return beyond the previous year's 10th or 90th percentile) and the trade-count climax at a new 1-hour high or low. This study asks whether the extra condition adds anything to the move it contains, by matching each minute that carries the condition to a minute with the same move and no condition. The answer: the long liquidation signature and the climax at a new high add nothing measurable to their moves; the climax at a new low adds a small increment that holds under both labels; the short signature is not resolved, which the power statement below said it might not be.
+
+- **The long liquidation signature is the hard fall's own reversal.** Matched to falls of the same size without the open-interest and volume legs, it reverses no more (the A-long rows of the main table; in the subsets table the return leg alone carries the signature's deviation).
+- **The trade-count climax adds something at a new low and nothing measurable at a new high.** At a new low the adjusted difference is above zero under both labels with the sign held in most years, the one Holm rejection; at a new high the intervals lie below the increment of interest (the B rows and the Holm sentence under the main table).
+- **The short signature is not resolved.** Its intervals straddle zero and the increment of interest, which the pre-registration's detectable increment for that cell anticipated (the A-short rows).
+- **The relative count does not reproduce the increment**, and at a new high it is followed by less reversal than a plain new high (the B2 rows, descriptive).
+
+Three contrasts, all with the reversal as the outcome (positive when the price goes back against the move):
+
+- Contrast A: the liquidation signature against the hard 15-minute move alone, long (after a fall) and short (after a rise).
+- Contrast B: the trade-count climax at a new 1-hour high or low against new highs and lows without the climax.
+- Contrast B2: the same with the count taken relative to the previous day's mean (descriptive).
 
 The study was pre-registered: the block below was generated from existing results before any matched result was computed, and is not edited.
 
@@ -690,25 +701,491 @@ Pre-registration of the matched-increment study, written 2026-10-06 20:01 UTC at
 **Scored years.** As in the library's tables, a year with fewer than 500 matched pairs in a cell is not scored for that cell and does not enter its pool; the results state in how many of the years each cell was scored.
 <!-- table:matched_increment_prereg:end -->
 
-Method. Each treated minute (the condition holds) is matched to one control from the rest of the same population (the move alone), within its year and side, in the same four-hour block of the day, the same tercile of trailing 60-minute volatility (edges from the previous year) and the same bin of the size of the move. Three choices were fixed before the full run. First, the move-size bins are the quintiles of the treated minutes' own move size in that year and side, because the treated minutes sit far out in the population's tail and population quintiles would put almost all of them in the top bin, where the controls are smaller moves; a treated minute in a bin with no eligible control is left unmatched and counted, and controls whose move lies outside the range of the treated minutes' move size are not eligible, because the outermost bins are open-ended. Second, the balance after matching is reported (the mean move size and volatility of treated minutes and of controls, and the standardised difference of each). Because the treated minutes are deeper moves than any control available to them, some imbalance remains, so the matched difference is bias-corrected: within each cell the pair difference is regressed on the pair's differences in move size and volatility (ordinary least squares with an intercept), and the intercept, the difference at zero covariate difference, is the adjusted estimate. It is the primary estimate for the decision rule and the Holm test, and the raw matched difference is shown beside it. A primary cell whose standardised difference of the move size exceeds the threshold in the pre-registration is 'not resolved (support)' whatever its intervals say, because the adjustment cannot be trusted to extrapolate that far; below the threshold the adjusted estimate decides. Third, as in the library tables, a year with fewer than the minimum number of matched pairs in a cell is not scored for it and does not enter its pool, and the table says in how many years each cell was scored. Controls are never within 30 minutes after a treated minute. The difference is the mean over pairs of the treated outcome minus the control outcome, under the last-print label and the 60-second VWAP label; the 95% intervals come from errors clustered by UTC day and, separately, by episode (treated minutes less than 30 minutes apart form one), and years are pooled by pairs. The rule that turns the intervals into a verdict, and the four primary cells, are in the pre-registration above.
+**Method.** Three of the choices below were fixed before the full run, after a one-year smoke run showed the treated minutes sitting far out in the population's tail; they are marked.
+
+- Each treated minute (the condition holds) is matched to one control from the rest of the same population (the move alone), within its year and side: the same four-hour block of the day, the same tercile of trailing 60-minute volatility (edges from the previous year), and the same bin of the size of the move.
+- The move-size bins are the quintiles of the treated minutes' own move size in that year and side, because population quintiles would put almost all of the treated in the top bin, where the controls are smaller moves. A treated minute in a bin with no eligible control is left unmatched and counted. A control whose move lies outside the treated minutes' range is not eligible, because the outermost bins are open-ended. (Fixed before the run.)
+- Balance after matching is reported: the mean move size and volatility of treated minutes and of controls, and the standardised difference of each. The treated minutes are deeper moves than any control available to them, so some imbalance remains, and the matched difference is bias-corrected: within each cell the pair difference is regressed on the pair's differences in move size and volatility (ordinary least squares with an intercept), and the intercept, the difference at zero covariate difference, is the adjusted estimate. It is the primary estimate for the decision rule and the Holm test; the raw matched difference is shown beside it. A primary cell whose standardised difference of the move size exceeds the pre-registered threshold is "not resolved (support)" whatever its intervals say, because the adjustment cannot be trusted to extrapolate that far. (Fixed before the run.)
+- As in the library tables, a year with fewer than the minimum number of matched pairs in a cell is not scored for it and does not enter its pool, and the table says in how many years each cell was scored. (Fixed before the run.)
+- Controls are never within 30 minutes after a treated minute.
+- The difference is the mean over pairs of the treated outcome minus the control outcome, under the last-print label and the 60-second VWAP label. The 95% intervals come from errors clustered by UTC day and, separately, by episode (treated minutes less than 30 minutes apart form one); years are pooled by pairs. The rule that turns intervals into a verdict, and the four primary cells, are in the pre-registration above.
 
 <!-- table:matched_increment:start -->
-Not yet generated: `python -m models.btc_15m.matched_increment --start 2018 --end 2026-08 --out results/btc_15m` writes this table.
+Does the condition add anything to the move it sits on? Matched treated minutes (the condition holds) against controls (the move alone), reversal positive, every minute as a decision time. Contrast A, 2022, 2023, 2024, 2025, 2026: the liquidation signature against the hard 15-minute move (return strictly beyond the previous year's 10th or 90th percentile). Contrast B, 2018 to 2026: a trade count above the previous year's 99th percentile at a new 1-hour extreme, against new 1-hour extremes without it; B2 uses the count relative to the previous 1440 minutes. Each treated minute has one control in the same year and side, the same four-hour block, the same tercile of trailing 60-minute volatility (previous-year edges) and the same bin of the move's size (the five bins are the quintiles of the treated minutes' move size in that year and side, and controls outside the range of the treated minutes' move size are not eligible); a year with fewer than 500 matched pairs in a cell is not scored for it; controls exclude the 30 minutes after any treated minute. The difference is the mean over pairs of (treated outcome minus control outcome) in points, under the last-print label and the 60-second VWAP label, with 95% intervals from errors clustered by UTC day and by episode (treated minutes less than 30 minutes apart form one), years pooled by pairs as the library tables pool by firings. The adjusted difference regresses each cell-year's pair differences on the pair's differences in move size and volatility (ordinary least squares with an intercept) and takes the intercept, the difference at zero covariate difference; it is the primary estimate, and the raw matched difference follows it. Reversal rate is the share of oriented outcomes that point back against the move. Years held: years whose difference has the pooled sign, under the last print and under the VWAP label. Years held and the per-year range (shown at 15 minutes, last print and VWAP) are those of the adjusted estimate.
+
+| contrast | side | horizon (min) | pairs | drawn without replacement | treated reversal rate | control reversal rate | difference adjusted, last print (points) [day interval] [episode interval] | difference adjusted, VWAP (points) | difference raw, last print (points) | difference raw, VWAP (points) | years held, adjusted (last print, VWAP) | per-year range, adjusted, at 15 min (last print; VWAP) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| A | long (after a fall) | 1 | 23,515 | 85.5% | 51.8% | 52.5% | -0.7 day [-1.6, +0.2], episode [-1.6, +0.2] | -0.7 day [-1.6, +0.1], episode [-1.6, +0.1] | -0.6 day [-1.5, +0.2], episode [-1.6, +0.3] | -0.8 day [-1.7, +0.1], episode [-1.7, +0.1] | 3/5, 3/5 | - |
+| A | long (after a fall) | 3 | 23,515 | 85.5% | 52.6% | 54.1% | -1.7 day [-2.8, -0.5], episode [-2.7, -0.6] | -1.3 day [-2.3, -0.3], episode [-2.4, -0.3] | -1.5 day [-2.6, -0.4], episode [-2.6, -0.4] | -1.3 day [-2.3, -0.2], episode [-2.3, -0.2] | 5/5, 5/5 | - |
+| A | long (after a fall) | 5 | 23,515 | 85.5% | 53.4% | 54.7% | -1.4 day [-2.6, -0.1], episode [-2.6, -0.1] | -1.1 day [-2.3, +0.1], episode [-2.3, +0.1] | -1.3 day [-2.5, -0.0], episode [-2.5, -0.1] | -1.0 day [-2.2, +0.2], episode [-2.2, +0.2] | 5/5, 5/5 | - |
+| A | long (after a fall) | 10 | 23,515 | 85.5% | 53.6% | 54.5% | -1.2 day [-2.7, +0.2], episode [-2.7, +0.2] | -1.0 day [-2.4, +0.4], episode [-2.4, +0.4] | -0.9 day [-2.3, +0.6], episode [-2.3, +0.6] | -0.7 day [-2.1, +0.7], episode [-2.1, +0.8] | 5/5, 5/5 | - |
+| A | long (after a fall) | 15 | 23,515 | 85.5% | 54.3% | 55.1% | -1.2 day [-2.7, +0.4], episode [-2.7, +0.4] | -0.7 day [-2.2, +0.9], episode [-2.2, +0.9] | -0.8 day [-2.4, +0.7], episode [-2.4, +0.7] | -0.3 day [-1.9, +1.2], episode [-1.9, +1.2] | 5/5, 2/5 | -5.2 to -0.3; -4.0 to +0.8 |
+| A | long (after a fall) | 30 | 23,515 | 85.5% | 55.5% | 54.2% | +1.1 day [-0.6, +2.8], episode [-0.6, +2.8] | +1.1 day [-0.6, +2.7], episode [-0.7, +2.8] | +1.3 day [-0.4, +3.0], episode [-0.4, +3.0] | +1.3 day [-0.4, +3.0], episode [-0.4, +3.0] | 4/5, 4/5 | - |
+| A | short (after a rise) | 1 | 17,392 | 95.8% | 53.0% | 51.9% | +1.1 day [+0.0, +2.1], episode [+0.0, +2.1] | +1.6 day [+0.6, +2.6], episode [+0.5, +2.6] | +1.1 day [+0.0, +2.1], episode [+0.0, +2.1] | +1.4 day [+0.4, +2.4], episode [+0.4, +2.5] | 4/5, 4/5 | - |
+| A | short (after a rise) | 3 | 17,392 | 95.8% | 53.4% | 52.3% | +1.2 day [-0.0, +2.4], episode [-0.1, +2.4] | +0.8 day [-0.3, +2.0], episode [-0.3, +2.0] | +1.1 day [-0.1, +2.3], episode [-0.1, +2.3] | +0.9 day [-0.3, +2.0], episode [-0.3, +2.0] | 4/5, 3/5 | - |
+| A | short (after a rise) | 5 | 17,392 | 95.8% | 54.1% | 52.7% | +1.6 day [+0.3, +2.9], episode [+0.3, +3.0] | +1.0 day [-0.3, +2.3], episode [-0.3, +2.3] | +1.4 day [+0.1, +2.7], episode [+0.0, +2.8] | +0.8 day [-0.4, +2.1], episode [-0.5, +2.1] | 3/5, 3/5 | - |
+| A | short (after a rise) | 10 | 17,391 | 95.8% | 53.5% | 52.8% | +0.9 day [-0.6, +2.4], episode [-0.7, +2.5] | +0.9 day [-0.7, +2.4], episode [-0.7, +2.4] | +0.8 day [-0.8, +2.3], episode [-0.8, +2.3] | +0.7 day [-0.8, +2.3], episode [-0.8, +2.3] | 3/5, 3/5 | - |
+| A | short (after a rise) | 15 | 17,391 | 95.8% | 54.2% | 52.6% | +1.7 day [-0.1, +3.4], episode [-0.0, +3.4] | +1.4 day [-0.4, +3.1], episode [-0.3, +3.1] | +1.6 day [-0.2, +3.3], episode [-0.1, +3.3] | +1.2 day [-0.5, +3.0], episode [-0.5, +2.9] | 3/5, 3/5 | -0.3 to +3.2; -1.5 to +3.1 |
+| A | short (after a rise) | 30 | 17,391 | 95.8% | 52.7% | 52.6% | +0.2 day [-1.7, +2.0], episode [-1.7, +2.0] | -0.2 day [-2.0, +1.7], episode [-2.1, +1.7] | +0.1 day [-1.8, +1.9], episode [-1.8, +1.9] | -0.4 day [-2.2, +1.5], episode [-2.2, +1.5] | 3/5, 2/5 | - |
+| B | low (after a new low) | 1 | 38,319 | 39.2% | 53.6% | 52.8% | +1.3 day [+0.6, +2.1], episode [+0.6, +2.0] | +0.5 day [-0.3, +1.2], episode [-0.3, +1.2] | +0.8 day [+0.0, +1.5], episode [+0.1, +1.5] | +0.2 day [-0.6, +0.9], episode [-0.5, +0.9] | 4/8, 3/8 | - |
+| B | low (after a new low) | 3 | 38,319 | 39.2% | 56.6% | 56.5% | +0.5 day [-0.2, +1.3], episode [-0.2, +1.3] | +0.5 day [-0.3, +1.3], episode [-0.2, +1.3] | +0.1 day [-0.7, +0.9], episode [-0.7, +0.9] | -0.0 day [-0.8, +0.8], episode [-0.8, +0.7] | 4/8, 4/8 | - |
+| B | low (after a new low) | 5 | 38,319 | 39.2% | 57.7% | 57.1% | +0.7 day [-0.1, +1.5], episode [-0.0, +1.5] | +1.4 day [+0.6, +2.2], episode [+0.7, +2.2] | +0.6 day [-0.2, +1.4], episode [-0.2, +1.4] | +1.4 day [+0.6, +2.2], episode [+0.7, +2.2] | 3/8, 3/8 | - |
+| B | low (after a new low) | 10 | 38,319 | 39.2% | 58.6% | 55.9% | +2.7 day [+1.8, +3.6], episode [+1.8, +3.6] | +2.7 day [+1.8, +3.6], episode [+1.8, +3.5] | +2.7 day [+1.8, +3.6], episode [+1.8, +3.6] | +2.4 day [+1.5, +3.4], episode [+1.6, +3.3] | 3/8, 5/8 | - |
+| B | low (after a new low) | 15 | 38,318 | 39.2% | 58.4% | 56.0% | +2.3 day [+1.4, +3.3], episode [+1.4, +3.3] | +1.8 day [+0.8, +2.8], episode [+0.8, +2.7] | +2.4 day [+1.4, +3.3], episode [+1.4, +3.3] | +1.9 day [+0.9, +2.9], episode [+1.0, +2.8] | 5/8, 6/8 | -3.4 to +4.9; -5.1 to +3.9 |
+| B | low (after a new low) | 30 | 38,316 | 39.2% | 59.0% | 57.1% | +1.8 day [+0.7, +2.8], episode [+0.8, +2.8] | +2.9 day [+1.9, +3.9], episode [+1.9, +3.9] | +1.9 day [+0.9, +2.9], episode [+0.9, +2.9] | +2.9 day [+1.9, +3.9], episode [+1.9, +3.9] | 4/8, 5/8 | - |
+| B | high (after a new high) | 1 | 36,031 | 45.7% | 51.9% | 50.5% | +1.1 day [+0.4, +1.9], episode [+0.4, +1.9] | +1.6 day [+0.8, +2.4], episode [+0.9, +2.3] | +1.4 day [+0.6, +2.1], episode [+0.6, +2.1] | +1.7 day [+0.9, +2.5], episode [+0.9, +2.4] | 2/8, 3/8 | - |
+| B | high (after a new high) | 3 | 36,029 | 45.7% | 55.1% | 54.7% | +0.1 day [-0.7, +1.0], episode [-0.7, +0.9] | +1.4 day [+0.5, +2.2], episode [+0.6, +2.2] | +0.4 day [-0.4, +1.2], episode [-0.4, +1.2] | +1.6 day [+0.7, +2.4], episode [+0.8, +2.4] | 2/8, 2/8 | - |
+| B | high (after a new high) | 5 | 36,028 | 45.7% | 56.1% | 55.5% | +0.4 day [-0.4, +1.3], episode [-0.4, +1.3] | +0.3 day [-0.5, +1.2], episode [-0.5, +1.2] | +0.6 day [-0.2, +1.5], episode [-0.2, +1.5] | +0.4 day [-0.4, +1.3], episode [-0.4, +1.2] | 1/8, 2/8 | - |
+| B | high (after a new high) | 10 | 36,028 | 45.7% | 56.6% | 55.3% | +1.1 day [+0.2, +2.0], episode [+0.2, +2.0] | +0.6 day [-0.3, +1.5], episode [-0.3, +1.5] | +1.3 day [+0.4, +2.2], episode [+0.4, +2.2] | +0.7 day [-0.2, +1.6], episode [-0.2, +1.6] | 1/8, 2/8 | - |
+| B | high (after a new high) | 15 | 36,028 | 45.7% | 56.1% | 55.2% | +0.6 day [-0.3, +1.5], episode [-0.3, +1.5] | -0.0 day [-0.9, +0.9], episode [-0.9, +0.9] | +0.9 day [-0.0, +1.8], episode [-0.0, +1.8] | +0.1 day [-0.8, +1.0], episode [-0.9, +1.0] | 1/8, 6/8 | -11.8 to +7.2; -8.0 to +6.1 |
+| B | high (after a new high) | 30 | 36,027 | 45.7% | 56.4% | 54.0% | +2.0 day [+1.0, +3.0], episode [+1.0, +3.0] | +1.9 day [+0.9, +2.9], episode [+0.9, +2.9] | +2.4 day [+1.4, +3.3], episode [+1.3, +3.4] | +2.1 day [+1.1, +3.1], episode [+1.1, +3.1] | 3/8, 3/8 | - |
+| B2 | low (after a new low) | 1 | 15,279 | 66.2% | 55.9% | 54.7% | +1.0 day [-0.1, +2.1], episode [-0.1, +2.1] | +3.0 day [+1.9, +4.1], episode [+1.9, +4.1] | +1.1 day [+0.1, +2.2], episode [+0.0, +2.2] | +3.1 day [+2.0, +4.2], episode [+2.0, +4.2] | 5/9, 6/9 | - |
+| B2 | low (after a new low) | 3 | 15,278 | 66.2% | 57.9% | 57.4% | +0.5 day [-0.7, +1.6], episode [-0.7, +1.6] | -0.1 day [-1.2, +1.1], episode [-1.2, +1.1] | +0.5 day [-0.6, +1.7], episode [-0.6, +1.6] | +0.1 day [-1.0, +1.3], episode [-1.0, +1.3] | 6/9, 4/9 | - |
+| B2 | low (after a new low) | 5 | 15,278 | 66.2% | 58.4% | 57.8% | +0.6 day [-0.6, +1.8], episode [-0.6, +1.8] | +0.4 day [-0.9, +1.6], episode [-0.8, +1.6] | +0.6 day [-0.6, +1.8], episode [-0.6, +1.8] | +0.5 day [-0.7, +1.8], episode [-0.7, +1.7] | 5/9, 5/9 | - |
+| B2 | low (after a new low) | 10 | 15,278 | 66.2% | 58.4% | 58.3% | +0.0 day [-1.2, +1.2], episode [-1.2, +1.3] | +0.7 day [-0.6, +1.9], episode [-0.6, +1.9] | +0.1 day [-1.1, +1.3], episode [-1.2, +1.3] | +0.6 day [-0.6, +1.9], episode [-0.6, +1.9] | 4/9, 4/9 | - |
+| B2 | low (after a new low) | 15 | 15,278 | 66.2% | 58.0% | 57.9% | +0.1 day [-1.2, +1.3], episode [-1.2, +1.3] | +0.6 day [-0.7, +1.9], episode [-0.7, +1.9] | +0.1 day [-1.1, +1.4], episode [-1.1, +1.4] | +0.7 day [-0.6, +1.9], episode [-0.6, +1.9] | 5/9, 6/9 | -3.3 to +3.6; -3.2 to +2.8 |
+| B2 | low (after a new low) | 30 | 15,277 | 66.2% | 57.8% | 59.3% | -1.3 day [-2.7, -0.0], episode [-2.7, +0.0] | -0.8 day [-2.1, +0.5], episode [-2.2, +0.6] | -1.6 day [-2.9, -0.3], episode [-2.9, -0.2] | -1.0 day [-2.4, +0.3], episode [-2.4, +0.3] | 7/9, 6/9 | - |
+| B2 | high (after a new high) | 1 | 13,965 | 69.2% | 52.8% | 53.9% | -1.1 day [-2.3, +0.1], episode [-2.3, +0.1] | +0.4 day [-0.8, +1.6], episode [-0.8, +1.6] | -1.1 day [-2.3, +0.1], episode [-2.3, +0.1] | +0.4 day [-0.8, +1.6], episode [-0.8, +1.5] | 7/9, 5/9 | - |
+| B2 | high (after a new high) | 3 | 13,965 | 69.2% | 54.0% | 55.3% | -1.3 day [-2.5, -0.0], episode [-2.5, -0.0] | -1.0 day [-2.2, +0.3], episode [-2.2, +0.3] | -1.3 day [-2.5, -0.1], episode [-2.5, -0.1] | -1.0 day [-2.3, +0.2], episode [-2.2, +0.2] | 7/9, 7/9 | - |
+| B2 | high (after a new high) | 5 | 13,965 | 69.2% | 55.1% | 56.6% | -1.2 day [-2.5, +0.1], episode [-2.5, +0.1] | +0.4 day [-0.9, +1.7], episode [-0.9, +1.6] | -1.5 day [-2.8, -0.2], episode [-2.8, -0.2] | +0.1 day [-1.2, +1.4], episode [-1.1, +1.4] | 5/9, 6/9 | - |
+| B2 | high (after a new high) | 10 | 13,965 | 69.2% | 54.4% | 57.0% | -2.5 day [-3.8, -1.2], episode [-3.8, -1.2] | -2.3 day [-3.6, -1.0], episode [-3.6, -1.0] | -2.6 day [-3.8, -1.3], episode [-3.9, -1.3] | -2.4 day [-3.7, -1.1], episode [-3.7, -1.1] | 7/9, 5/9 | - |
+| B2 | high (after a new high) | 15 | 13,965 | 69.2% | 53.8% | 56.7% | -2.7 day [-4.0, -1.4], episode [-4.1, -1.4] | -2.5 day [-3.8, -1.2], episode [-3.9, -1.2] | -2.9 day [-4.2, -1.6], episode [-4.3, -1.5] | -2.7 day [-4.1, -1.4], episode [-4.1, -1.4] | 6/9, 6/9 | -7.8 to +1.8; -8.6 to +3.1 |
+| B2 | high (after a new high) | 30 | 13,965 | 69.2% | 53.9% | 55.8% | -1.8 day [-3.2, -0.3], episode [-3.3, -0.3] | -1.6 day [-3.1, -0.2], episode [-3.1, -0.1] | -1.9 day [-3.3, -0.4], episode [-3.4, -0.4] | -1.7 day [-3.2, -0.3], episode [-3.2, -0.2] | 7/9, 7/9 | - |
+
+A: liquidation signature against the hard 15-minute move, long (after a fall), 15 minutes, by the pre-registered rule applied to the adjusted estimate: adds nothing measurable (all four intervals lie below the increment of interest). Standardised difference of the move size after matching +0.097. Adjusted estimate, last print -1.2 day [-2.7, +0.4], episode [-2.7, +0.4]; VWAP -0.7 day [-2.2, +0.9], episode [-2.2, +0.9]; years held 5/5 and 2/5. Raw matched difference, last print -0.8 day [-2.4, +0.7], episode [-2.4, +0.7]; VWAP -0.3 day [-1.9, +1.2], episode [-1.9, +1.2].
+
+A: liquidation signature against the hard 15-minute move, short (after a rise), 15 minutes, by the pre-registered rule applied to the adjusted estimate: not resolved (an interval straddles zero or the increment of interest). Standardised difference of the move size after matching +0.083. Adjusted estimate, last print +1.7 day [-0.1, +3.4], episode [-0.0, +3.4]; VWAP +1.4 day [-0.4, +3.1], episode [-0.3, +3.1]; years held 3/5 and 3/5. Raw matched difference, last print +1.6 day [-0.2, +3.3], episode [-0.1, +3.3]; VWAP +1.2 day [-0.5, +3.0], episode [-0.5, +2.9].
+
+B: trade-count climax against the new 1-hour extreme, high (after a new high), 15 minutes, by the pre-registered rule applied to the adjusted estimate: adds nothing measurable (all four intervals lie below the increment of interest). Standardised difference of the move size after matching +0.185. Adjusted estimate, last print +0.6 day [-0.3, +1.5], episode [-0.3, +1.5]; VWAP -0.0 day [-0.9, +0.9], episode [-0.9, +0.9]; years held 1/8 and 6/8. Raw matched difference, last print +0.9 day [-0.0, +1.8], episode [-0.0, +1.8]; VWAP +0.1 day [-0.8, +1.0], episode [-0.9, +1.0].
+
+B: trade-count climax against the new 1-hour extreme, low (after a new low), 15 minutes, by the pre-registered rule applied to the adjusted estimate: adds something (all four intervals are above zero and the sign is held in a majority of years under both labels). Standardised difference of the move size after matching +0.143. Adjusted estimate, last print +2.3 day [+1.4, +3.3], episode [+1.4, +3.3]; VWAP +1.8 day [+0.8, +2.8], episode [+0.8, +2.7]; years held 5/8 and 6/8. Raw matched difference, last print +2.4 day [+1.4, +3.3], episode [+1.4, +3.3]; VWAP +1.9 day [+0.9, +2.9], episode [+1.0, +2.8].
+
+Holm across the four primary cells at level 0.05: 1 of 4 rejected (adjusted p A-long 1.000, A-short 0.382, B-high 1.000, B-low 0.002).
+
+'B: trade-count climax against the new 1-hour extreme, high (after a new high)' was scored in 8 of 9 years (fewer than 500 pairs in the others).
+
+'B: trade-count climax against the new 1-hour extreme, low (after a new low)' was scored in 8 of 9 years (fewer than 500 pairs in the others).
+
+B: trade-count climax against the new 1-hour extreme, high (after a new high): 36,370 of 36,825 treated minutes matched, 45.7% of the pairs drawn without replacement; 455 treated minutes unmatched, of which 0 fall in a move-size bin with no eligible control.
+
+B2: relative trade-count climax against the new 1-hour extreme, high (after a new high): 13,965 of 14,142 treated minutes matched, 69.2% of the pairs drawn without replacement; 177 treated minutes unmatched, of which 0 fall in a move-size bin with no eligible control.
+
+B: trade-count climax against the new 1-hour extreme, low (after a new low): 38,642 of 40,475 treated minutes matched, 39.2% of the pairs drawn without replacement; 1,833 treated minutes unmatched, of which 0 fall in a move-size bin with no eligible control.
+
+B2: relative trade-count climax against the new 1-hour extreme, low (after a new low): 15,279 of 15,536 treated minutes matched, 66.2% of the pairs drawn without replacement; 257 treated minutes unmatched, of which 0 fall in a move-size bin with no eligible control.
+
+A: liquidation signature against the hard 15-minute move, long (after a fall): 23,515 of 23,526 treated minutes matched, 85.5% of the pairs drawn without replacement; 11 treated minutes unmatched, of which 0 fall in a move-size bin with no eligible control.
+
+A: liquidation signature against the hard 15-minute move, short (after a rise): 17,392 of 17,395 treated minutes matched, 95.8% of the pairs drawn without replacement; 3 treated minutes unmatched, of which 0 fall in a move-size bin with no eligible control.
+
+A: liquidation signature against the hard 15-minute move, long (after a fall): per year at 15 minutes the adjusted difference runs from -5.2 to -0.3 points under the last print and from -4.0 to +0.8 under the VWAP label, over 5 years.
+
+A: liquidation signature against the hard 15-minute move, short (after a rise): per year at 15 minutes the adjusted difference runs from -0.3 to +3.2 points under the last print and from -1.5 to +3.1 under the VWAP label, over 5 years.
+
+B: trade-count climax against the new 1-hour extreme, high (after a new high): per year at 15 minutes the adjusted difference runs from -11.8 to +7.2 points under the last print and from -8.0 to +6.1 under the VWAP label, over 8 years.
+
+B: trade-count climax against the new 1-hour extreme, low (after a new low): per year at 15 minutes the adjusted difference runs from -3.4 to +4.9 points under the last print and from -5.1 to +3.9 under the VWAP label, over 8 years.
 <!-- table:matched_increment:end -->
 
 Support and balance of the matching:
 
 <!-- table:matched_increment_support:start -->
-Not yet generated: the full run of `python -m models.btc_15m.matched_increment` writes this table.
+Common support of the matching: for each year, contrast and side, the share of treated minutes and the share of the population in each bin of the move's size (bin 1 is the smallest move; the bin edges are the quintiles of the treated minutes' move size in that year and side, so the treated shares are near one fifth and the population shares show where the rest of the population lies), and the number of eligible controls and of unmatched treated minutes in the bin. A treated minute in a bin with no eligible control is unmatched.
+
+| year | contrast | side | move-size bin | treated minutes | share of treated | population minutes | share of population | eligible controls | unmatched treated |
+|---|---|---|---|---|---|---|---|---|---|
+| 2018 | B | high | 1 | 2,638 | 20.0% | 11,795 | 41.3% | 6,424 | 0 |
+| 2018 | B | high | 2 | 2,637 | 20.0% | 6,802 | 23.8% | 2,835 | 0 |
+| 2018 | B | high | 3 | 2,638 | 20.0% | 3,979 | 13.9% | 918 | 0 |
+| 2018 | B | high | 4 | 2,637 | 20.0% | 3,161 | 11.1% | 368 | 0 |
+| 2018 | B | high | 5 | 2,638 | 20.0% | 2,798 | 9.8% | 109 | 0 |
+| 2018 | B2 | high | 1 | 130 | 20.0% | 25,315 | 88.7% | 24,754 | 0 |
+| 2018 | B2 | high | 2 | 130 | 20.0% | 1,921 | 6.7% | 1,718 | 0 |
+| 2018 | B2 | high | 3 | 130 | 20.0% | 678 | 2.4% | 521 | 0 |
+| 2018 | B2 | high | 4 | 130 | 20.0% | 390 | 1.4% | 245 | 0 |
+| 2018 | B2 | high | 5 | 131 | 20.1% | 231 | 0.8% | 97 | 11 |
+| 2018 | B | low | 1 | 3,079 | 20.0% | 9,544 | 35.7% | 4,456 | 0 |
+| 2018 | B | low | 2 | 3,079 | 20.0% | 6,407 | 24.0% | 2,338 | 0 |
+| 2018 | B | low | 3 | 3,078 | 20.0% | 4,161 | 15.6% | 771 | 0 |
+| 2018 | B | low | 4 | 3,079 | 20.0% | 3,420 | 12.8% | 241 | 0 |
+| 2018 | B | low | 5 | 3,079 | 20.0% | 3,186 | 11.9% | 74 | 215 |
+| 2018 | B2 | low | 1 | 203 | 20.0% | 20,413 | 76.4% | 19,364 | 0 |
+| 2018 | B2 | low | 2 | 203 | 20.0% | 3,730 | 14.0% | 3,304 | 0 |
+| 2018 | B2 | low | 3 | 202 | 19.9% | 1,333 | 5.0% | 1,067 | 0 |
+| 2018 | B2 | low | 4 | 203 | 20.0% | 763 | 2.9% | 531 | 0 |
+| 2018 | B2 | low | 5 | 203 | 20.0% | 479 | 1.8% | 264 | 0 |
+| 2019 | B | high | 1 | 662 | 20.0% | 22,293 | 76.2% | 20,268 | 0 |
+| 2019 | B | high | 2 | 662 | 20.0% | 3,962 | 13.5% | 2,876 | 0 |
+| 2019 | B | high | 3 | 662 | 20.0% | 1,430 | 4.9% | 680 | 0 |
+| 2019 | B | high | 4 | 662 | 20.0% | 888 | 3.0% | 202 | 0 |
+| 2019 | B | high | 5 | 663 | 20.0% | 681 | 2.3% | 17 | 285 |
+| 2019 | B2 | high | 1 | 281 | 20.0% | 24,898 | 85.1% | 23,786 | 0 |
+| 2019 | B2 | high | 2 | 281 | 20.0% | 2,430 | 8.3% | 1,987 | 0 |
+| 2019 | B2 | high | 3 | 281 | 20.0% | 1,036 | 3.5% | 686 | 0 |
+| 2019 | B2 | high | 4 | 281 | 20.0% | 549 | 1.9% | 247 | 5 |
+| 2019 | B2 | high | 5 | 282 | 20.1% | 341 | 1.2% | 51 | 28 |
+| 2019 | B | low | 1 | 736 | 20.0% | 17,568 | 76.0% | 15,661 | 0 |
+| 2019 | B | low | 2 | 736 | 20.0% | 2,849 | 12.3% | 1,874 | 0 |
+| 2019 | B | low | 3 | 735 | 20.0% | 1,144 | 4.9% | 365 | 0 |
+| 2019 | B | low | 4 | 736 | 20.0% | 817 | 3.5% | 75 | 0 |
+| 2019 | B | low | 5 | 736 | 20.0% | 740 | 3.2% | 4 | 566 |
+| 2019 | B2 | low | 1 | 366 | 20.0% | 19,130 | 82.7% | 18,064 | 0 |
+| 2019 | B2 | low | 2 | 366 | 20.0% | 2,153 | 9.3% | 1,677 | 0 |
+| 2019 | B2 | low | 3 | 366 | 20.0% | 862 | 3.7% | 449 | 0 |
+| 2019 | B2 | low | 4 | 366 | 20.0% | 565 | 2.4% | 190 | 11 |
+| 2019 | B2 | low | 5 | 366 | 20.0% | 408 | 1.8% | 40 | 51 |
+| 2020 | B | high | 1 | 1,288 | 20.0% | 17,203 | 58.5% | 13,620 | 0 |
+| 2020 | B | high | 2 | 1,288 | 20.0% | 6,297 | 21.4% | 4,197 | 0 |
+| 2020 | B | high | 3 | 1,288 | 20.0% | 2,829 | 9.6% | 1,315 | 0 |
+| 2020 | B | high | 4 | 1,288 | 20.0% | 1,733 | 5.9% | 383 | 0 |
+| 2020 | B | high | 5 | 1,288 | 20.0% | 1,337 | 4.5% | 40 | 68 |
+| 2020 | B2 | high | 1 | 311 | 20.0% | 24,559 | 83.5% | 23,063 | 0 |
+| 2020 | B2 | high | 2 | 310 | 20.0% | 2,759 | 9.4% | 2,260 | 0 |
+| 2020 | B2 | high | 3 | 310 | 20.0% | 955 | 3.2% | 586 | 0 |
+| 2020 | B2 | high | 4 | 310 | 20.0% | 660 | 2.2% | 318 | 8 |
+| 2020 | B2 | high | 5 | 311 | 20.0% | 466 | 1.6% | 146 | 7 |
+| 2020 | B | low | 1 | 1,169 | 20.0% | 13,483 | 60.3% | 10,895 | 0 |
+| 2020 | B | low | 2 | 1,169 | 20.0% | 4,338 | 19.4% | 2,712 | 0 |
+| 2020 | B | low | 3 | 1,169 | 20.0% | 1,998 | 8.9% | 731 | 0 |
+| 2020 | B | low | 4 | 1,169 | 20.0% | 1,377 | 6.2% | 182 | 0 |
+| 2020 | B | low | 5 | 1,170 | 20.0% | 1,180 | 5.3% | 9 | 558 |
+| 2020 | B2 | low | 1 | 324 | 20.0% | 18,318 | 81.9% | 17,267 | 0 |
+| 2020 | B2 | low | 2 | 324 | 20.0% | 2,274 | 10.2% | 1,824 | 0 |
+| 2020 | B2 | low | 3 | 324 | 20.0% | 839 | 3.7% | 478 | 0 |
+| 2020 | B2 | low | 4 | 324 | 20.0% | 533 | 2.4% | 196 | 34 |
+| 2020 | B2 | low | 5 | 325 | 20.0% | 412 | 1.8% | 76 | 15 |
+| 2021 | B | high | 1 | 1,089 | 20.0% | 18,304 | 64.7% | 14,176 | 0 |
+| 2021 | B | high | 2 | 1,089 | 20.0% | 4,937 | 17.5% | 3,187 | 0 |
+| 2021 | B | high | 3 | 1,089 | 20.0% | 2,410 | 8.5% | 1,104 | 0 |
+| 2021 | B | high | 4 | 1,089 | 20.0% | 1,499 | 5.3% | 372 | 1 |
+| 2021 | B | high | 5 | 1,089 | 20.0% | 1,120 | 4.0% | 31 | 18 |
+| 2021 | B2 | high | 1 | 338 | 20.0% | 21,239 | 75.1% | 19,418 | 0 |
+| 2021 | B2 | high | 2 | 338 | 20.0% | 3,796 | 13.4% | 3,217 | 0 |
+| 2021 | B2 | high | 3 | 338 | 20.0% | 1,743 | 6.2% | 1,317 | 0 |
+| 2021 | B2 | high | 4 | 338 | 20.0% | 957 | 3.4% | 586 | 0 |
+| 2021 | B2 | high | 5 | 339 | 20.0% | 535 | 1.9% | 191 | 14 |
+| 2021 | B | low | 1 | 1,301 | 20.0% | 17,106 | 61.9% | 13,293 | 0 |
+| 2021 | B | low | 2 | 1,301 | 20.0% | 5,186 | 18.8% | 3,227 | 0 |
+| 2021 | B | low | 3 | 1,301 | 20.0% | 2,420 | 8.8% | 928 | 0 |
+| 2021 | B | low | 4 | 1,301 | 20.0% | 1,608 | 5.8% | 276 | 4 |
+| 2021 | B | low | 5 | 1,302 | 20.0% | 1,317 | 4.8% | 15 | 250 |
+| 2021 | B2 | low | 1 | 350 | 20.0% | 21,797 | 78.9% | 20,145 | 0 |
+| 2021 | B2 | low | 2 | 350 | 20.0% | 3,061 | 11.1% | 2,511 | 0 |
+| 2021 | B2 | low | 3 | 349 | 20.0% | 1,490 | 5.4% | 1,081 | 4 |
+| 2021 | B2 | low | 4 | 350 | 20.0% | 822 | 3.0% | 452 | 3 |
+| 2021 | B2 | low | 5 | 350 | 20.0% | 467 | 1.7% | 114 | 2 |
+| 2022 | A | long | 1 | 615 | 20.0% | 12,058 | 41.2% | 10,575 | 0 |
+| 2022 | A | long | 2 | 614 | 20.0% | 7,274 | 24.9% | 6,035 | 0 |
+| 2022 | A | long | 3 | 614 | 20.0% | 4,557 | 15.6% | 3,494 | 0 |
+| 2022 | A | long | 4 | 614 | 20.0% | 3,320 | 11.4% | 2,370 | 0 |
+| 2022 | A | long | 5 | 615 | 20.0% | 2,025 | 6.9% | 1,190 | 0 |
+| 2022 | A | short | 1 | 466 | 20.0% | 10,429 | 39.9% | 9,327 | 0 |
+| 2022 | A | short | 2 | 466 | 20.0% | 6,444 | 24.7% | 5,456 | 0 |
+| 2022 | A | short | 3 | 466 | 20.0% | 4,459 | 17.1% | 3,544 | 0 |
+| 2022 | A | short | 4 | 466 | 20.0% | 3,038 | 11.6% | 2,251 | 0 |
+| 2022 | A | short | 5 | 466 | 20.0% | 1,742 | 6.7% | 1,074 | 0 |
+| 2022 | B | high | 1 | 1,058 | 20.0% | 11,909 | 47.9% | 9,559 | 0 |
+| 2022 | B | high | 2 | 1,058 | 20.0% | 4,807 | 19.3% | 3,350 | 0 |
+| 2022 | B | high | 3 | 1,058 | 20.0% | 3,265 | 13.1% | 2,045 | 0 |
+| 2022 | B | high | 4 | 1,058 | 20.0% | 2,761 | 11.1% | 1,596 | 0 |
+| 2022 | B | high | 5 | 1,058 | 20.0% | 2,121 | 8.5% | 1,001 | 0 |
+| 2022 | B2 | high | 1 | 311 | 20.0% | 21,006 | 84.5% | 19,656 | 0 |
+| 2022 | B2 | high | 2 | 311 | 20.0% | 2,015 | 8.1% | 1,570 | 0 |
+| 2022 | B2 | high | 3 | 311 | 20.0% | 897 | 3.6% | 556 | 0 |
+| 2022 | B2 | high | 4 | 311 | 20.0% | 560 | 2.3% | 231 | 14 |
+| 2022 | B2 | high | 5 | 312 | 20.1% | 385 | 1.5% | 68 | 24 |
+| 2022 | B | low | 1 | 1,122 | 20.0% | 12,028 | 44.9% | 9,795 | 0 |
+| 2022 | B | low | 2 | 1,121 | 20.0% | 5,676 | 21.2% | 4,085 | 0 |
+| 2022 | B | low | 3 | 1,122 | 20.0% | 3,824 | 14.3% | 2,494 | 0 |
+| 2022 | B | low | 4 | 1,121 | 20.0% | 3,183 | 11.9% | 1,904 | 0 |
+| 2022 | B | low | 5 | 1,122 | 20.0% | 2,048 | 7.7% | 856 | 0 |
+| 2022 | B2 | low | 1 | 350 | 20.0% | 21,624 | 80.8% | 19,999 | 0 |
+| 2022 | B2 | low | 2 | 350 | 20.0% | 2,858 | 10.7% | 2,292 | 0 |
+| 2022 | B2 | low | 3 | 350 | 20.0% | 1,165 | 4.4% | 741 | 0 |
+| 2022 | B2 | low | 4 | 350 | 20.0% | 671 | 2.5% | 311 | 0 |
+| 2022 | B2 | low | 5 | 351 | 20.0% | 441 | 1.6% | 82 | 18 |
+| 2023 | A | long | 1 | 804 | 20.0% | 9,719 | 45.0% | 8,023 | 0 |
+| 2023 | A | long | 2 | 803 | 20.0% | 5,067 | 23.5% | 3,667 | 0 |
+| 2023 | A | long | 3 | 804 | 20.0% | 3,333 | 15.4% | 2,000 | 0 |
+| 2023 | A | long | 4 | 803 | 20.0% | 2,089 | 9.7% | 1,003 | 0 |
+| 2023 | A | long | 5 | 804 | 20.0% | 1,398 | 6.5% | 398 | 1 |
+| 2023 | A | short | 1 | 762 | 20.0% | 11,483 | 45.5% | 9,636 | 0 |
+| 2023 | A | short | 2 | 761 | 20.0% | 5,895 | 23.4% | 4,467 | 0 |
+| 2023 | A | short | 3 | 761 | 20.0% | 3,797 | 15.0% | 2,471 | 0 |
+| 2023 | A | short | 4 | 761 | 20.0% | 2,401 | 9.5% | 1,227 | 0 |
+| 2023 | A | short | 5 | 762 | 20.0% | 1,669 | 6.6% | 688 | 0 |
+| 2023 | B | high | 1 | 286 | 20.0% | 24,334 | 79.4% | 23,550 | 0 |
+| 2023 | B | high | 2 | 286 | 20.0% | 3,403 | 11.1% | 3,034 | 0 |
+| 2023 | B | high | 3 | 286 | 20.0% | 1,448 | 4.7% | 1,122 | 0 |
+| 2023 | B | high | 4 | 286 | 20.0% | 940 | 3.1% | 626 | 0 |
+| 2023 | B | high | 5 | 287 | 20.1% | 537 | 1.8% | 243 | 0 |
+| 2023 | B2 | high | 1 | 441 | 20.0% | 25,821 | 84.2% | 23,989 | 0 |
+| 2023 | B2 | high | 2 | 441 | 20.0% | 2,558 | 8.3% | 1,912 | 0 |
+| 2023 | B2 | high | 3 | 441 | 20.0% | 1,077 | 3.5% | 565 | 0 |
+| 2023 | B2 | high | 4 | 441 | 20.0% | 692 | 2.3% | 218 | 0 |
+| 2023 | B2 | high | 5 | 442 | 20.0% | 514 | 1.7% | 60 | 32 |
+| 2023 | B | low | 1 | 277 | 20.0% | 21,770 | 78.0% | 21,161 | 0 |
+| 2023 | B | low | 2 | 276 | 20.0% | 3,325 | 11.9% | 2,954 | 0 |
+| 2023 | B | low | 3 | 277 | 20.0% | 1,451 | 5.2% | 1,145 | 0 |
+| 2023 | B | low | 4 | 276 | 20.0% | 900 | 3.2% | 603 | 0 |
+| 2023 | B | low | 5 | 277 | 20.0% | 478 | 1.7% | 195 | 0 |
+| 2023 | B2 | low | 1 | 426 | 20.0% | 23,728 | 85.0% | 22,252 | 0 |
+| 2023 | B2 | low | 2 | 426 | 20.0% | 2,114 | 7.6% | 1,554 | 0 |
+| 2023 | B2 | low | 3 | 426 | 20.0% | 977 | 3.5% | 516 | 0 |
+| 2023 | B2 | low | 4 | 426 | 20.0% | 626 | 2.2% | 189 | 0 |
+| 2023 | B2 | low | 5 | 427 | 20.0% | 479 | 1.7% | 46 | 64 |
+| 2024 | A | long | 1 | 1,521 | 20.0% | 49,230 | 57.6% | 44,170 | 0 |
+| 2024 | A | long | 2 | 1,521 | 20.0% | 18,633 | 21.8% | 14,968 | 0 |
+| 2024 | A | long | 3 | 1,521 | 20.0% | 9,269 | 10.8% | 6,305 | 0 |
+| 2024 | A | long | 4 | 1,521 | 20.0% | 5,384 | 6.3% | 2,853 | 3 |
+| 2024 | A | long | 5 | 1,521 | 20.0% | 2,914 | 3.4% | 943 | 0 |
+| 2024 | A | short | 1 | 1,071 | 20.0% | 46,124 | 53.6% | 41,559 | 0 |
+| 2024 | A | short | 2 | 1,070 | 20.0% | 19,594 | 22.8% | 16,325 | 0 |
+| 2024 | A | short | 3 | 1,071 | 20.0% | 10,727 | 12.5% | 8,033 | 0 |
+| 2024 | A | short | 4 | 1,070 | 20.0% | 6,133 | 7.1% | 3,995 | 3 |
+| 2024 | A | short | 5 | 1,071 | 20.0% | 3,477 | 4.0% | 1,662 | 0 |
+| 2024 | B | high | 1 | 68 | 20.1% | 31,597 | 90.2% | 31,032 | 0 |
+| 2024 | B | high | 2 | 68 | 20.1% | 2,284 | 6.5% | 2,113 | 0 |
+| 2024 | B | high | 3 | 67 | 19.8% | 789 | 2.3% | 681 | 0 |
+| 2024 | B | high | 4 | 68 | 20.1% | 254 | 0.7% | 174 | 0 |
+| 2024 | B | high | 5 | 68 | 20.1% | 96 | 0.3% | 27 | 0 |
+| 2024 | B2 | high | 1 | 507 | 20.0% | 24,854 | 71.0% | 22,266 | 0 |
+| 2024 | B2 | high | 2 | 507 | 20.0% | 5,758 | 16.4% | 4,608 | 0 |
+| 2024 | B2 | high | 3 | 507 | 20.0% | 2,388 | 6.8% | 1,627 | 0 |
+| 2024 | B2 | high | 4 | 507 | 20.0% | 1,296 | 3.7% | 705 | 2 |
+| 2024 | B2 | high | 5 | 508 | 20.0% | 724 | 2.1% | 194 | 10 |
+| 2024 | B | low | 1 | 73 | 20.2% | 29,666 | 94.1% | 29,175 | 0 |
+| 2024 | B | low | 2 | 72 | 19.9% | 1,391 | 4.4% | 1,249 | 0 |
+| 2024 | B | low | 3 | 72 | 19.9% | 268 | 0.9% | 185 | 0 |
+| 2024 | B | low | 4 | 72 | 19.9% | 118 | 0.4% | 45 | 0 |
+| 2024 | B | low | 5 | 73 | 20.2% | 76 | 0.2% | 3 | 39 |
+| 2024 | B2 | low | 1 | 496 | 20.0% | 23,675 | 75.1% | 21,232 | 0 |
+| 2024 | B2 | low | 2 | 496 | 20.0% | 4,494 | 14.3% | 3,478 | 0 |
+| 2024 | B2 | low | 3 | 495 | 20.0% | 1,785 | 5.7% | 1,141 | 0 |
+| 2024 | B2 | low | 4 | 496 | 20.0% | 976 | 3.1% | 428 | 4 |
+| 2024 | B2 | low | 5 | 496 | 20.0% | 589 | 1.9% | 87 | 10 |
+| 2025 | A | long | 1 | 968 | 20.0% | 17,026 | 43.3% | 14,693 | 0 |
+| 2025 | A | long | 2 | 967 | 20.0% | 10,162 | 25.8% | 8,116 | 0 |
+| 2025 | A | long | 3 | 967 | 20.0% | 6,534 | 16.6% | 4,698 | 0 |
+| 2025 | A | long | 4 | 967 | 20.0% | 3,578 | 9.1% | 2,060 | 0 |
+| 2025 | A | long | 5 | 968 | 20.0% | 2,025 | 5.1% | 744 | 6 |
+| 2025 | A | short | 1 | 551 | 20.0% | 15,657 | 42.7% | 13,979 | 0 |
+| 2025 | A | short | 2 | 551 | 20.0% | 9,526 | 26.0% | 8,110 | 0 |
+| 2025 | A | short | 3 | 551 | 20.0% | 5,730 | 15.6% | 4,422 | 0 |
+| 2025 | A | short | 4 | 551 | 20.0% | 3,607 | 9.8% | 2,447 | 0 |
+| 2025 | A | short | 5 | 551 | 20.0% | 2,117 | 5.8% | 1,167 | 0 |
+| 2025 | B | high | 1 | 135 | 20.0% | 33,430 | 93.8% | 32,593 | 0 |
+| 2025 | B | high | 2 | 135 | 20.0% | 1,386 | 3.9% | 1,144 | 0 |
+| 2025 | B | high | 3 | 135 | 20.0% | 448 | 1.3% | 290 | 0 |
+| 2025 | B | high | 4 | 135 | 20.0% | 242 | 0.7% | 102 | 0 |
+| 2025 | B | high | 5 | 136 | 20.1% | 146 | 0.4% | 10 | 37 |
+| 2025 | B2 | high | 1 | 255 | 20.0% | 30,860 | 86.6% | 29,176 | 0 |
+| 2025 | B2 | high | 2 | 255 | 20.0% | 2,695 | 7.6% | 2,261 | 0 |
+| 2025 | B2 | high | 3 | 254 | 19.9% | 1,106 | 3.1% | 786 | 0 |
+| 2025 | B2 | high | 4 | 255 | 20.0% | 603 | 1.7% | 325 | 0 |
+| 2025 | B2 | high | 5 | 255 | 20.0% | 388 | 1.1% | 126 | 8 |
+| 2025 | B | low | 1 | 182 | 20.0% | 31,865 | 90.2% | 30,804 | 0 |
+| 2025 | B | low | 2 | 182 | 20.0% | 2,355 | 6.7% | 1,970 | 0 |
+| 2025 | B | low | 3 | 182 | 20.0% | 633 | 1.8% | 420 | 0 |
+| 2025 | B | low | 4 | 182 | 20.0% | 282 | 0.8% | 93 | 0 |
+| 2025 | B | low | 5 | 182 | 20.0% | 187 | 0.5% | 5 | 131 |
+| 2025 | B2 | low | 1 | 314 | 20.0% | 29,431 | 83.3% | 27,583 | 0 |
+| 2025 | B2 | low | 2 | 314 | 20.0% | 3,338 | 9.5% | 2,730 | 0 |
+| 2025 | B2 | low | 3 | 314 | 20.0% | 1,334 | 3.8% | 938 | 0 |
+| 2025 | B2 | low | 4 | 314 | 20.0% | 761 | 2.2% | 400 | 4 |
+| 2025 | B2 | low | 5 | 315 | 20.1% | 458 | 1.3% | 132 | 12 |
+| 2026 | A | long | 1 | 799 | 20.0% | 17,536 | 48.8% | 15,286 | 0 |
+| 2026 | A | long | 2 | 799 | 20.0% | 7,964 | 22.2% | 6,215 | 0 |
+| 2026 | A | long | 3 | 798 | 20.0% | 5,018 | 14.0% | 3,446 | 0 |
+| 2026 | A | long | 4 | 799 | 20.0% | 3,422 | 9.5% | 1,992 | 0 |
+| 2026 | A | long | 5 | 799 | 20.0% | 1,984 | 5.5% | 804 | 1 |
+| 2026 | A | short | 1 | 630 | 20.0% | 17,039 | 48.2% | 15,106 | 0 |
+| 2026 | A | short | 2 | 630 | 20.0% | 8,870 | 25.1% | 7,215 | 0 |
+| 2026 | A | short | 3 | 630 | 20.0% | 4,769 | 13.5% | 3,399 | 0 |
+| 2026 | A | short | 4 | 630 | 20.0% | 2,756 | 7.8% | 1,683 | 0 |
+| 2026 | A | short | 5 | 630 | 20.0% | 1,950 | 5.5% | 989 | 0 |
+| 2026 | B | high | 1 | 141 | 20.0% | 18,391 | 90.3% | 17,521 | 0 |
+| 2026 | B | high | 2 | 141 | 20.0% | 1,187 | 5.8% | 932 | 0 |
+| 2026 | B | high | 3 | 141 | 20.0% | 423 | 2.1% | 265 | 1 |
+| 2026 | B | high | 4 | 141 | 20.0% | 215 | 1.1% | 72 | 0 |
+| 2026 | B | high | 5 | 141 | 20.0% | 148 | 0.7% | 7 | 45 |
+| 2026 | B2 | high | 1 | 254 | 20.0% | 16,494 | 81.0% | 15,107 | 0 |
+| 2026 | B2 | high | 2 | 254 | 20.0% | 2,063 | 10.1% | 1,623 | 0 |
+| 2026 | B2 | high | 3 | 254 | 20.0% | 936 | 4.6% | 615 | 0 |
+| 2026 | B2 | high | 4 | 254 | 20.0% | 524 | 2.6% | 247 | 8 |
+| 2026 | B2 | high | 5 | 254 | 20.0% | 347 | 1.7% | 90 | 6 |
+| 2026 | B | low | 1 | 158 | 20.1% | 19,308 | 87.8% | 18,494 | 0 |
+| 2026 | B | low | 2 | 157 | 19.9% | 1,722 | 7.8% | 1,410 | 0 |
+| 2026 | B | low | 3 | 157 | 19.9% | 520 | 2.4% | 334 | 1 |
+| 2026 | B | low | 4 | 157 | 19.9% | 260 | 1.2% | 97 | 0 |
+| 2026 | B | low | 5 | 158 | 20.1% | 174 | 0.8% | 16 | 69 |
+| 2026 | B2 | low | 1 | 278 | 20.0% | 17,995 | 81.9% | 16,575 | 0 |
+| 2026 | B2 | low | 2 | 278 | 20.0% | 2,112 | 9.6% | 1,630 | 0 |
+| 2026 | B2 | low | 3 | 278 | 20.0% | 990 | 4.5% | 641 | 0 |
+| 2026 | B2 | low | 4 | 278 | 20.0% | 515 | 2.3% | 221 | 5 |
+| 2026 | B2 | low | 5 | 278 | 20.0% | 372 | 1.7% | 84 | 20 |
+
+Across all years, contrasts and sides, 0 of 147,899 treated minutes fall in a bin with no eligible control and are left unmatched.
+
+Balance after matching, per year and pooled over the scored years ('all'): the mean move size (basis points) and the mean trailing 60-minute volatility of the treated minutes and of their matched controls, and the standardised difference of each (difference of the means over the pooled standard deviation). A primary cell with an absolute standardised difference of the move size above 0.25 is 'not resolved (support)'.
+
+| year | contrast | side | pairs | move, treated | move, controls | move, standardised difference | volatility, treated | volatility, controls | volatility, standardised difference |
+|---|---|---|---|---|---|---|---|---|---|
+| 2018 | B | high | 13,188 | 16.05 | 12.99 | +0.170 | 13.850 | 11.943 | +0.193 |
+| 2018 | B2 | high | 640 | 55.91 | 50.47 | +0.138 | 17.303 | 20.138 | -0.198 |
+| 2018 | B | low | 15,179 | 16.48 | 14.71 | +0.098 | 14.771 | 12.225 | +0.263 |
+| 2018 | B2 | low | 1,014 | 43.20 | 40.23 | +0.093 | 14.623 | 15.625 | -0.099 |
+| 2019 | B | high | 3,026 | 22.49 | 19.45 | +0.167 | 13.875 | 11.650 | +0.333 |
+| 2019 | B2 | high | 1,373 | 35.87 | 29.81 | +0.212 | 13.460 | 12.346 | +0.139 |
+| 2019 | B | low | 3,113 | 23.91 | 20.88 | +0.162 | 13.744 | 10.584 | +0.494 |
+| 2019 | B2 | low | 1,768 | 43.96 | 37.77 | +0.155 | 14.336 | 13.520 | +0.086 |
+| 2020 | B | high | 6,372 | 17.89 | 14.10 | +0.208 | 12.122 | 9.741 | +0.248 |
+| 2020 | B2 | high | 1,537 | 31.21 | 29.02 | +0.079 | 11.983 | 15.092 | -0.224 |
+| 2020 | B | low | 5,288 | 20.83 | 16.55 | +0.185 | 12.286 | 9.977 | +0.292 |
+| 2020 | B2 | low | 1,572 | 47.46 | 40.70 | +0.141 | 14.154 | 16.589 | -0.179 |
+| 2021 | B | high | 5,426 | 25.19 | 20.83 | +0.223 | 15.686 | 11.819 | +0.475 |
+| 2021 | B2 | high | 1,677 | 34.27 | 31.26 | +0.101 | 13.824 | 15.844 | -0.185 |
+| 2021 | B | low | 6,252 | 26.34 | 22.48 | +0.160 | 17.469 | 11.325 | +0.807 |
+| 2021 | B2 | low | 1,740 | 45.33 | 38.36 | +0.177 | 17.224 | 17.451 | -0.019 |
+| 2022 | A | long | 3,072 | 107.84 | 103.63 | +0.070 | 16.309 | 15.491 | +0.087 |
+| 2022 | A | short | 2,330 | 115.17 | 107.21 | +0.111 | 18.251 | 16.036 | +0.193 |
+| 2022 | B | high | 5,290 | 16.37 | 12.94 | +0.182 | 8.946 | 8.452 | +0.088 |
+| 2022 | B2 | high | 1,518 | 36.95 | 31.93 | +0.172 | 12.714 | 12.195 | +0.070 |
+| 2022 | B | low | 5,608 | 16.45 | 13.07 | +0.187 | 9.233 | 8.668 | +0.097 |
+| 2022 | B2 | low | 1,733 | 33.37 | 29.46 | +0.144 | 12.684 | 12.259 | +0.060 |
+| 2023 | A | long | 4,017 | 80.46 | 75.73 | +0.091 | 12.695 | 10.766 | +0.264 |
+| 2023 | A | short | 3,807 | 77.48 | 74.69 | +0.056 | 11.949 | 10.482 | +0.205 |
+| 2023 | B | high | 1,431 | 22.65 | 18.54 | +0.178 | 9.833 | 7.998 | +0.371 |
+| 2023 | B2 | high | 2,174 | 22.55 | 19.10 | +0.168 | 8.058 | 7.615 | +0.095 |
+| 2023 | B | low | 1,383 | 24.66 | 20.08 | +0.178 | 9.734 | 8.097 | +0.346 |
+| 2023 | B2 | low | 2,067 | 24.05 | 20.23 | +0.170 | 8.007 | 7.510 | +0.104 |
+| 2024 | A | long | 7,602 | 72.15 | 66.31 | +0.120 | 12.379 | 10.672 | +0.232 |
+| 2024 | A | short | 5,350 | 66.06 | 62.85 | +0.081 | 11.470 | 10.374 | +0.148 |
+| 2024 | B | high | 339 | 35.39 | 29.79 | +0.204 | 11.844 | 11.072 | +0.106 |
+| 2024 | B2 | high | 2,524 | 17.24 | 14.91 | +0.158 | 8.203 | 8.585 | -0.074 |
+| 2024 | B | low | 323 | 47.72 | 38.53 | +0.227 | 16.655 | 10.134 | +0.889 |
+| 2024 | B2 | low | 2,465 | 22.89 | 18.66 | +0.187 | 9.973 | 8.974 | +0.188 |
+| 2025 | A | long | 4,831 | 70.49 | 65.73 | +0.104 | 11.202 | 10.014 | +0.179 |
+| 2025 | A | short | 2,755 | 71.87 | 66.43 | +0.120 | 12.102 | 10.223 | +0.230 |
+| 2025 | B | high | 639 | 26.03 | 21.98 | +0.251 | 13.244 | 9.292 | +0.745 |
+| 2025 | B2 | high | 1,266 | 19.81 | 16.82 | +0.198 | 8.257 | 8.404 | -0.028 |
+| 2025 | B | low | 779 | 21.58 | 19.36 | +0.152 | 13.883 | 9.020 | +0.890 |
+| 2025 | B2 | low | 1,555 | 19.64 | 16.35 | +0.191 | 9.119 | 8.716 | +0.074 |
+| 2026 | A | long | 3,993 | 62.29 | 58.58 | +0.105 | 9.661 | 9.467 | +0.037 |
+| 2026 | A | short | 3,150 | 65.06 | 61.53 | +0.094 | 10.313 | 9.900 | +0.079 |
+| 2026 | B | high | 659 | 25.98 | 22.49 | +0.192 | 12.383 | 8.041 | +0.907 |
+| 2026 | B2 | high | 1,256 | 20.06 | 17.19 | +0.174 | 7.834 | 8.561 | -0.147 |
+| 2026 | B | low | 717 | 22.85 | 19.93 | +0.190 | 12.207 | 7.760 | +1.063 |
+| 2026 | B2 | low | 1,365 | 18.99 | 16.34 | +0.186 | 8.214 | 8.014 | +0.047 |
+| all | B | high | 36,031 | 18.96 | 15.46 | +0.185 | 12.906 | 10.722 | +0.251 |
+| all | B2 | high | 13,965 | 27.88 | 24.40 | +0.134 | 10.667 | 11.295 | -0.070 |
+| all | B | low | 38,319 | 19.81 | 16.88 | +0.143 | 13.726 | 10.816 | +0.349 |
+| all | B2 | low | 15,279 | 32.43 | 27.81 | +0.142 | 11.840 | 11.753 | +0.010 |
+| all | A | long | 23,515 | 76.22 | 71.36 | +0.097 | 12.243 | 10.978 | +0.170 |
+| all | A | short | 17,392 | 75.88 | 71.71 | +0.083 | 12.374 | 11.046 | +0.163 |
 <!-- table:matched_increment_support:end -->
 
 The legs of contrast A added one at a time, descriptive and unmatched:
 
 <!-- table:matched_increment_subsets:start -->
-Not yet generated: the full run of `python -m models.btc_15m.matched_increment` writes this table.
+Descriptive and unmatched: the legs of the liquidation signature added one at a time. For each side and each non-empty subset of the three legs (the 15-minute return beyond its previous-year cut, the 15-minute open-interest change below its lower cut, the perp volume ratio above its upper cut), the event is 'every leg in the subset is on', scored against all other minutes as in the derivatives table: pooled up-rate of the next h minutes, the oriented deviation from the unconditional rate in points (reversal positive) with a 95% interval (day-clustered errors, years combined as independent), and the share of the last-print deviation kept under the VWAP label. A subset-year with fewer than 500 firings is not scored. No matching and no null are applied, so a larger deviation in a bigger subset can come from a bigger move.
+
+| side | legs on | horizon (min) | fires | share | reversal rate | deviation (points) [95% interval] | years held | VWAP retained |
+|---|---|---|---|---|---|---|---|---|
+| long | 15-minute return extreme | 1 | 211,519 | 8.63% | 52.0% | +0.7 [+0.5, +0.9] | 5/5 | 286% |
+| long | 15-minute return extreme | 3 | 211,519 | 8.63% | 52.9% | +2.6 [+2.3, +2.9] | 5/5 | 115% |
+| long | 15-minute return extreme | 5 | 211,519 | 8.63% | 53.5% | +3.4 [+3.0, +3.7] | 5/5 | 105% |
+| long | 15-minute return extreme | 10 | 211,519 | 8.63% | 53.8% | +3.7 [+3.3, +4.1] | 5/5 | 111% |
+| long | 15-minute return extreme | 15 | 211,518 | 8.63% | 54.1% | +3.9 [+3.5, +4.4] | 5/5 | 107% |
+| long | 15-minute return extreme | 30 | 211,513 | 8.63% | 53.9% | +3.5 [+3.0, +4.0] | 5/5 | 106% |
+| long | 15-minute open-interest drop | 1 | 183,796 | 7.50% | 50.6% | -0.9 [-1.1, -0.7] | 5/5 | 1% |
+| long | 15-minute open-interest drop | 3 | 183,796 | 7.50% | 50.5% | +0.1 [-0.2, +0.4] | 4/5 | - |
+| long | 15-minute open-interest drop | 5 | 183,796 | 7.50% | 50.7% | +0.5 [+0.2, +0.9] | 4/5 | 107% |
+| long | 15-minute open-interest drop | 10 | 183,796 | 7.50% | 51.2% | +1.1 [+0.6, +1.6] | 4/5 | 95% |
+| long | 15-minute open-interest drop | 15 | 183,796 | 7.50% | 51.6% | +1.4 [+0.9, +2.0] | 4/5 | 95% |
+| long | 15-minute open-interest drop | 30 | 183,787 | 7.50% | 52.0% | +1.7 [+1.0, +2.3] | 5/5 | 105% |
+| long | perp volume surge | 1 | 255,953 | 10.44% | 50.2% | -1.1 [-1.3, -0.9] | 5/5 | 19% |
+| long | perp volume surge | 3 | 255,953 | 10.44% | 50.3% | -0.0 [-0.3, +0.2] | 2/5 | - |
+| long | perp volume surge | 5 | 255,953 | 10.44% | 50.3% | +0.2 [-0.1, +0.5] | 2/5 | - |
+| long | perp volume surge | 10 | 255,953 | 10.44% | 50.5% | +0.3 [-0.0, +0.7] | 3/5 | - |
+| long | perp volume surge | 15 | 255,953 | 10.44% | 50.5% | +0.4 [-0.0, +0.8] | 3/5 | - |
+| long | perp volume surge | 30 | 255,948 | 10.44% | 50.7% | +0.3 [-0.2, +0.9] | 4/5 | - |
+| long | 15-minute return extreme + 15-minute open-interest drop | 1 | 44,281 | 1.81% | 51.8% | +0.4 [-0.1, +0.8] | 4/5 | - |
+| long | 15-minute return extreme + 15-minute open-interest drop | 3 | 44,281 | 1.81% | 52.6% | +2.2 [+1.6, +2.8] | 5/5 | 109% |
+| long | 15-minute return extreme + 15-minute open-interest drop | 5 | 44,281 | 1.81% | 53.4% | +3.2 [+2.5, +4.0] | 4/5 | 101% |
+| long | 15-minute return extreme + 15-minute open-interest drop | 10 | 44,281 | 1.81% | 54.0% | +3.9 [+2.9, +4.8] | 4/5 | 113% |
+| long | 15-minute return extreme + 15-minute open-interest drop | 15 | 44,281 | 1.81% | 54.7% | +4.5 [+3.5, +5.6] | 4/5 | 105% |
+| long | 15-minute return extreme + 15-minute open-interest drop | 30 | 44,281 | 1.81% | 55.2% | +4.9 [+3.7, +6.0] | 4/5 | 106% |
+| long | 15-minute return extreme + perp volume surge | 1 | 75,062 | 3.06% | 52.3% | +0.9 [+0.6, +1.3] | 4/5 | 260% |
+| long | 15-minute return extreme + perp volume surge | 3 | 75,062 | 3.06% | 53.3% | +2.9 [+2.4, +3.4] | 5/5 | 112% |
+| long | 15-minute return extreme + perp volume surge | 5 | 75,062 | 3.06% | 54.2% | +4.0 [+3.4, +4.5] | 5/5 | 106% |
+| long | 15-minute return extreme + perp volume surge | 10 | 75,062 | 3.06% | 54.2% | +4.1 [+3.4, +4.8] | 5/5 | 114% |
+| long | 15-minute return extreme + perp volume surge | 15 | 75,062 | 3.06% | 54.7% | +4.5 [+3.7, +5.3] | 5/5 | 111% |
+| long | 15-minute return extreme + perp volume surge | 30 | 75,062 | 3.06% | 55.0% | +4.6 [+3.7, +5.6] | 5/5 | 108% |
+| long | 15-minute open-interest drop + perp volume surge | 1 | 58,042 | 2.37% | 50.0% | -1.4 [-1.8, -1.0] | 5/5 | 25% |
+| long | 15-minute open-interest drop + perp volume surge | 3 | 58,042 | 2.37% | 50.3% | -0.0 [-0.6, +0.5] | 2/5 | - |
+| long | 15-minute open-interest drop + perp volume surge | 5 | 58,042 | 2.37% | 50.4% | +0.2 [-0.4, +0.8] | 2/5 | - |
+| long | 15-minute open-interest drop + perp volume surge | 10 | 58,042 | 2.37% | 50.8% | +0.6 [-0.2, +1.4] | 4/5 | - |
+| long | 15-minute open-interest drop + perp volume surge | 15 | 58,042 | 2.37% | 51.1% | +0.9 [+0.0, +1.8] | 4/5 | 98% |
+| long | 15-minute open-interest drop + perp volume surge | 30 | 58,042 | 2.37% | 52.1% | +1.8 [+0.7, +2.8] | 4/5 | 106% |
+| long | 15-minute return extreme + 15-minute open-interest drop + perp volume surge | 1 | 23,526 | 0.96% | 51.8% | +0.4 [-0.2, +1.0] | 4/5 | - |
+| long | 15-minute return extreme + 15-minute open-interest drop + perp volume surge | 3 | 23,526 | 0.96% | 52.6% | +2.2 [+1.3, +3.1] | 5/5 | 119% |
+| long | 15-minute return extreme + 15-minute open-interest drop + perp volume surge | 5 | 23,526 | 0.96% | 53.4% | +3.2 [+2.1, +4.2] | 4/5 | 108% |
+| long | 15-minute return extreme + 15-minute open-interest drop + perp volume surge | 10 | 23,526 | 0.96% | 53.6% | +3.5 [+2.2, +4.8] | 4/5 | 119% |
+| long | 15-minute return extreme + 15-minute open-interest drop + perp volume surge | 15 | 23,526 | 0.96% | 54.3% | +4.1 [+2.7, +5.5] | 4/5 | 112% |
+| long | 15-minute return extreme + 15-minute open-interest drop + perp volume surge | 30 | 23,526 | 0.96% | 55.5% | +5.1 [+3.6, +6.7] | 4/5 | 106% |
+| short | 15-minute return extreme | 1 | 209,433 | 8.54% | 51.9% | +3.2 [+3.0, +3.5] | 5/5 | 70% |
+| short | 15-minute return extreme | 3 | 209,433 | 8.54% | 52.5% | +2.9 [+2.6, +3.2] | 5/5 | 100% |
+| short | 15-minute return extreme | 5 | 209,432 | 8.54% | 52.8% | +3.0 [+2.7, +3.4] | 5/5 | 104% |
+| short | 15-minute return extreme | 10 | 209,430 | 8.54% | 52.7% | +2.9 [+2.5, +3.3] | 5/5 | 111% |
+| short | 15-minute return extreme | 15 | 209,430 | 8.54% | 52.7% | +2.9 [+2.4, +3.3] | 5/5 | 111% |
+| short | 15-minute return extreme | 30 | 209,429 | 8.54% | 52.1% | +2.4 [+1.9, +2.9] | 5/5 | 109% |
+| short | 15-minute open-interest drop | 1 | 183,796 | 7.50% | 49.4% | +0.9 [+0.7, +1.1] | 5/5 | 1% |
+| short | 15-minute open-interest drop | 3 | 183,796 | 7.50% | 49.5% | -0.1 [-0.4, +0.2] | 4/5 | - |
+| short | 15-minute open-interest drop | 5 | 183,796 | 7.50% | 49.3% | -0.5 [-0.9, -0.2] | 4/5 | 107% |
+| short | 15-minute open-interest drop | 10 | 183,796 | 7.50% | 48.8% | -1.1 [-1.6, -0.6] | 4/5 | 95% |
+| short | 15-minute open-interest drop | 15 | 183,796 | 7.50% | 48.4% | -1.4 [-2.0, -0.9] | 4/5 | 95% |
+| short | 15-minute open-interest drop | 30 | 183,787 | 7.50% | 48.0% | -1.7 [-2.3, -1.0] | 5/5 | 105% |
+| short | perp volume surge | 1 | 255,953 | 10.44% | 49.8% | +1.1 [+0.9, +1.3] | 5/5 | 19% |
+| short | perp volume surge | 3 | 255,953 | 10.44% | 49.7% | +0.0 [-0.2, +0.3] | 2/5 | - |
+| short | perp volume surge | 5 | 255,953 | 10.44% | 49.7% | -0.2 [-0.5, +0.1] | 2/5 | - |
+| short | perp volume surge | 10 | 255,953 | 10.44% | 49.5% | -0.3 [-0.7, +0.0] | 3/5 | - |
+| short | perp volume surge | 15 | 255,953 | 10.44% | 49.5% | -0.4 [-0.8, +0.0] | 3/5 | - |
+| short | perp volume surge | 30 | 255,948 | 10.44% | 49.3% | -0.3 [-0.9, +0.2] | 4/5 | - |
+| short | 15-minute return extreme + 15-minute open-interest drop | 1 | 38,525 | 1.57% | 51.9% | +3.4 [+2.9, +3.9] | 5/5 | 81% |
+| short | 15-minute return extreme + 15-minute open-interest drop | 3 | 38,525 | 1.57% | 52.2% | +2.6 [+1.9, +3.3] | 5/5 | 95% |
+| short | 15-minute return extreme + 15-minute open-interest drop | 5 | 38,525 | 1.57% | 52.5% | +2.7 [+1.9, +3.5] | 5/5 | 96% |
+| short | 15-minute return extreme + 15-minute open-interest drop | 10 | 38,525 | 1.57% | 52.3% | +2.4 [+1.5, +3.4] | 5/5 | 114% |
+| short | 15-minute return extreme + 15-minute open-interest drop | 15 | 38,525 | 1.57% | 52.3% | +2.5 [+1.5, +3.6] | 5/5 | 116% |
+| short | 15-minute return extreme + 15-minute open-interest drop | 30 | 38,524 | 1.57% | 51.4% | +1.7 [+0.6, +2.9] | 5/5 | 105% |
+| short | 15-minute return extreme + perp volume surge | 1 | 69,232 | 2.82% | 52.3% | +3.7 [+3.3, +4.0] | 5/5 | 88% |
+| short | 15-minute return extreme + perp volume surge | 3 | 69,232 | 2.82% | 53.0% | +3.3 [+2.8, +3.8] | 5/5 | 101% |
+| short | 15-minute return extreme + perp volume surge | 5 | 69,232 | 2.82% | 53.4% | +3.6 [+3.0, +4.2] | 5/5 | 101% |
+| short | 15-minute return extreme + perp volume surge | 10 | 69,232 | 2.82% | 53.0% | +3.1 [+2.3, +3.9] | 5/5 | 112% |
+| short | 15-minute return extreme + perp volume surge | 15 | 69,232 | 2.82% | 53.3% | +3.5 [+2.6, +4.3] | 5/5 | 113% |
+| short | 15-minute return extreme + perp volume surge | 30 | 69,232 | 2.82% | 53.2% | +3.5 [+2.6, +4.5] | 5/5 | 107% |
+| short | 15-minute open-interest drop + perp volume surge | 1 | 58,042 | 2.37% | 50.0% | +1.4 [+1.0, +1.8] | 5/5 | 25% |
+| short | 15-minute open-interest drop + perp volume surge | 3 | 58,042 | 2.37% | 49.7% | +0.0 [-0.5, +0.6] | 2/5 | - |
+| short | 15-minute open-interest drop + perp volume surge | 5 | 58,042 | 2.37% | 49.6% | -0.2 [-0.8, +0.4] | 2/5 | - |
+| short | 15-minute open-interest drop + perp volume surge | 10 | 58,042 | 2.37% | 49.2% | -0.6 [-1.4, +0.2] | 4/5 | - |
+| short | 15-minute open-interest drop + perp volume surge | 15 | 58,042 | 2.37% | 48.9% | -0.9 [-1.8, -0.0] | 4/5 | 98% |
+| short | 15-minute open-interest drop + perp volume surge | 30 | 58,042 | 2.37% | 47.9% | -1.8 [-2.8, -0.7] | 4/5 | 106% |
+| short | 15-minute return extreme + 15-minute open-interest drop + perp volume surge | 1 | 17,395 | 0.71% | 53.0% | +4.4 [+3.7, +5.2] | 5/5 | 90% |
+| short | 15-minute return extreme + 15-minute open-interest drop + perp volume surge | 3 | 17,395 | 0.71% | 53.4% | +3.8 [+2.8, +4.8] | 5/5 | 98% |
+| short | 15-minute return extreme + 15-minute open-interest drop + perp volume surge | 5 | 17,395 | 0.71% | 54.1% | +4.3 [+3.2, +5.5] | 5/5 | 89% |
+| short | 15-minute return extreme + 15-minute open-interest drop + perp volume surge | 10 | 17,395 | 0.71% | 53.5% | +3.7 [+2.3, +5.0] | 5/5 | 109% |
+| short | 15-minute return extreme + 15-minute open-interest drop + perp volume surge | 15 | 17,395 | 0.71% | 54.2% | +4.4 [+2.9, +5.9] | 5/5 | 107% |
+| short | 15-minute return extreme + 15-minute open-interest drop + perp volume surge | 30 | 17,395 | 0.71% | 52.7% | +3.1 [+1.4, +4.7] | 5/5 | 98% |
 <!-- table:matched_increment_subsets:end -->
 
-**What it says.** (written by the owner after the run, from the rows)
+**What it says.** Written after the run, from the rows of the tables above.
+
+- *The long liquidation signature adds nothing to the fall it sits on.* Matched to falls of the same size without the open-interest and volume legs, its adjusted difference is small and slightly negative at every horizon up to 15 minutes, and at 15 minutes every interval lies below the increment of interest under both labels (the A-long rows). The subsets table says the same from the other side: the return leg alone carries almost all of the signature's deviation, and adding the open-interest and volume legs changes it little.
+- *The short signature leans toward adding something, and five years cannot say.* Its adjusted difference is positive at 5 and 15 minutes; at 15 minutes the interval touches zero under both labels and the sign holds in a majority of years (the A-short rows), and the subsets table shows the three legs together reversing more than the rise alone. The pre-registration's detectable increment for this cell was larger than the increment of interest, so "not resolved" is what an effect of about this size produces with five years; more years would settle it, not another method.
+- *The trade-count climax adds something at a new low.* Matched to new 1-hour lows without the climax, the adjusted difference is above zero at 10, 15 and 30 minutes under the last print and at 15 minutes under both labels, the sign holds in a majority of years at 15 minutes, and it is the one cell the Holm test rejects (the B-low rows and the Holm sentence). The per-year range is wide (the per-year sentence), so this is a pooled increment rather than a rule that holds every year.
+- *At a new high the climax adds nothing measurable at 15 minutes.* The adjusted difference is near zero there and the sign holds in few years (the B-high rows); at 30 minutes it is positive with an interval above zero, which is descriptive, not a primary cell.
+- *The relative count does not reproduce it.* The relative-count climax at a new low adds nothing (the B2-low rows), and at a new high it is followed by less reversal than a plain new high, with intervals below zero from 10 to 30 minutes (the B2-high rows). The absolute count at a new low is the version that carries the increment.
+- *The matching is thinner for the climax than for the signature.* Fewer than half of the climax pairs could be drawn without replacement, and the volatility balance of the climax cells is the weakest in the balance table (reported, not gated; the adjustment includes volatility). The move-size balance is inside the pre-registered gate in every primary cell (the support table).
 
 ## Direction with magnitude
 
