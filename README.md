@@ -1,6 +1,6 @@
 # prediction-market-lab
 
-Models, prediction logs and tracking tools for prediction markets. Each model lives in its own folder under `models/`, is evaluated walk-forward against a one-feature baseline on the same windows, and reports numbers that a script generated.
+Models, prediction logs and tracking tools for prediction markets. Each model lives in its own folder under `models/`. It is evaluated walk-forward against a one-feature baseline on the same windows, and a script generates every number it reports.
 
 ## Models
 
@@ -11,11 +11,22 @@ Models, prediction logs and tracking tools for prediction markets. Each model li
 
 ### BTC 15-minute direction, in short
 
-The question was whether machine learning on free Binance candles predicts the direction of a 15-minute window. The answer, after 32 studies and an outside review that forced the baselines and the statistics to be redone, is in two parts.
+The question was whether machine learning on free Binance candles predicts the direction of a 15-minute window. After 32 studies and an outside review that forced the baselines and the statistics to be redone, the answer is that consecutive windows tend to reverse and the fitted models add little to that.
 
-**There is a real effect, and it is one bit.** Consecutive 15-minute windows tend to go opposite ways. Calling the opposite of the previous window is right about 52% of the time, and that holds everywhere it was looked for: in the eleven study months, in nine earlier months no study had loaded, in September 2026 after the rules were frozen, on Coinbase and Bitstamp as well as Binance, under labels built from 60-second volume-weighted prices (so it is not noise in a shared boundary print), and at every one of the 15 ways of placing a 15-minute grid on the clock (so it is about any 15-minute boundary, not the quarter hour). A search over about 900 event rules finds the same reversal hundreds of times over against a null that finds nothing, and the rules kept their direction out of sample.
-
-**The models add little beyond that bit, and what they add is not established.** With price and order-flow features the forest is about half a point above the one-bit rule in the backtest, with a day-level interval that includes zero; with a bank of technical indicators it is about a point above, with an interval that excludes zero on day blocks only. On the nine 2025 months the frozen forest is level with the rule. After the open, the lead over the open scaled by the volatility left in the window explains the accuracy, and no model beats it. Earlier versions of this README put the headline at 53% against a 50% majority baseline; against the right baseline the fitted models' contribution is the small, uncertain part, and the reversal is the finding.
+- **There is a real effect, and it is one bit: the previous window's direction.** Consecutive 15-minute windows tend to go opposite ways. Calling the opposite of the previous window (the one-bit rule) is right about 52% of the time. It holds everywhere it was looked for:
+  - in the eleven study months
+  - in nine earlier months no study had loaded
+  - in September 2026, after the rules were frozen
+  - on Coinbase and Bitstamp as well as Binance
+  - under labels built from 60-second volume-weighted prices, so it is not noise in a shared boundary print
+  - at every one of the 15 ways of placing a 15-minute grid on the clock, so it concerns any 15-minute boundary, not the quarter hour
+- **The event rules find the same reversal.** A search over about 900 event rules finds it hundreds of times over against a null that finds nothing. The rules kept their direction out of sample.
+- **The models add little beyond that bit, and what they add is not established.**
+  - With price and order-flow features, the forest is about half a point above the one-bit rule in the backtest, with a day-level interval that includes zero.
+  - With a bank of technical indicators, it is about a point above, with an interval that excludes zero on day blocks only.
+  - On the nine 2025 months, the frozen forest is level with the rule.
+  - After the open, the lead over the open scaled by the volatility left in the window explains the accuracy, and no model beats it.
+- **The reversal is the finding, and the fitted models are the small, uncertain part.** Earlier versions of this README put the headline at 53% against a 50% majority baseline. Against the right baseline, the models' contribution is small and uncertain.
 
 <!-- table:headline:start -->
 | where | one-bit rule | its accuracy | fitted model | its accuracy | model minus rule, points [day CI] | more |
@@ -45,11 +56,14 @@ Every row above is read from a table a study wrote. The full tables, the 32 stud
 ## How the work is done
 
 - No number in a document is typed by hand. Tables come from `results/`, written by the evaluation scripts and spliced into the docs by `scripts/update_readme.py`; the README summary is built by `scripts/headline.py` from those tables.
-- Features are pure functions of past candles, and a test proves it by tampering with future candles.
-- Every model is reported next to a one-feature baseline on the same windows: the previous window's direction at the open, the lead z-score after it.
-- Uncertainty respects time: intervals resample whole days and whole months, the model-against-baseline test uses daily differences with random sign flips, and the significance test rotates labels within months instead of shuffling them.
-- The forward log is append-only with a hash chain (`python -m models.btc_15m.log --verify`) and a manifest of what the frozen models are. Windows scored under two model versions appear twice, labelled; nothing is overwritten.
-- Bugs found along the way are recorded, not erased: [docs/process.md](docs/process.md). Data sources and what each was used for: [docs/sources.md](docs/sources.md).
+- Features are pure functions of past candles, and a test checks this by altering future candles.
+- **One-feature baselines.** Every model is reported next to one on the same windows: the previous window's direction at the open, the lead z-score after it.
+- Uncertainty respects time:
+  - Intervals resample whole days and whole months.
+  - The model-against-baseline test uses daily differences with random sign flips.
+  - The significance test rotates labels within months instead of shuffling them.
+- The forward log is append-only, with a hash chain (`python -m models.btc_15m.log --verify`) and a manifest of what the frozen models are. Windows scored under two model versions appear twice, labelled. Nothing is overwritten.
+- Bugs are recorded, not erased, in [docs/process.md](docs/process.md). Data sources and what each was used for are in [docs/sources.md](docs/sources.md).
 
 ## Setup
 
@@ -79,4 +93,4 @@ python -m pytest tests
 python scripts/run_queue.py "python -m models.btc_15m.drift" "python -m models.btc_15m.meta"   # runs jobs when the machine is free
 ```
 
-Heavy models run on the GPU when one is present (XGBoost, the sequence models). Host-side threads are capped at two per process so several studies can run without saturating the machine, and features are cached under `data/feature_cache/` after the first build.
+Heavy models run on the GPU when one is present (XGBoost, the sequence models). Host-side threads are capped at two per process, so several studies can run without saturating the machine. Features are cached under `data/feature_cache/` after the first build.
