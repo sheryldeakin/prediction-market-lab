@@ -1,6 +1,9 @@
 """The numbers the docs repeat by hand agree with what the docs contain."""
 import re
+import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -20,3 +23,14 @@ def test_every_table_marker_has_a_generated_source():
         for name in re.findall(r"<!-- table:([a-z_0-9]+):start -->", text):
             assert (ROOT / "results" / "btc_15m" / f"{name}.md").exists(), f"{doc.name}: no results/btc_15m/{name}.md"
             assert f"<!-- table:{name}:end -->" in text, f"{doc.name}: {name} has no end marker"
+
+
+# The marker comes off when the docs prose pass lands.
+@pytest.mark.xfail(strict=False, reason="docs prose pass in progress")
+def test_docs_prose_has_no_blocking_language_hits():
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import check_prose
+    results = check_prose.check_files(check_prose.default_files())
+    blocking = [f"{name}:{n}: {fam}" for name, hits in results.items()
+                for n, fam, _ in hits if check_prose.is_blocking(fam)]
+    assert not blocking, f"{len(blocking)} blocking hits, first: {blocking[:5]}"
