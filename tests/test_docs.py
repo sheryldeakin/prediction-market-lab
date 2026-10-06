@@ -25,8 +25,7 @@ def test_every_table_marker_has_a_generated_source():
             assert f"<!-- table:{name}:end -->" in text, f"{doc.name}: {name} has no end marker"
 
 
-# The marker comes off when the docs prose pass lands.
-@pytest.mark.xfail(strict=False, reason="docs prose pass in progress")
+# Blocking since the docs prose pass of 2026-10-06; a retired phrasing goes into scripts/check_prose.py the day it is retired.
 def test_docs_prose_has_no_blocking_language_hits():
     sys.path.insert(0, str(ROOT / "scripts"))
     import check_prose

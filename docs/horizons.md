@@ -1412,7 +1412,7 @@ The verdict follows from the criteria:
 - **B is supported** if the g=1 label is over half of the last-print deviation (A1 read the other way at two of three horizons), B1 is met and B3 is met.
 - **"Unidentified with this data"** if neither holds, or both, or they conflict. The section then names what data would settle it.
 
-A3 can corroborate A and cannot make it supported. B2 is not part of the verdict. A control-only common-factor check is out of scope here: the cross-venue replication earlier in this document covers it.
+A3 can corroborate A and cannot make it supported. B2 is not part of the verdict. A control-only common-factor check is out of scope here: the venue comparison in study 25 of the main report ([btc_15m.md](btc_15m.md)) covers it.
 
 <!-- table:mechanism_embargo:start -->
 Embargoed labels for events of any of the six kinds and for each kind alone, 2018 to 2026-08. Each event is the first firing of its kind in any 30 minutes; each has one matched control minute (same year, same hour of day, same previous-year volatility decile, none of the six firing in the 30 minutes up to and including it). All labels are signed so that a reversal is positive: the share of events whose label points back against the move, minus the same share for the matched controls, in points, with a 95% interval (day-clustered errors, years pooled by random effects). 'Last print' is the library's label (close of the horizon's last minute against the open of the decision minute); the VWAP labels compare the 60-second VWAP of minute g after the decision minute with the VWAP of minute g+h-1, so g=0 is the VWAP label of the cells section and g=1 and g=2 enter one and two minutes later. 'Retained' is the embargoed deviation as a share of the last-print deviation. The p after a last-print or g=1 interval is a per-slice null: a day-level sign flip on the matched pairs (event against its control), 2000 draws, one-sided, all years pooled; no search-wide adjustment is used because the comparison is six events. Years held: years in which the last-print deviation had the pooled sign, out of the years with at least 100 events.
@@ -2522,8 +2522,9 @@ At 30 minutes, across the 12 cells: the embargo-1 deviation is 93% of the embarg
 
 ## What is not yet done
 
-- **Scoring the derivatives events** (funding extremes, open-interest spikes and drops, liquidation signature), which are defined and tested but have no previous year of futures data to take their cutoffs from (see "Derivatives and tick events for the library").
-- **Tick events:** whether the climax adds anything to the price extreme it fires at, and how much of the persistence events is "price recently rose or fell".
+- **The funding events with a level definition.** The scored funding events cut at the previous year's deciles and mark the year rather than an extreme (see "Derivatives and tick events for the library"); a definition against the exchange default or the trailing year has not been run.
+- **The short liquidation signature with more years, and the climax's side asymmetry.** The matched-control section left the short signature unresolved for want of years, and found the climax adding to a new low but not to a new high; neither the extra year nor the asymmetry check has been run (see "Does the condition add anything to the move?").
+- **How much of the persistence events is "price recently rose or fell".** Not measured.
 - **The mechanism of the reversal at the level of the book.** The tick-table test in the section "The mechanism" excludes the bounce and leaves price impact unidentified. Settling it needs best bid and ask and depth around the same events (spread, depth and refill after a sharp move), and a measure of pressure that sees the depth it pushed against, which the last-print table cannot supply.
 - **Hidden Markov model (HMM) variants after study 32 (in [btc_15m.md](btc_15m.md)).** Time-of-day and volatility transitions, explicit durations, window-feature emissions and the joint daily-and-minute state were run and add nothing beyond the forest model of the main report. Not run:
   - an HMM observing order-flow imbalance alone;
