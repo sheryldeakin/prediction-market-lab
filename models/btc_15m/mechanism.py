@@ -119,12 +119,11 @@ def vol_decile(vol: np.ndarray, edges: np.ndarray) -> np.ndarray:
     return np.searchsorted(edges, vol, side="right")
 
 
-def match_controls(hour: np.ndarray, decile: np.ndarray, event_pos: np.ndarray, eligible_pos: np.ndarray, rng) -> tuple[np.ndarray, int]:
-    """One control row per event row, drawn from the eligible rows with the same hour and
-    decile. Without replacement while the stratum has enough rows, with replacement when it
-    does not; -1 where the stratum is empty. Returns the control positions and the number drawn
-    with replacement."""
-    key = hour.astype(np.int64) * 10 + decile.astype(np.int64)
+def match_by_stratum(key: np.ndarray, event_pos: np.ndarray, eligible_pos: np.ndarray, rng) -> tuple[np.ndarray, int]:
+    """One control row per event row, drawn from the eligible rows with the same stratum key (an
+    integer label per row). Without replacement while the stratum has enough rows, with
+    replacement when it does not; -1 where the stratum is empty. Returns the control positions
+    and the number drawn with replacement."""
     out = np.full(len(event_pos), -1, dtype=np.int64)
     replaced = 0
     pool_by_key = {}
@@ -141,6 +140,11 @@ def match_controls(hour: np.ndarray, decile: np.ndarray, event_pos: np.ndarray, 
             out[sel] = rng.choice(pool, size=len(sel), replace=True)
             replaced += len(sel)
     return out, replaced
+
+
+def match_controls(hour: np.ndarray, decile: np.ndarray, event_pos: np.ndarray, eligible_pos: np.ndarray, rng) -> tuple[np.ndarray, int]:
+    """match_by_stratum with the stratum of the mechanism study: hour of day and volatility decile."""
+    return match_by_stratum(hour.astype(np.int64) * 10 + decile.astype(np.int64), event_pos, eligible_pos, rng)
 
 
 # ---------------- per-second table ----------------

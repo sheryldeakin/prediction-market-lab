@@ -153,6 +153,18 @@ def cluster_diff_pvalue(mask: np.ndarray, y: np.ndarray, t: np.ndarray) -> tuple
     return float(b), se, float(2 * (1 - norm.cdf(abs(b) / se)))
 
 
+def paired_cluster_se(d: np.ndarray, cluster: np.ndarray) -> float:
+    """Standard error of the mean of per-pair differences d with clusters (CR0 sandwich, no small-sample
+    correction, as cluster_diff_pvalue): sqrt(sum over clusters of (sum of the cluster's d - mean)^2) / n.
+    Infinite with fewer than two clusters, where the clustered error is not defined."""
+    d = np.asarray(d, float)
+    _, inv = np.unique(cluster, return_inverse=True)
+    if len(d) < 2 or inv.max() < 1:
+        return float("inf")
+    s = np.bincount(inv, weights=d - d.mean())
+    return float(np.sqrt(np.sum(s * s)) / len(d))
+
+
 def _logit(p):
     p = np.clip(p, 1e-6, 1 - 1e-6)
     return np.log(p / (1 - p))

@@ -661,6 +661,36 @@ For scale, the largest deviation among the price-action library's cells that hol
 - *Open interest falling leans up; open interest rising leans down only in the first minute, where the VWAP label removes it.* The two drop events (bottom decile over 15 and 60 minutes) are followed by a small lean up that grows from 5 to 30 minutes, with intervals excluding zero and the deviation kept under the VWAP label (the drop group's sentence and the retained column). The two rise events are followed by a small lean down over 5 to 30 minutes with most intervals covering zero (the rise group's sentence). The rise events' cells that clear the null in at least half of the years are at 1 minute and keep a small fraction of their deviation under the VWAP label (the sentence above that lists them), so they are last-print artefacts, not a result. The first version of this bullet read the sign the other way, from the summary sentence and without the rows; the method notes record the correction and what changed in the tables because of it.
 - *The funding events are a property of the year, as the plain trade-count climax was.* Funding's level shifts between years, so the previous year's decile marks a regime rather than an extreme: the top event fires on no minute at all in some scored years and so was scored in only some of them (the scored-in sentence above), the bottom one fires on a large share of one year (the firing-share sentences above and library_derivatives_shares.csv), and in the years that do fire the deviation is near zero with every interval covering it. The rows stay in the table because every cell is listed by rule; read them as a diagnostic of the definition, not as evidence about funding. A level definition (funding against the exchange default, or against its own trailing year) would not have this problem; it was not run because the definition was frozen first (BACKLOG.md).
 
+## Does the condition add anything to the move?
+
+The library's one robust effect is a reversal after a sharp move, and two events in the derivatives and tick sections sit on top of such a move and reverse too. The question is whether their extra condition adds anything to the move they contain. Contrast A compares the liquidation signature (open interest falling and heavy perp volume, on top of a 15-minute return beyond the previous year's 10th or 90th percentile) with the hard 15-minute move alone. Contrast B compares a trade-count climax at a new 1-hour high or low with new 1-hour highs and lows without the climax, and B2 does the same with the count taken relative to the previous day's mean. The outcome is the reversal, positive when the price goes back against the move.
+
+The study was pre-registered: the block below was generated from existing results before any matched result was computed, and is not edited.
+
+<!-- table:matched_increment_prereg:start -->
+Not yet generated: `python -m models.btc_15m.matched_increment --prereg --out results/btc_15m` writes the pre-registration before the full run, and this placeholder is replaced by it.
+<!-- table:matched_increment_prereg:end -->
+
+Method. Each treated minute (the condition holds) is matched to one control from the rest of the same population (the move alone), within its year and side, in the same four-hour block of the day, the same tercile of trailing 60-minute volatility (edges from the previous year) and the same bin of the size of the move. Three choices were fixed before the full run. First, the move-size bins are the quintiles of the treated minutes' own move size in that year and side, because the treated minutes sit far out in the population's tail and population quintiles would put almost all of them in the top bin, where the controls are smaller moves; a treated minute in a bin with no eligible control is left unmatched and counted, and controls whose move lies outside the range of the treated minutes' move size are not eligible, because the outermost bins are open-ended. Second, the balance after matching is reported (the mean move size and volatility of treated minutes and of controls, and the standardised difference of each), and a primary cell whose standardised difference of the move size exceeds the threshold in the pre-registration is 'not resolved (support)' whatever its intervals say. Third, as in the library tables, a year with fewer than the minimum number of matched pairs in a cell is not scored for it and does not enter its pool, and the table says in how many years each cell was scored. Controls are never within 30 minutes after a treated minute. The difference is the mean over pairs of the treated outcome minus the control outcome, under the last-print label and the 60-second VWAP label; the 95% intervals come from errors clustered by UTC day and, separately, by episode (treated minutes less than 30 minutes apart form one), and years are pooled by pairs. The rule that turns the intervals into a verdict, and the four primary cells, are in the pre-registration above.
+
+<!-- table:matched_increment:start -->
+Not yet generated: `python -m models.btc_15m.matched_increment --start 2018 --end 2026-08 --out results/btc_15m` writes this table.
+<!-- table:matched_increment:end -->
+
+Support and balance of the matching:
+
+<!-- table:matched_increment_support:start -->
+Not yet generated: the full run of `python -m models.btc_15m.matched_increment` writes this table.
+<!-- table:matched_increment_support:end -->
+
+The legs of contrast A added one at a time, descriptive and unmatched:
+
+<!-- table:matched_increment_subsets:start -->
+Not yet generated: the full run of `python -m models.btc_15m.matched_increment` writes this table.
+<!-- table:matched_increment_subsets:end -->
+
+**What it says.** (written by the owner after the run, from the rows)
+
 ## Direction with magnitude
 
 "It will go up for the next five minutes" means, honestly, "it will touch +X before -X within h minutes". For every decision minute and pattern, barriers of 5, 10 and 20 basis points and horizons of 5, 15 and 30 minutes: how often either barrier is reached in time, and how often the upper one comes first, against the same shares for all minutes.
