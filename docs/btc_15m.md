@@ -131,7 +131,13 @@ On September's 2,880 windows the re-fitted frozen forest scored 50.9% at the ope
 
 Six follow-ups, each with the reason it was worth running and what it found; all tables carry the one-feature baseline on the same windows. Tables are generated into `results/btc_15m/` and spliced here.
 
-**1. Feature sets, including an indicator bank and tick-level order flow.** Classic indicators (RSI, MACD, Bollinger %b, ATR, EMA cross, stochastic, OBV slope, VWAP deviation, ADX) are deterministic transforms of the same prices, so the expectation was little gain. Tick-level flow (Binance aggregated trades reduced to one-second bins: signed volume imbalance over the 5 to 300 seconds before the entry, large-trade share, trade-rate ratio) is the one input the minute candles cannot express; published work on Binance futures reports that order imbalance at quarter-hour openings carries information over hours, so the question was whether any of it shows at 15 minutes.
+**1. Feature sets, including an indicator bank and tick-level order flow.** Do classic indicators or tick-level order flow add anything to price features? At the open the indicator bank adds a small gain and tick flow adds nothing reliable; three minutes in, nothing beats the lead.
+
+- **The indicator bank is the one addition that helps at the open.** The first sentence under the table gives the gain and its limits.
+- **Tick-level flow does not reliably help.** The tick-flow sentence under the table: its interval against the price-only forest includes zero.
+- **Three minutes in, no feature set beats the lead.** The last column of the table, rows for three minutes in.
+
+**Method.** The indicators (RSI, MACD, Bollinger %b, ATR, EMA cross, stochastic, OBV slope, VWAP deviation, ADX) are deterministic transforms of the same prices, so the expectation was little gain. Tick-level flow is Binance aggregated trades reduced to one-second bins: signed volume imbalance over the 5 to 300 seconds before the entry, large-trade share and trade-rate ratio. It is the one input the minute candles cannot express. Published work on Binance futures reports that order imbalance at quarter-hour openings carries information over hours, so the question was whether any of it shows at 15 minutes.
 
 <!-- table:ablation:start -->
 Feature-set ablation, walk-forward by month. The last two columns are accuracy minus the price-only forest and minus the one-feature baseline (the previous window at the open, the lead z-score after), on the same windows, day-block 95% intervals.
@@ -162,9 +168,14 @@ Feature-set ablation, walk-forward by month. The last two columns are accuracy m
 | 3 | one-feature baseline (lead-z) |  | 23328 | 66.35% | 0.721 | 0.6150 |  | baseline |
 <!-- table:ablation:end -->
 
-At the open, the indicator bank is the only addition whose interval excludes zero: +0.99 [+0.42, +1.55] points over the price-only forest, and +1.27 [+0.58, +1.95] over the one-bit rule, on day blocks. It is one of ten comparisons in the table, the 2025 holdout puts the same model at +0.40 [-0.22, +1.02] over the rule (study 26), and the selection correction of study 23 applies, so read it as "worth keeping", not as a discovery. Tick-level flow adds +0.55 [-0.03, +1.15] over the price-only forest: the imbalance in the seconds before a window opens does not reliably predict the next 15 minutes here. Three minutes in, no feature set beats the lead z-score; every "vs one-feature baseline" interval includes zero or sits below it.
+At the open, the indicator bank is the only addition whose interval excludes zero: +0.99 [+0.42, +1.55] points over the price-only forest, and +1.27 [+0.58, +1.95] over the one-bit rule (the one-feature baseline: the previous window's direction), on day blocks. It is one of ten comparisons in the table. The 2025 holdout puts the same model at +0.40 [-0.22, +1.02] over the rule (study 26), and the selection correction of study 23 applies, so read it as "worth keeping" and no more. Tick-level flow adds +0.55 [-0.03, +1.15] over the price-only forest: the imbalance in the seconds before a window opens does not reliably predict the next 15 minutes here. Three minutes in, no feature set beats the lead z-score; every "vs one-feature baseline" interval includes zero or sits below it.
 
-**2. A sequence model on the raw minute series.** A GRU over the last 120 minutes of returns, volume ratios and taker-buy share, with the lead and hour as side inputs, trained walk-forward with early stopping (runs on the GPU when one is present).
+**2. A sequence model on the raw minute series.** Can a recurrent network (a GRU) find a signal that hand-built features miss? No: it scores below the one-feature baseline at the open and three minutes in.
+
+- **At the open the GRU scores below the previous-window rule.** The first sentence under the table gives the gap.
+- **Three minutes in it scores below the lead z-score.** The same sentence; the last column of the table carries both intervals.
+
+**Method.** The GRU reads the last 120 minutes of returns, volume ratios and taker-buy share, with the lead and hour as side inputs. It is trained walk-forward with early stopping and runs on the GPU when one is present.
 
 <!-- table:sequence:start -->
 GRU over the last 120 minutes (return, volume ratio, taker-buy share) plus lead and hour, walk-forward by month, early stopping on the last 10% of training months.
@@ -175,9 +186,15 @@ GRU over the last 120 minutes (return, volume ratio, taker-buy share) plus lead 
 | 3 | gru-sequence | 23328 | 65.89% [65.28, 66.54] | 0.715 | 0.6203 | -0.46 [-0.79, -0.12] vs lead-z |
 <!-- table:sequence:end -->
 
-It does not learn the one bit: 51.2% at the open is a point below the previous-window rule (-1.05 [-1.68, -0.40]), and three minutes in it is half a point below the lead z-score. With 23,000 training windows a GRU on the raw series finds less than the hand-built features, which themselves add little to the rule. Study 28 repeats this with honest tuning, three architectures and three sequence lengths.
+It does not learn the one-bit rule (the previous window's direction): 51.2% at the open is a point below it (-1.05 [-1.68, -0.40]). Three minutes in it is half a point below the lead z-score. With 23,000 training windows a GRU on the raw series finds less than the hand-built features, which themselves add little to the rule. Study 28 repeats this with honest tuning, three architectures and three sequence lengths.
 
-**3. A magnitude label.** Instead of up or down: does the window move at least 10 basis points from its open in either direction? That is the question that decides whether a window is worth acting on at all. The baseline is logistic regression on the trailing 60-minute volatility alone.
+**3. A magnitude label.** Can a model predict whether a window moves a meaningful distance, in either direction? It predicts that far better than it predicts direction, and volatility alone gets most of the way there.
+
+- **The size of the move is far more predictable than its direction.** The first sentence under the table compares accuracy with the base rate.
+- **Most of that comes from volatility clustering.** The same sentence gives the volatility-only baseline.
+- **Three minutes in, the picture is the same.** The second sentence under the table.
+
+**Method.** The label is whether the window closes at least 10 basis points from its open, up or down. That question decides whether a window is worth acting on at all. The baseline is logistic regression on the trailing 60-minute volatility alone.
 
 <!-- table:magnitude:start -->
 Magnitude label: the window's close is at least 10 basis points from the entry price (the open at minute 0, the price at entry after it), in either direction.
@@ -190,9 +207,14 @@ Magnitude label: the window's close is at least 10 basis points from the entry p
 | 3 | all features | 23328 | 45.1% | 66.85% [65.57, 68.13] | 0.730 | 0.6006 |
 <!-- table:magnitude:end -->
 
-Magnitude is far more predictable than direction (65.3% at the open against a 50.7% base rate), and most of it is volatility clustering: the volatility-only baseline gets 64.7%. At minute 3 the label is now measured from the entry price over the remaining minutes (the review found the earlier version let the lead decide it), and the picture is the same: 66.9% against 65.6% for volatility alone.
+Magnitude is far more predictable than direction (65.3% at the open against a 50.7% base rate), and most of it is volatility clustering: the volatility-only baseline gets 64.7%. At minute 3 the label is measured from the entry price over the remaining minutes (the review found the earlier version let the lead decide it). The picture is the same: 66.9% against 65.6% for volatility alone.
 
-**4. Where the direction signal lives.** Accuracy at the open by session, volatility tercile and 4-hour trend tercile.
+**4. Where the direction signal lives.** Does the forest's accuracy at the open depend on the trading session, the volatility level or the recent trend? It barely does: accuracy is even across sessions and volatility levels, and only windows after a strong four-hour move stand out.
+
+- **Accuracy is even across sessions and volatility levels.** The first sentence under the table gives the range.
+- **Windows after a strong four-hour move score highest.** The second sentence under the table notes that their interval overlaps the other trend groups.
+
+**Method.** Accuracy at the open is split three ways: by trading session, by tercile of trailing volatility and by tercile of the absolute 4-hour return.
 
 <!-- table:regime:start -->
 Accuracy at the open (forest, price + flow) by regime, walk-forward predictions. Volatility is the trailing 60-minute realised volatility; trend is the absolute 4-hour return.
@@ -213,7 +235,12 @@ Accuracy at the open (forest, price + flow) by regime, walk-forward predictions.
 
 The forest's accuracy at the open is spread evenly across sessions and volatility levels (51.8% to 53.0%). The only group that stands out is windows following a strong 4-hour move, 53.8%, and the intervals of the three trend groups overlap.
 
-**5. Combinatorial purged cross-validation as a second estimate.** Six contiguous blocks, every pair as the test set (15 paths), training rows within 25 hours of a test block dropped (the longest feature lookback; the review found the earlier four-hour embargo shorter than the 24-hour volume baseline). Unlike walk-forward, some paths train on data from after the test block, so agreement between the two is a check that the walk-forward estimate is not an artefact of the particular month order.
+**5. Combinatorial purged cross-validation as a second estimate.** Does the walk-forward accuracy at the open depend on the particular order of the months? It does not: a second validation scheme gives the same accuracy.
+
+- **The second estimate agrees with walk-forward.** The sentence under the table compares the two.
+- **The agreement checks that month order is not driving the walk-forward result.** Some paths train on later data, which walk-forward never does.
+
+**Method.** The data is split into six contiguous blocks and every pair is used once as the test set (15 paths). Training rows within 25 hours of a test block are dropped (the longest feature lookback; the review found the earlier four-hour embargo shorter than the 24-hour volume baseline). Unlike walk-forward, some paths train on data from after the test block.
 
 <!-- table:cpcv:start -->
 Combinatorial purged cross-validation at minute 0: 6 contiguous blocks, every pair as the test set, training rows within 25 hours of a test block dropped (the longest feature lookback). Forest, price + flow. Unlike walk-forward, some paths train on data from after the test block.
@@ -240,7 +267,13 @@ Combinatorial purged cross-validation at minute 0: 6 contiguous blocks, every pa
 
 The 15 paths give 52.2% to 53.6% with a mean of 52.8%, in line with the walk-forward 52.65%.
 
-**6. Break-even accuracy under hypothetical costs.** A sensitivity calculation, not a backtest of trades: if a $1 binary could be bought at 0.5 plus half a 1-cent spread with a 1.75-cent fee, the break-even accuracy is 52.25%, and the table shows accuracy minus that, acting only when the model's probability is far enough from 0.5. No venue settles on a Binance last print, and the price model is an assumption.
+**6. Break-even accuracy under hypothetical costs.** Does the model's accuracy at the open exceed the break-even accuracy under assumed trading costs? Acting on every window it only matches break-even; acting only on its most confident calls goes above it.
+
+- **Acting on every window at the open, accuracy is level with break-even.** The first sentence under the table gives the margin and its interval.
+- **Acting only on the most confident windows lifts accuracy above break-even.** The open rows with a stricter cutoff; studies 10 and 13 reach the same result by other routes.
+- **Rows after the open are not meaningful.** The last sentence under the table gives the reason.
+
+**Method.** This is a sensitivity calculation, not a backtest of trades. A $1 binary is bought at 0.5 plus half a 1-cent spread, with a 1.75-cent fee, which puts the break-even accuracy at 52.25%. The table shows accuracy minus that, acting only when the model's probability is far enough from 0.5. No venue settles on a Binance last print, and the price model is an assumption.
 
 <!-- table:cost:start -->
 Break-even accuracy under hypothetical costs. Forest, price + flow features, walk-forward, acting only when the probability is far enough from 0.5. Under a hypothetical cost model (buy the favoured side at 0.5 plus half a 1c spread, pay a 1.75c fee, receive 1 if right) the break-even accuracy is 52.25%. These are sensitivity figures, not a backtest of trades: no venue settles on a Binance last print, and the price model is an assumption. After the open a market would not be priced at 0.5, so only the minute-0 rows are even hypothetically meaningful. Last column: accuracy minus break-even, in points, day-block 95% interval.
@@ -257,13 +290,19 @@ Break-even accuracy under hypothetical costs. Forest, price + flow features, wal
 | 3 | >= 0.58 or <= 0.42 | 17306 | 74% | 70.41% | +18.16 [+17.51, +18.83] |
 <!-- table:cost:end -->
 
-Acting on every window at the open, the forest sits +0.40 points above the hypothetical break-even with an interval across zero; the one-bit rule, at 52.21%, sits on it. Acting only on the most confident 11% of windows gives +5.5 points, which is the same confidence-thresholding idea that the meta-labelling (study 10) and conformal (study 13) tables reach by other routes: one idea, three tables, one result. After the open the rows describe a contract that a real market would not price at 0.5, so they describe nothing.
+Acting on every window at the open, the forest sits +0.40 points above the hypothetical break-even with an interval across zero. The one-bit rule (the previous window's direction), at 52.21%, is level with it. Acting only on the most confident 11% of windows gives +5.5 points. The meta-labelling (study 10) and conformal (study 13) tables apply the same confidence cutoff by other routes and reach the same result. After the open the rows describe a contract that a real market would not price at 0.5, so they are not meaningful.
 
 ## Going deeper
 
-Thirteen more studies, chosen because they are the questions a careful reader asks next. Each uses the same walk-forward harness, day-clustered intervals and the same splice.
+Thirteen more studies on the questions a careful reader asks after the first six. Each uses the same walk-forward harness, day-clustered intervals and the same splice.
 
-**7. Four coins, and what one coin says about another.** The features are scale-free (basis points, ratios, shares), so the same pipeline runs on ETH, SOL and DOGE, and their earlier months can be pooled to train one model that is tested on each coin. A second question is cross-asset lead-lag: does ETH's or SOL's last few minutes say anything about BTC's next window?
+**7. Four coins, and what one coin says about another.** Does the reversal at the open show up in other coins, and does another coin's history or recent price help predict Bitcoin? The reversal appears in every coin; pooling coins adds little, and ETH and SOL features add nothing for BTC.
+
+- **All four coins show the same reversal at the open.** The first sentence under the table compares each coin's model with its own one-feature rule.
+- **Pooling the coins' history adds little.** The sentences on pooling under the table give the intervals and the reason.
+- **ETH's and SOL's recent minutes add nothing to BTC.** The sentence on ETH and SOL under the table.
+
+**Method.** The features are scale-free (basis points, ratios, shares), so the same pipeline runs on ETH, SOL and DOGE. Their earlier months can be pooled to train one model that is tested on each coin. A second question is cross-asset lead-lag: do ETH's or SOL's last few minutes say anything about BTC's next window?
 
 <!-- table:multi_asset:start -->
 Multi-asset results (xgb, price + flow features), walk-forward by month, 2025-10 to 2026-08. Last column: accuracy minus the coin's own-history model on the same windows, day-block 95% interval.
@@ -300,9 +339,15 @@ Multi-asset results (xgb, price + flow features), walk-forward by month, 2025-10
 | 3 | BTC + ETH and SOL features | 23328 | 66.27% [65.68, 66.91] | 0.718 | 0.6169 | +0.05 [-0.16, +0.28] |
 <!-- table:multi_asset:end -->
 
-All four coins show the same reversal at the open: each coin's own one-bit rule scores 52.0% to 52.8%, and each coin's own model 52.5% to 53.5%, with the model's increment over the rule between zero and 0.7 points (ETH's +0.71 [+0.07, +1.33] is the only interval that excludes zero, one of four). Pooling four coins' history adds +0.0 to +0.3 points, every interval across zero: four coins over the same months are close to one sample of the same effect, not four replications. ETH's and SOL's last minutes add nothing to BTC (-0.22 at the open, +0.05 at minute 3). This table is also where a caching bug was caught: a first run showed four identical rows because the feature cache was keyed on the time span alone, which the coins share; the key now covers the content and a test covers it.
+All four coins show the same reversal at the open: each coin's own one-bit rule (the previous window's direction) scores 52.0% to 52.8%, and each coin's own model 52.5% to 53.5%. The model's increment over the rule is between zero and 0.7 points (ETH's +0.71 [+0.07, +1.33] is the only interval that excludes zero, one of four). Pooling four coins' history adds +0.0 to +0.3 points, every interval across zero. Four coins over the same months are close to one sample of the same effect, and not four replications. ETH's and SOL's last minutes add nothing to BTC (-0.22 at the open, +0.05 at minute 3). This table is also where a caching bug was caught. A first run showed four identical rows because the feature cache was keyed on the time span alone, which the coins share. The key now covers the content and a test covers it.
 
-**8. Hyperparameter search, honest and dishonest.** For each test month, Optuna picks XGBoost parameters two ways: validated on the month before the test month (honest), and validated on the test month itself, which is what happens when a notebook tunes and reports on the same split. The gap between the two rows is the optimism to subtract from any tuned result that does not name its validation split.
+**8. Hyperparameter search, honest and dishonest.** How much does tuning on the test month inflate a result compared with tuning on earlier data? Here the inflation is small, because tuning adds little in either form.
+
+- **Honest tuning adds little at the open and nothing three minutes in.** The first sentence under the table gives the gain and its interval.
+- **Tuning on the test month adds only a little more than honest tuning.** The second sentence under the table gives the reason.
+- **The untuned model with indicators is above the previous-window rule.** The last sentence under the table repeats the increment from study 1.
+
+**Method.** For each test month, Optuna picks XGBoost parameters two ways. The honest way validates on the month before the test month. The other validates on the test month itself, which is what happens when a notebook tunes and reports on the same split. The gap between the two rows is the optimism to subtract from any tuned result that does not name its validation split.
 
 <!-- table:tuning:start -->
 XGBoost with default parameters vs Optuna search (30 trials per month) validated honestly (on the month before the test month) and validated on the test month itself. Walk-forward, price + flow + indicator features. Last column: accuracy minus default on the same windows, day-block 95% interval.
@@ -319,9 +364,15 @@ XGBoost with default parameters vs Optuna search (30 trials per month) validated
 | 3 | one-feature baseline (lead-z) | 23328 | 66.35% [65.73, 66.98] | 0.721 | 0.6150 | +0.03 [-0.28, +0.38] |
 <!-- table:tuning:end -->
 
-Honest tuning adds +0.23 points at the open with an interval across zero, and nothing at minute 3. The leaky variant is +0.17 above honest, which is itself informative: with 30 trials over a small space and a weak signal there is little room to overfit the test month. The gap grows with the number of trials and the flexibility of the space, which is the usual setting of a tuned notebook. The default XGBoost with indicators sits +0.90 [+0.26, +1.59] over the one-bit rule here, the same increment the ablation shows.
+Honest tuning adds +0.23 points at the open with an interval across zero, and nothing at minute 3. The leaky variant is +0.17 above honest: with 30 trials over a small space and a weak signal there is little room to overfit the test month. The gap grows with the number of trials and the flexibility of the space, which is the usual setting of a tuned notebook. The default XGBoost with indicators is +0.90 [+0.26, +1.59] over the one-bit rule (the previous window's direction), the same increment the ablation shows.
 
-**9. How much history, and how often to retrain.** Training on only the last few months beats training on everything when the relationship drifts. The second table scores, on each target month, the model retrained just before it and the models last retrained one, two and three months earlier, all on the same windows (the review found the earlier version pooled each age over different months).
+**9. How much history, and how often to retrain.** Does a shorter training window or more frequent retraining improve the model? It does not help at the open, and three minutes in the longer window is slightly better.
+
+- **A shorter training window does no better than all earlier months.** The first sentence under the tables; the first table's last column.
+- **A model retrained one to three months earlier scores about as well as a fresh one.** The second sentence under the tables; the second table's last column.
+- **Whatever the fitted models add does not drift within the year.** The last sentence under the tables.
+
+**Method.** Training on only the last few months should beat training on everything if the relationship drifts. The first table tests that for each test month. The second table scores, on each target month, the model retrained just before it and the models last retrained one, two and three months earlier. All are scored on the same windows (the review found the earlier version pooled each age over different months).
 
 <!-- table:drift:start -->
 Training window: for each test month, train on the last W months only or on every earlier month. XGBoost, price + flow + indicators, walk-forward. Last column: accuracy minus expanding on the same windows, day-block 95% interval.
@@ -353,9 +404,16 @@ Retrain frequency: on each target month (2026-04 to 2026-08), the model retraine
 | 3 | 3 | 5 | 14688 | 66.74% [66.04, 67.46] | -0.24 [-0.52, +0.05] |
 <!-- table:drift:end -->
 
-Training on the last two to six months does no better or worse than training on everything at the open; at minute 3 the expanding set is slightly better. A model one to three months stale is within half a point of a fresh one on the same windows, with every interval across zero. Whatever the fitted models add, it is not drifting within the year, which fits the rest of the evidence: the stable part is the one-bit rule, and the increment is small everywhere.
+Training on the last two to six months does no better or worse than training on everything at the open; at minute 3 the expanding set is slightly better. A model one to three months stale is within half a point of a fresh one on the same windows, with every interval across zero. Whatever the fitted models add, it is not drifting within the year. That fits the rest of the evidence: the stable part is the one-bit rule (the previous window's direction), and the increment is small everywhere.
 
-**10. Minute-bar barrier labels and meta-labelling.** Instead of "close above open", a window is labelled by which barrier the price touches first inside its remaining minutes (a minute's high for the upper barrier, its low for the lower; a minute crossing both is labelled by its close and counted as ambiguous, which happens in under 1% of windows), or the time limit. At entry minute k the barriers are measured from the entry price over the remaining minutes only; measuring them from the open lets a barrier touched in minutes the model has already seen decide the label, which produced a false 74% at minute 3 before a test caught it. Meta-labelling trains a second model to predict whether the first model's direction call will be right, using only first-model predictions that were made out of sample, and uses it to decide when to act.
+**10. Minute-bar barrier labels and meta-labelling.** Can a model predict which price barrier is touched first, and can a second model pick the windows where the first model's call is right? Barrier direction after entry is a coin flip, and the second model selects a small set of windows where accuracy is higher.
+
+- **At the open, barrier labels behave like the plain up-or-down label.** The first sentence under the tables.
+- **Three minutes in, barrier direction is a coin flip.** The second sentence under the tables; the plain label's accuracy three minutes in is the lead already in hand.
+- **The second model ranks right calls only slightly above wrong ones at the open.** The sentence on the second model under the tables gives its AUC.
+- **Acting only on its most confident calls raises accuracy on a small share of windows.** The last meta-labelling rows; studies 6 and 13 reach the same result.
+
+**Method.** Instead of "close above open", a window is labelled by which barrier the price touches first inside its remaining minutes, or by the time limit. A minute's high counts for the upper barrier and its low for the lower. A minute crossing both is labelled by its close and counted as ambiguous, which happens in under 1% of windows. At entry minute k the barriers are measured from the entry price over the remaining minutes only. Measuring them from the open lets a barrier touched in minutes the model has already seen decide the label. That produced a false 74% at minute 3 before a test caught it. Meta-labelling trains a second model to predict whether the first model's direction call will be right, using only first-model predictions made out of sample. The second model's output decides when to act.
 
 <!-- table:meta:start -->
 Minute-bar barrier labels: which comes first in the minutes after entry, a minute's high reaching the upper barrier, a minute's low reaching the lower barrier, or the time limit (then the sign of the final move). A minute that crosses both is ambiguous with one-minute bars and is labelled by its close. XGBoost, price + flow + indicators, walk-forward.
@@ -385,9 +443,15 @@ Meta-labelling: a second model predicts whether the primary direction call is ri
 | 3 | act when meta >= 0.6 | 12855 | 63% | 72.05% [71.35, 72.78] | +19.80 [+19.10, +20.53] |  |
 <!-- table:meta:end -->
 
-At the open, the barrier labels behave like the plain label (52.2% to 53.0%). Three minutes in, predicting which barrier the remaining path touches first from the entry price is a coin flip (50.9% to 51.0%): the 66% accuracy of the plain label at minute 3 is entirely the lead already in hand, and the direction of the rest of the window is not predictable. The meta model ranks right calls above wrong ones with an AUC of 0.51 at the open and 0.62 at minute 3. Acting only when it is at least 0.6 confident raises the primary's accuracy at the open from 53.0% to 57.3% on the 12% of windows it selects. This is the confidence-thresholding of study 6 by another route, and study 13 is a third; they are one idea with one result, not three findings.
+At the open, the barrier labels behave like the plain label (52.2% to 53.0%). Three minutes in, predicting which barrier the remaining path touches first from the entry price is a coin flip (50.9% to 51.0%). The 66% accuracy of the plain label at minute 3 is entirely the lead already in hand, and the direction of the rest of the window is not predictable. The meta model ranks right calls above wrong ones with an AUC of 0.51 at the open and 0.62 at minute 3. Acting only when it is at least 0.6 confident raises the primary's accuracy at the open from 53.0% to 57.3% on the 12% of windows it selects. This applies the confidence cutoff of study 6 by another route, as study 13 does; the three studies are one idea with one result, and not three findings.
 
-**11. Ensembles and stacking.** The four base models' out-of-fold probabilities averaged, and a logistic stacker fit on earlier months' out-of-fold probabilities only (so it never sees a base prediction that was fit on the month it scores).
+**11. Ensembles and stacking.** Does combining the four base models beat the best one? It does not: neither averaging nor stacking improves on the best single model.
+
+- **Neither the average nor the stacker beats the best single model.** The second sentence under the table gives both gaps at the open.
+- **The base models make the same calls, so there is little to combine.** The third sentence under the table.
+- **The indicator-bearing models stay above the previous-window rule at the open.** The last sentence under the table.
+
+**Method.** The ensemble is the mean of the four base models' out-of-fold probabilities. A logistic stacker is fit on earlier months' out-of-fold probabilities only, so it never sees a base prediction that was fit on the month it scores.
 
 <!-- table:ensemble:start -->
 Ensembles: the mean of four base models' out-of-fold probabilities, and a logistic stacker fit on earlier months' out-of-fold probabilities only. Scored on the months where every variant exists (the stacker needs one month of base predictions to start). The last two columns are accuracy minus the best single base model and minus the one-feature baseline (the previous window at the open, the lead z-score after), on the same windows, day-block 95% intervals.
@@ -410,9 +474,20 @@ Ensembles: the mean of four base models' out-of-fold probabilities, and a logist
 | 3 | lead-z | 20352 | 66.45% [65.80, 67.10] | 0.721 | 0.6146 | -0.03 [-0.39, +0.32] vs xgb-all | baseline |
 <!-- table:ensemble:end -->
 
-Neither helps. The average is -0.14 points from the best single model at the open and the stacker -0.15, both intervals across zero; at minute 3 both are slightly behind. The four base models make the same calls on the same windows; there is nothing to combine. The last column puts every row against the one-bit rule on the same windows: the indicator-bearing models sit +0.7 to +1.3 above it on these 20,352 windows.
+Neither helps. The average is -0.14 points from the best single model at the open and the stacker -0.15, both intervals across zero; at minute 3 both are slightly behind. The four base models make the same calls on the same windows, so there is nothing to combine. The last column compares every row with the one-bit rule (the previous window's direction at the open) on the same windows. The indicator-bearing models are +0.7 to +1.3 above it on these 20,352 windows.
 
-**12. Calibration.** Are the probabilities honest numbers? Platt and isotonic recalibration fit on earlier months' out-of-fold probabilities, the Brier score split into reliability (calibration error) and resolution (information), and the expected calibration error month by month.
+**12. Calibration.** Are the model's probabilities calibrated? At the open they are too extreme, and a Platt rescaling fixes that; three minutes in they are calibrated as they stand.
+
+- **At the open the raw probabilities are too extreme.** The first sentence under the tables gives the calibration slope.
+- **Platt scaling corrects the slope at little cost.** The Platt sentence under the tables gives the new slope; the Brier score barely moves.
+- **Three minutes in, the raw probabilities are calibrated.** The sentence on three minutes in, under the tables.
+- **Month by month, the mean predicted probability tracks the observed rate.** The last sentence under the tables names the largest miss.
+
+**Method.** Three measurements:
+
+- Platt and isotonic recalibration, each fit on earlier months' out-of-fold probabilities only.
+- The Brier score split into reliability (calibration error) and resolution (information).
+- The expected calibration error, month by month.
 
 <!-- table:calibration:start -->
 Calibration of the XGBoost probabilities (price + flow + indicators), walk-forward. Platt and isotonic recalibration are fit on earlier months' out-of-fold probabilities only. Binned decomposition over ten quantile bins of the predicted probability: Brier is approximately reliability - resolution + uncertainty, and the residual column is the part the binning does not account for. Lower reliability is better calibration, higher resolution is more information. ECE is the expected calibration error over the same quantile bins. The calibration slope is the coefficient of a logistic regression of the outcome on the logit of the probability, with a day-block interval: 1 is calibrated, below 1 means the probabilities are too extreme, above 1 too timid.
@@ -448,9 +523,15 @@ Reliability by month (raw probabilities): ECE, mean predicted, observed rate of 
 | 3 | 2026-08 | 2976 | 2.81% | 49.8% | 50.3% |
 <!-- table:calibration:end -->
 
-The raw probabilities at the open are not calibrated: the calibration slope is 0.63 [0.52, 0.76], meaning the model's deviations from 0.5 are about one and a half times too large, even though the expected calibration error (1.75% over quantile bins) looks small because almost every probability sits between 0.45 and 0.55. Platt scaling, fit on earlier months only, brings the slope to 1.02 [0.83, 1.22] at the cost of a little resolution, and the Brier score barely moves. At minute 3 the raw probabilities are calibrated (slope 0.99 [0.95, 1.03]). The decomposition columns are the binned version and the residual column is what the binning does not explain; it is small throughout. Month by month, the mean predicted probability tracks the observed rate within about two points; June 2026, when 47.6% of windows closed up, is the largest miss.
+The raw probabilities at the open are not calibrated: the calibration slope is 0.63 [0.52, 0.76], meaning the model's deviations from 0.5 are about one and a half times too large. The expected calibration error (1.75% over quantile bins) looks small because almost every probability falls between 0.45 and 0.55. Platt scaling, fit on earlier months only, brings the slope to 1.02 [0.83, 1.22] at the cost of a little resolution, and the Brier score barely moves. At minute 3 the raw probabilities are calibrated (slope 0.99 [0.95, 1.03]). The decomposition columns come from binning; the residual column holds what the binning does not explain and is small throughout. Month by month, the mean predicted probability tracks the observed rate within about two points; June 2026, when 47.6% of windows closed up, is the largest miss.
 
-**13. Abstention with conformal prediction.** Instead of a fixed confidence cutoff, split conformal prediction uses the previous month to set a threshold that guarantees a coverage rate, and issues a set: {up}, {down}, or both. A two-class set is an abstention.
+**13. Abstention with conformal prediction.** Can the model abstain on uncertain windows and be right more often on the rest? It can: a strict coverage target leaves calls on a small share of windows, and those calls are right more often than the model is across all windows.
+
+- **The coverage guarantee holds at every target.** The first sentence under the table.
+- **At the open, the calls that remain are right more often.** The second sentence under the table; it is the same trade as studies 6 and 10.
+- **Low coverage targets produce empty sets, which the table counts as misses.** The sentence on empty sets under the table.
+
+**Method.** Instead of a fixed confidence cutoff, split conformal prediction uses the previous month to set a threshold that guarantees a coverage rate. It issues a set: {up}, {down}, or both. A two-class set is an abstention.
 
 <!-- table:conformal:start -->
 Split conformal prediction sets: the previous month calibrates the threshold, the current month is scored. Coverage is how often the set contains the truth (should be at least the target); an empty set contains neither class and counts as a miss. Empty sets appear when the target is below about 50%. A single-class set is a call; a two-class set is an abstention.
@@ -471,9 +552,15 @@ Split conformal prediction sets: the previous month calibrates the threshold, th
 | 3 | 40% | 20352 | 39.5% | 46.8% | 53.2% | 0.0% | 74.14% |
 <!-- table:conformal:end -->
 
-The coverage guarantee holds at every target (90.9% delivered for 90% promised, and so on down). At the open, asking for 90% coverage makes a call on 21% of windows, and those calls are right 56.9% of the time; this is the same trade as the meta-labelling rule (57.3% on 12%) and the confidence cutoff of study 6 (57.8% on 11%). Below a 50% target the sets start coming back empty (5.8% of windows at 50%, 26.9% at 40%), which the table now counts and scores as misses; an earlier version reported only single and two-class sets. Three minutes in, 90% coverage yields calls on 41% of windows at 76% accuracy.
+The coverage guarantee holds at every target (90.9% delivered for 90% promised). At the open, asking for 90% coverage makes a call on 21% of windows, and those calls are right 56.9% of the time. That is the same trade as the meta-labelling rule (57.3% on 12%) and the confidence cutoff of study 6 (57.8% on 11%). Below a 50% target the sets start coming back empty (5.8% of windows at 50%, 26.9% at 40%), which the table counts and scores as misses. An earlier version reported only single and two-class sets. Three minutes in, 90% coverage yields calls on 41% of windows at 76% accuracy.
 
-**14. Adversarial validation.** For each test month, a classifier tries to tell that month's windows from all earlier months. AUC 0.5 would mean nothing moved.
+**14. Adversarial validation.** Do the input features drift from month to month? Yes: every month can be told apart from the earlier ones, mostly through volatility, while what the models add does not drift.
+
+- **Every month is distinguishable from the earlier months.** The first sentence under the table gives the range.
+- **The features that give a month away are mostly volatility measures and the trade-rate ratio.** The same sentence.
+- **The inputs drift in volatility level while the models' increment does not.** The second sentence under the table, with the evidence in study 9.
+
+**Method.** For each test month, a classifier is trained to tell that month's windows from all earlier months. An AUC of 0.5 would mean nothing moved.
 
 <!-- table:adversarial:start -->
 Adversarial validation: a classifier trained to tell a test month's windows from all earlier months, scored on a held-out half. AUC 0.5 means the month is indistinguishable; higher means the feature distribution moved, and the top features say where.
@@ -498,9 +585,15 @@ Adversarial validation: a classifier trained to tell a test month's windows from
 | 3 | 2026-08 | 0.786 | vol240, atr14, wday |
 <!-- table:adversarial:end -->
 
-Every month is distinguishable (AUC 0.68 to 0.85), and the features that give it away are always the volatility measures (`vol240`, `atr14`) and the trade-rate ratio. So the inputs drift month to month, in their volatility level, while whatever the models add does not (study 9): the decision depends on the shape of the recent path, not its scale. This is the argument for the volatility-normalised features already in the set, and a caution for any feature that is not scale-free.
+Every month is distinguishable (AUC 0.68 to 0.85), and the features that give it away are always the volatility measures (`vol240`, `atr14`) and the trade-rate ratio. So the inputs drift month to month, in their volatility level, while whatever the models add does not (study 9). The decision depends on the shape of the recent path, not its scale. This supports the volatility-normalised features already in the set and argues against any feature that is not scale-free.
 
-**15. Feature importance over time.** Permutation importance (accuracy lost when a feature is shuffled) and mean absolute SHAP contribution, on each held-out month.
+**15. Feature importance over time.** Which features carry the prediction, and does that change from month to month? Three minutes in, the lead carries it in every month; at the open no single feature leads and the ranking changes each month.
+
+- **Three minutes in, the lead matters far more than any other feature.** The first sentence under the table.
+- **At the open there is no stable leader.** The sentence on the open under the table: the top permutation feature changes every month.
+- **The SHAP ranking is steadier than the permutation ranking.** The last sentence under the table.
+
+**Method.** Two importance measures are computed on each held-out month: permutation importance (accuracy lost when a feature is shuffled) and mean absolute SHAP contribution.
 
 <!-- table:importance:start -->
 Feature importance on each held-out month. Permutation importance is the accuracy drop (points) when the feature is shuffled; SHAP is the mean absolute contribution from the booster. Top five of each.
@@ -525,9 +618,21 @@ Feature importance on each held-out month. Permutation importance is the accurac
 | 3 | 2026-08 | lead +16.30, stoch14 +0.84, ret5 +0.77, flow3 +0.64, rangepos +0.44 | lead 0.515, flow3 0.066, win1 0.063, stoch14 0.056, obv_slope60 0.041 |
 <!-- table:importance:end -->
 
-Three minutes in, the lead is worth 12 to 16 points every month and nothing else is worth more than one, which is the numerical form of "the lead explains the accuracy". At the open there is no stable leader: the top permutation feature changes every month and no single feature is worth more than 1.5 points. The SHAP ranking is steadier (`flow15`, `rsi60`, `rangepos`, `obv_slope60` recur), which says the model spreads a small signal over several correlated inputs rather than finding one that matters.
+Three minutes in, the lead is worth 12 to 16 points every month and nothing else is worth more than one. That matches the earlier finding that the lead explains the accuracy. At the open there is no stable leader: the top permutation feature changes every month and no single feature is worth more than 1.5 points. The SHAP ranking is steadier (`flow15`, `rsi60`, `rangepos`, `obv_slope60` recur), which says the model spreads a small signal over several correlated inputs rather than finding one that matters.
 
-**16. Event rules: "if X happens, then up or down".** Forty-odd conditions of the kind a chart reader would name (price breaks the 4-hour high, RSI is oversold, three windows down in a row, taker buying dominates, a two-standard-deviation spike in the last five minutes), each scored by the up-rate of the next window when it holds. Because forty tests produce a few false positives by chance, p-values (firing against non-firing windows, day-clustered) are corrected for the false discovery rate, and every survivor is re-checked month by month: it counts as stable only if the direction it had in the first three months holds in at least three quarters of the later ones (the review found the earlier check compared months with a pooled direction those months had helped set). A depth-2 decision tree per month then shows what a learned rule looks like.
+**16. Event rules: "if X happens, then up or down".** Do the conditions a chart reader would name predict the next window? At the open every stable one points toward reversal: whatever just went up tends to go down in the next window, and the reverse.
+
+- **Every stable event at the open points toward reversal.** The first paragraph under the table lists the main events with their up-rates.
+- **The previous window's direction is the simplest of these events.** It is the one-bit rule (call the next window from the previous window's direction alone), which the other events restate through indicators.
+- **A decision tree per month finds the same thing.** The root split in most months is the hour-RSI, as the paragraph under the table describes.
+- **Three minutes in, the strongest events are the lead in disguise.** The last paragraph of this study.
+
+**Method.** There are four steps:
+
+- Forty-odd conditions of the kind a chart reader would name are each scored by the up-rate of the next window when the condition holds. Examples: price breaks the 4-hour high; RSI is oversold; three windows down in a row; taker buying dominates; a two-standard-deviation spike in the last five minutes.
+- Forty tests produce a few false positives by chance, so p-values (firing against non-firing windows, day-clustered) are corrected for the false discovery rate.
+- Every survivor is re-checked month by month. It counts as stable only if the direction it had in the first three months holds in at least three quarters of the later ones. The review found the earlier check compared months with a pooled direction those months had helped set.
+- A depth-2 decision tree per month shows what a learned rule looks like.
 
 <!-- table:rules:start -->
 Event library: up-rate of the window when the condition holds at the entry minute, against the unconditional rate. Day-block 95% intervals; p compares windows where the event fires with windows where it does not, with day-clustered errors; 'survives FDR' marks events that pass Benjamini-Hochberg at a 10% false discovery rate across all events tested at that minute. Events that fire fewer than 300 times are omitted.
@@ -703,9 +808,19 @@ Learned rules: a depth-2 decision tree per test month (leaves of at least 500 wi
 | 3 | 2026-08 | 67.61% | &#124;--- lead <= -0.1<br>&#124;   &#124;--- lead <= -4.8<br>&#124;   &#124;   &#124;--- class: 0<br>&#124;   &#124;--- lead >  -4.8<br>&#124;   &#124;   &#124;--- class: 0<br>&#124;--- lead >  -0.1<br>&#124;   &#124;--- lead <= 4.6<br>&#124;   &#124;   &#124;--- class: 1<br>&#124;   &#124;--- lead >  4.6<br>&#124;   &#124;   &#124;--- class: 1<br> |
 <!-- table:rules:end -->
 
-Two things come out of it. First, at the open every stable event points the same way: **whatever just went up tends to go down in the next window, and vice versa**. Price at the 4-hour high is followed by an up window only 38% of the time (down by 11 points, in 7 of 7 months); price in the upper quarter of its range, 45%; RSI14 above 70, 43%; a two-standard-deviation spike up in the last five minutes, 42%; taker buying dominating the last 15 minutes, 45%. The mirror images hold for the down versions (RSI14 below 30 is followed by an up window 57% of the time, 8 of 8 months). The plainest pair is the previous window itself, up or down, each a 2.2-point deviation in 8 of 8 months: that pair is the one-bit rule the whole report is now measured against, and the other events are the same reversal seen through indicators that are all functions of the same recent rise or fall. So "if the price breaks X, then up" is backwards at this horizon: a break is followed by a pull-back more often than by a continuation. Second, the learned trees say the same thing in one line: the root split in six of eight months is the hour-RSI at about 55, with "below, up; above, down".
+At the open every stable event points the same way: whatever just went up tends to go down in the next window, and the reverse. The share of next windows that close up after each event:
 
-Three minutes in, the strongest "events" are just the lead in disguise (a spike up in the last five minutes, which is now inside the window, is followed by an up close 82% of the time), and the conditions that were reversal signals at the open have flipped sign for that reason.
+- Price at the 4-hour high: 38% (down by 11 points, in 7 of 7 months).
+- Price in the upper quarter of its range: 45%.
+- RSI14 above 70: 43%.
+- A two-standard-deviation spike up in the last five minutes: 42%.
+- Taker buying dominating the last 15 minutes: 45%.
+
+The mirror images hold for the down versions (RSI14 below 30 is followed by an up window 57% of the time, 8 of 8 months). The plainest pair is the previous window itself, up or down, each a 2.2-point deviation in 8 of 8 months. That pair is the one-bit rule the whole report is measured against. The other events are the same reversal seen through indicators that are all functions of the same recent rise or fall. So "if the price breaks X, then up" is backwards at this horizon: a break is followed by a pull-back more often than by a continuation.
+
+The learned trees say the same thing in one line: the root split in six of eight months is the hour-RSI at about 55, with "below, up; above, down".
+
+Three minutes in, the strongest "events" are the lead in disguise (a spike up in the last five minutes, which then lies inside the window, is followed by an up close 82% of the time). The conditions that were reversal signals at the open have flipped sign for that reason.
 
 **17. Acting only when a strong event fires, and the September check.** The stable events from study 16 turned into three rules (act on any stable event with the strongest deciding; only events with a 5-point deviation or more; only when every firing event agrees), scored in-sample on the backtest and then on September 2026, which the event search never saw. The rules were selected, signed and thresholded on data through August; September tests whether they held, not whether they were found honestly, and a rule chosen from a stable set is not "a rule with no fitted parameters", as an earlier version of this report called it.
 
