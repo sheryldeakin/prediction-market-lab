@@ -1,0 +1,43 @@
+{
+  "written": "2026-10-06 20:01 UTC",
+  "commit": "ac20f4940a0d97ca3e721003ce0779778a898502",
+  "increment_points": 2.0,
+  "horizon": 15,
+  "level": 0.05,
+  "liquidation_deviation_points": {
+    "long": 4.11635127296858,
+    "short": 4.39235688485881
+  },
+  "minimum_detectable": {
+    "A-long": {
+      "se_points": 1.0115449086227812,
+      "detectable_points": 1.9826280209006513,
+      "years": 5
+    },
+    "A-short": {
+      "se_points": 1.1146644455951835,
+      "detectable_points": 2.1847423133665598,
+      "years": 5
+    },
+    "B-high": {
+      "se_points": 0.5315656260365614,
+      "detectable_points": 1.0418686270316604,
+      "years": 8
+    },
+    "B-low": {
+      "se_points": 0.5090513118789579,
+      "detectable_points": 0.9977405712827575,
+      "years": 8
+    }
+  },
+  "primary": [
+    "A-long",
+    "A-short",
+    "B-high",
+    "B-low"
+  ],
+  "episode_gap_minutes": 30,
+  "control_block_minutes": 30,
+  "min_pairs_per_cell_year": 500,
+  "smd_max": 0.25
+}
