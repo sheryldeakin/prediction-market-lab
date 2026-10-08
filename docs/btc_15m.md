@@ -1866,9 +1866,9 @@ With studies 29 and 30 this closes the HMM line for the window label on these da
 **33. Confidence by minute.** This study asked whether an early confident call is worth more than the window's own move. It is not: no cell of the grid is ahead of the one-feature rule once the comparison is adjusted for the number of cells.
 
 - **No cell is ahead of the rule.** The sentences under the first table give the largest paired difference with its adjusted p, and the count of cells whose adjusted p is under 0.05.
-- **Only the lowest threshold shows a gap, and it does not survive the adjustment.** Three cells have an unadjusted interval above zero: the forest and the two XGBoost fits at 0.55. Each has an adjusted p above 0.05.
-- **From 0.65 up, a fitted predictor's calls are as accurate as the rule's.** The two accuracy columns agree to within a few hundredths of a point. The difference column straddles zero or sits on it.
-- **From minute 3 the fitted model is confident more often than the rule and right less often.** In the calibration table its hit rate is below the rule's at both thresholds. That holds at every minute from 1 to 14. Its share is above the rule's at every one of those minutes at 0.65, and from minute 3 at 0.75.
+- **Only the lowest threshold shows a gap, and it does not survive the adjustment.** The sentence on unadjusted intervals under the first table names those cells. It also gives each adjusted p.
+- **From 0.65 up, a fitted predictor's calls are as accurate as the rule's.** The sentence on thresholds of 0.65 and above under the first table gives the largest absolute difference among those cells.
+- **From minute 3 the fitted model is confident more often than the rule and right less often.** The last two sentences under the calibration table give, for each threshold, the minutes where its hit rate is below the rule's. They also give the minutes where its share is above.
 - **A threshold does not fix the accuracy.** In the calibration table the hit rate of calls at 0.75 or more rises down the minutes, for xgb-all and for the rule alike. A confident call at minute 2 and one at minute 14 are not the same bet.
 
 The walk-forward gives a probability at every entry minute for every family. A model that is sure of itself at minute 1 or 2 would be worth acting on early. This study asks whether that call is worth more than reading the window's own move at the same minute. The one-feature rule is that move: the previous window's direction at the open, and after it the lead scaled by the volatility left.
@@ -1968,6 +1968,10 @@ The smallest paired difference among the cells with at least 200 calls is -0.01 
 
 0 of the 48 cells have a Holm-adjusted p under 0.05: 0 with the predictor ahead of the rule and 0 behind it.
 
+3 cells have an unadjusted interval entirely above zero (forest at 0.55, xgb-price at 0.55, xgb-all at 0.55) and 0 have one entirely below zero (none); their Holm-adjusted p is 0.0840, 0.7291, 0.3196 (above) and not applicable (below).
+
+Among the cells at thresholds of 0.65 and above, the largest absolute paired difference is 0.02 points (logistic-all at 0.65).
+
 The rule scored against itself differs by exactly zero in all 6 of its cells that make a call, and the constant predictor (majority) makes no call at any threshold; the run stops if either fails.
 
 6 cells make fewer than 200 calls; they are listed above and left out of the two sentences that name the largest and smallest difference.
@@ -1999,6 +2003,10 @@ Calibration of the confident calls by entry minute, 2026-01-01 to 2026-08-31, 23
 At minute 2: at 0.65, xgb-all has 39.9% of windows at or above it and those calls are right 71.5% of the time (9,306 calls), the rule 34.5% and 73.4% (8,041 calls); at 0.75, xgb-all has 11.1% of windows at or above it and those calls are right 79.3% of the time (2,581 calls), the rule 11.9% and 79.7% (2,777 calls).
 
 At minute 7: at 0.65, xgb-all has 75.0% of windows at or above it and those calls are right 81.2% of the time (17,491 calls), the rule 69.5% and 82.7% (16,213 calls); at 0.75, xgb-all has 52.7% of windows at or above it and those calls are right 86.4% of the time (12,299 calls), the rule 48.6% and 87.5% (11,335 calls).
+
+At 0.65, xgb-all's hit rate is below the rule's at minutes 1 to 14 and its share is above the rule's at minutes 0 to 14.
+
+At 0.75, xgb-all's hit rate is below the rule's at minutes 1 to 14 and its share is above the rule's at minutes 0 and 3 to 14.
 <!-- table:confidence_by_minute_calibration:end -->
 
 What it does not say:

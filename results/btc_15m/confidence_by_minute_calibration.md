@@ -21,3 +21,7 @@ Calibration of the confident calls by entry minute, 2026-01-01 to 2026-08-31, 23
 At minute 2: at 0.65, xgb-all has 39.9% of windows at or above it and those calls are right 71.5% of the time (9,306 calls), the rule 34.5% and 73.4% (8,041 calls); at 0.75, xgb-all has 11.1% of windows at or above it and those calls are right 79.3% of the time (2,581 calls), the rule 11.9% and 79.7% (2,777 calls).
 
 At minute 7: at 0.65, xgb-all has 75.0% of windows at or above it and those calls are right 81.2% of the time (17,491 calls), the rule 69.5% and 82.7% (16,213 calls); at 0.75, xgb-all has 52.7% of windows at or above it and those calls are right 86.4% of the time (12,299 calls), the rule 48.6% and 87.5% (11,335 calls).
+
+At 0.65, xgb-all's hit rate is below the rule's at minutes 1 to 14 and its share is above the rule's at minutes 0 to 14.
+
+At 0.75, xgb-all's hit rate is below the rule's at minutes 1 to 14 and its share is above the rule's at minutes 0 and 3 to 14.

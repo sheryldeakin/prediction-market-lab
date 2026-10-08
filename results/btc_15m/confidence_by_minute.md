@@ -57,6 +57,10 @@ The smallest paired difference among the cells with at least 200 calls is -0.01 
 
 0 of the 48 cells have a Holm-adjusted p under 0.05: 0 with the predictor ahead of the rule and 0 behind it.
 
+3 cells have an unadjusted interval entirely above zero (forest at 0.55, xgb-price at 0.55, xgb-all at 0.55) and 0 have one entirely below zero (none); their Holm-adjusted p is 0.0840, 0.7291, 0.3196 (above) and not applicable (below).
+
+Among the cells at thresholds of 0.65 and above, the largest absolute paired difference is 0.02 points (logistic-all at 0.65).
+
 The rule scored against itself differs by exactly zero in all 6 of its cells that make a call, and the constant predictor (majority) makes no call at any threshold; the run stops if either fails.
 
 6 cells make fewer than 200 calls; they are listed above and left out of the two sentences that name the largest and smallest difference.
