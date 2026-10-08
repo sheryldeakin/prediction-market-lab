@@ -395,11 +395,11 @@ def main():
     cells = run_cells(t, y, P, rule, n_boot=a.n_boot, n_draws=a.n_draws)
     check_engaged(cells)                                    # a run that fails its checks prints no summary and writes no file
     cal = calibration_table(P, rule, y)
+    dirty = bool(git("status", "--porcelain", "--untracked-files=no"))        # read before the outputs are written: they are tracked files themselves
     cells.to_csv(out / f"{STEM}.csv", index=False)
     (out / f"{STEM}.md").write_text(render_cells(cells, info), encoding="utf-8")
     cal.to_csv(out / f"{STEM}_calibration.csv", index=False)
     (out / f"{STEM}_calibration.md").write_text(render_calibration(cal, info), encoding="utf-8")
-    dirty = bool(git("status", "--porcelain", "--untracked-files=no"))
     (out / f"{STEM}.json").write_text(json.dumps({"ran_at": dt.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"), "commit": git("rev-parse", "HEAD"), "dirty": dirty, **info,
                                                   "wall_seconds": round(time.time() - t0), "sha256": {f"oof_k{k}.parquet": sha256(out / f"oof_k{k}.parquet") for k in MINUTES}}, indent=2), encoding="utf-8")
     print(f"wrote {STEM} tables to {out} in {time.time() - t0:.0f}s")
