@@ -86,7 +86,8 @@ def by_minute():
     w = pd.read_csv(OUT / "walk_forward.csv")
     base = w[((w.minute == 0) & (w.model == "prev-window")) | ((w.minute > 0) & (w.model == "lead-z"))].assign(model="one-feature baseline")
     w = pd.concat([w[w.model.isin(["majority", "forest"])], base])
-    fig, ax = plt.subplots(figsize=(7, 4), dpi=150)
+    last = int(w.minute.max())                       # every entry minute the walk-forward scored, 0 to 14
+    fig, ax = plt.subplots(figsize=(8, 4), dpi=150)
     style(ax, "Accuracy by entry minute against a one-feature baseline")
     labels = []
     for name in ["majority", "one-feature baseline", "forest"]:
@@ -94,11 +95,11 @@ def by_minute():
         ax.plot(d.minute, d.accuracy * 100, color=SERIES[name], linewidth=2, marker="o", markersize=5,
                 markeredgecolor=SURFACE, markeredgewidth=1.5, label=name)
         labels.append([name, d.accuracy.iloc[-1] * 100])
-    for lab, y in spread(labels, 1.6):
-        ax.annotate(lab, (8.2, y), color=INK, fontsize=8, va="center")
-    ax.set_xticks([0, 1, 3, 5, 8])
-    ax.set_ylim(48, 82)
-    ax.set_xlim(-0.3, 9.6)
+    for lab, y in spread(labels, 2.4):
+        ax.annotate(lab, (last + 0.3, y), color=INK, fontsize=8, va="center")
+    ax.set_xticks(range(last + 1))
+    ax.set_ylim(48, 96)
+    ax.set_xlim(-0.3, last + 3.8)
     ax.set_xlabel("minutes into the 15-minute window", color=MUTED, fontsize=9)
     ax.set_ylabel("accuracy, %", color=MUTED, fontsize=9)
     ax.legend(frameon=False, fontsize=8, loc="upper left")

@@ -1,0 +1,29 @@
+{
+  "ran_at": "2026-10-08 18:47 UTC",
+  "commit": "f3127073644baaf6e0d7653aaafb5d95439c9f1e",
+  "dirty": true,
+  "windows": 23328,
+  "days": 243,
+  "first": "2026-01-01",
+  "last": "2026-08-31",
+  "n_boot": 2000,
+  "n_draws": 20000,
+  "wall_seconds": 2,
+  "sha256": {
+    "oof_k0.parquet": "05b2e3c19fcc435154065b0c78f549cbe063ec4265dc29f1642b0b03c952c7e9",
+    "oof_k1.parquet": "2f41b93c5a69ef5cb14ce79bf0e403e8c9f7bf94f4bb194c55c5698b6bd9bda0",
+    "oof_k2.parquet": "6e3c7c033d5727531a2eec9da3eb393016fcdf74ef0773c5c2d641ed67494155",
+    "oof_k3.parquet": "5bff9fdc626dab41a98d6d51aa512b49fc425de7e766de30859be24b78bdb4bb",
+    "oof_k4.parquet": "6ebfd8ac999650109285a9e0080850dd2a42250fd0695a36b8e381fc7f194bf5",
+    "oof_k5.parquet": "e6f7938f49669c336b7acf43ec44981d68a1871d4ff672c70d1b335ecf5887d3",
+    "oof_k6.parquet": "9c2e6159e951ac20976252ac74d74ca73c28ab89069228303eb61e8ee3e245cb",
+    "oof_k7.parquet": "f0344b144e49f0148fdee448ed35ae969bea72a206b6fa9162be4efc09800bc4",
+    "oof_k8.parquet": "2c4e88ef92b0427d598d66e0d344ce48581c36f12191979f07d081abb4a3c53e",
+    "oof_k9.parquet": "23d45f4c4e88c4c322a4c8aa25776bec26adcce31ca768db1a07db08abd399d9",
+    "oof_k10.parquet": "8ddbe1ae2d9e92b6991240643ef8584b373e6edda0a0f27abc80228152e5ba57",
+    "oof_k11.parquet": "f97746de52ae8e7b4ebd10a97ee2f1d89e74d436f581462de16e92a3d0179a41",
+    "oof_k12.parquet": "c011fc21b777fb86da6f26a46b4888e93f14dda668bb0ee5fc44427f26769fae",
+    "oof_k13.parquet": "89302432ed675bd86cb853a2fc53777abbef0fd5cd847fc4ac40bb0a44f4f59f",
+    "oof_k14.parquet": "acde83134f23539cc84fbc1630b878d20ed2c7018d055c8a9cee8df094068be7"
+  }
+}

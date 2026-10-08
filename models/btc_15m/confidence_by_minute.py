@@ -194,8 +194,8 @@ def _pts(x: float) -> str:
     return f"{x * 100:+.2f}"
 
 
-def _iv(r, lo="diff_low", hi="diff_high") -> str:
-    return "-" if not np.isfinite(r["diff"]) else f"{_pts(r['diff'])} [{_pts(r[lo])}, {_pts(r[hi])}]"
+def _iv(r, est="diff", lo="diff_low", hi="diff_high") -> str:
+    return "-" if not np.isfinite(r[est]) else f"{_pts(r[est])} [{_pts(r[lo])}, {_pts(r[hi])}]"
 
 
 def _holm_p(r, n_draws: int) -> str:
@@ -223,7 +223,7 @@ def render_cells(cells: pd.DataFrame, info: dict) -> str:
     for r in cells.itertuples(index=False):
         d = r._asdict()
         mins = "-" if d["called"] == 0 else f"{d['mean_minute']:.1f} / {d['median_minute']:.0f}"
-        lines.append(f"| {d['predictor']} | {d['threshold']:.2f} | {_pct(d['share_called'], 1)} | {mins} | {_pct(d['acc_predictor'])} | {_pct(d['acc_rule'])} | {_iv(d)} | {_holm_p(d, nd)} | {d['early_called']:,} | {_iv(d, 'early_low', 'early_high') if d['early_called'] else '-'} |")
+        lines.append(f"| {d['predictor']} | {d['threshold']:.2f} | {_pct(d['share_called'], 1)} | {mins} | {_pct(d['acc_predictor'])} | {_pct(d['acc_rule'])} | {_iv(d)} | {_holm_p(d, nd)} | {d['early_called']:,} | {_iv(d, 'early_diff', 'early_low', 'early_high') if d['early_called'] else '-'} |")
     lines.append("")
     ranked = cells[cells.called >= MIN_CALLS]
     hi, lo = ranked.loc[ranked["diff"].idxmax()], ranked.loc[ranked["diff"].idxmin()]

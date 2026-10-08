@@ -183,6 +183,18 @@ def test_cells_cover_eight_predictors_by_six_thresholds_and_pass_the_engagement_
     C.check_engaged(cells)
 
 
+def test_the_early_column_prints_the_early_difference_and_not_the_primary_one():
+    f = frames(n=480)
+    t, y, P, rule = C.stack(f)
+    cells = C.run_cells(t, y, P, rule, n_boot=50, n_draws=200)
+    info = {"first": "a", "last": "b", "windows": len(t), "days": 5, "n_boot": 50, "n_draws": 200}
+    row = cells[(cells.predictor == "xgb-all") & (cells.threshold == 0.55)].iloc[0]
+    assert abs(row["early_diff"] - row["diff"]) > 1e-6                     # the two differ here, so printing the wrong one would show
+    line = next(l for l in C.render_cells(cells, info).splitlines() if l.startswith("| xgb-all | 0.55 "))
+    assert line.split("|")[-2].strip().startswith(C._pts(row["early_diff"]))
+    assert line.split("|")[7].strip().startswith(C._pts(row["diff"]))
+
+
 def test_engagement_check_fails_when_the_rule_differs_from_itself_or_the_constant_predictor_calls():
     f = frames(n=480)
     t, y, P, rule = C.stack(f)

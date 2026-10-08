@@ -11,7 +11,7 @@ Models, prediction logs and tracking tools for prediction markets. Each model li
 
 ### BTC 15-minute direction, in short
 
-The question was whether machine learning on free Binance candles predicts the direction of a 15-minute window. After 32 studies and an outside review that forced the baselines and the statistics to be redone, the answer is that consecutive windows tend to reverse and the fitted models add little to that.
+The question was whether machine learning on free Binance candles predicts the direction of a 15-minute window. After 33 studies and an outside review that forced the baselines and the statistics to be redone, the answer is that consecutive windows tend to reverse and the fitted models add little to that.
 
 - **There is a real effect, and it is one bit: the previous window's direction.** Consecutive 15-minute windows tend to go opposite ways. Calling the opposite of the previous window (the one-bit rule) is right about 52% of the time. It holds everywhere it was looked for:
   - in the eleven study months
@@ -49,7 +49,7 @@ The question was whether machine learning on free Binance candles predicts the d
 What the backtest could have detected: the forest's day-block interval at the open is 1.43 points wide, so an increment over the rule smaller than about 0.7 points could not have been told from zero with these windows, and a one-point increment could. A null here is a bound, not a verdict.
 <!-- table:headline:end -->
 
-Every row above is read from a table a study wrote. The full tables, the 32 studies and what each one found: [docs/btc_15m.md](docs/btc_15m.md). Bugs found on the way, including fifteen from the review, and the decisions behind each study: [docs/process.md](docs/process.md).
+Every row above is read from a table a study wrote. The full tables, the 33 studies and what each one found: [docs/btc_15m.md](docs/btc_15m.md). Bugs found on the way, including fifteen from the review, and the decisions behind each study: [docs/process.md](docs/process.md).
 
 ![accuracy by entry minute](results/btc_15m/by_minute.png)
 

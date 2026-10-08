@@ -95,6 +95,41 @@ Walk-forward results, 2025-10 to 2026-08, test months after the first three.
 | 8 | xgb-all | 23,328 | 77.33% | 0.856 | 0.4731 |
 <!-- table:walk_forward:end -->
 
+The table above shows entry minutes 0, 1, 3, 5 and 8. The walk-forward was run at every minute from 0 to 14, and the table below puts each minute's one-feature rule beside the fitted families. The full tables are in `results/btc_15m/`: `walk_forward_all.md` has every model at every minute, and `checks.md` has the intervals and tests at every minute.
+
+<!-- table:walk_forward_by_minute:start -->
+The one-feature rule of the minute against each fitted family, accuracy at every entry minute, walk-forward 2025-10 to 2026-08, test months after the first three, 23,328 windows at each minute. The rule is the previous window's direction at minute 0 and the lead z-score after. Accuracy is the share of windows called right; the families are fitted on all features (logistic-all, forest, hgb-all) or on price (xgb-price) or price and flow (xgb-all). The last column is the most accurate of the five families at that minute minus the rule on the same windows, in points, with a 95% interval from resampling whole days and the family's name. The best of five is chosen on these windows, so the difference is biased upward and the interval does not correct for the choice (study 23 does, for minutes 0 and 3).
+
+| minute | one-feature rule (prev-window at 0, lead-z after) | logistic-all | forest | hgb-all | xgb-price | xgb-all | best fitted minus rule (points) [95% interval] |
+|---|---|---|---|---|---|---|---|
+| 0 | 52.21% | 52.89% | 52.65% | 52.73% | 52.38% | 52.37% | +0.69 [-0.01, +1.37] (logistic-all) |
+| 1 | 58.86% | 59.21% | 59.22% | 59.34% | 59.08% | 59.24% | +0.48 [+0.06, +0.88] (hgb-all) |
+| 2 | 63.24% | 62.52% | 63.15% | 63.06% | 63.25% | 62.88% | +0.01 [-0.37, +0.41] (xgb-price) |
+| 3 | 66.35% | 65.66% | 66.13% | 66.35% | 66.14% | 66.28% | +0.00 [-0.29, +0.29] (hgb-all) |
+| 4 | 68.27% | 67.73% | 68.12% | 68.20% | 68.28% | 68.22% | +0.01 [-0.30, +0.31] (xgb-price) |
+| 5 | 69.98% | 69.09% | 69.98% | 69.85% | 69.91% | 69.96% | -0.00 [-0.33, +0.33] (forest) |
+| 6 | 72.90% | 72.26% | 72.90% | 72.81% | 72.90% | 72.77% | +0.00 [-0.25, +0.24] (xgb-price) |
+| 7 | 75.66% | 74.79% | 75.57% | 75.56% | 75.50% | 75.55% | -0.09 [-0.27, +0.10] (forest) |
+| 8 | 77.46% | 76.87% | 77.51% | 77.38% | 77.45% | 77.33% | +0.05 [-0.12, +0.21] (forest) |
+| 9 | 79.59% | 79.03% | 79.43% | 79.39% | 79.58% | 79.47% | -0.00 [-0.24, +0.24] (xgb-price) |
+| 10 | 82.25% | 81.63% | 82.00% | 82.03% | 81.99% | 82.04% | -0.21 [-0.41, -0.02] (xgb-all) |
+| 11 | 84.46% | 84.04% | 84.38% | 84.28% | 84.25% | 84.23% | -0.08 [-0.23, +0.06] (forest) |
+| 12 | 86.35% | 86.17% | 86.34% | 86.33% | 86.28% | 86.25% | -0.01 [-0.14, +0.12] (forest) |
+| 13 | 89.23% | 89.04% | 89.18% | 89.16% | 89.08% | 89.05% | -0.04 [-0.13, +0.05] (forest) |
+| 14 | 92.30% | 91.94% | 92.31% | 92.24% | 92.25% | 92.23% | +0.00 [-0.05, +0.06] (forest) |
+
+Across minutes 1 to 14 the largest best-fitted-minus-rule difference is +0.48 [+0.06, +0.88] points at minute 1 (hgb-all) and the smallest is -0.21 [-0.41, -0.02] points at minute 10 (xgb-all); at minute 0 it is +0.69 [-0.01, +1.37] points (logistic-all).
+
+The interval lies entirely above zero at 1 of the 15 minutes (minute 1) and entirely below zero at 1 (minute 10). The intervals are not adjusted for the number of minutes.
+<!-- table:walk_forward_by_minute:end -->
+
+Does a fitted model add anything over the window's own move at any minute? Not after the first two minutes. At the open and at minute 1 the best fitted family is above the rule. Only at minute 1 does the interval exclude zero, and that is before any correction for choosing the best of five or for reading fifteen minutes. From minute 2 on the best family is level with the rule, and at minute 10 it is below it.
+
+- **The gap is confined to the first two minutes.** The two largest values in the last column are at minutes 0 and 1. The first sentence under the table names the largest difference and the minute-0 value, and the minute-0 interval includes zero.
+- **From minute 2 the rule is as good as any family.** The interval includes zero at every minute from 2 to 9 and from 11 to 14. These rows cannot tell the best family from the rule.
+- **One minute is below zero, and the intervals are not adjusted.** The second sentence under the table lists the minutes whose interval excludes zero. With fifteen unadjusted intervals, one or two that miss zero are not evidence of an effect at those minutes.
+- **Method.** The rule is the previous window's direction at minute 0 and the lead z-score after. The best fitted family is the most accurate of the five at that minute on these windows, so the difference is biased upward; study 23 corrects for the choice at minutes 0 and 3 only. Hits are paired by window and whole days are resampled.
+
 ![accuracy by entry minute](../results/btc_15m/by_minute.png)
 
 ![accuracy at the open by test month](../results/btc_15m/monthly_k0.png)
@@ -1827,6 +1862,150 @@ Not tried:
 - entry minutes other than 0 and 3.
 
 With studies 29 and 30 this closes the HMM line for the window label on these data, to that bound.
+
+**33. Confidence by minute.** This study asked whether an early confident call is worth more than the window's own move. It is not: no cell of the grid is ahead of the one-feature rule once the comparison is adjusted for the number of cells.
+
+- **No cell is ahead of the rule.** The sentences under the first table give the largest paired difference with its adjusted p, and the count of cells whose adjusted p is under 0.05.
+- **Only the lowest threshold shows a gap, and it does not survive the adjustment.** Three cells have an unadjusted interval above zero: the forest and the two XGBoost fits at 0.55. Each has an adjusted p above 0.05.
+- **From 0.65 up, a fitted predictor's calls are as accurate as the rule's.** The two accuracy columns agree to within a few hundredths of a point. The difference column straddles zero or sits on it.
+- **From minute 3 the fitted model is confident more often than the rule and right less often.** In the calibration table its hit rate is below the rule's at both thresholds. That holds at every minute from 1 to 14. Its share is above the rule's at every one of those minutes at 0.65, and from minute 3 at 0.75.
+- **A threshold does not fix the accuracy.** In the calibration table the hit rate of calls at 0.75 or more rises down the minutes, for xgb-all and for the rule alike. A confident call at minute 2 and one at minute 14 are not the same bet.
+
+The walk-forward gives a probability at every entry minute for every family. A model that is sure of itself at minute 1 or 2 would be worth acting on early. This study asks whether that call is worth more than reading the window's own move at the same minute. The one-feature rule is that move: the previous window's direction at the open, and after it the lead scaled by the volatility left.
+
+Method:
+
+- **The call.** For each window, predictor and threshold, the call is made at the first minute from 0 to 14 at which the probability of the called side reaches the threshold. That probability is the larger of p and 1 - p, and the side is that minute's side. A probability of exactly 0.5 is not a call. A window that never reaches the threshold makes no call: it counts in the share called and is left out of both accuracies.
+- **The comparison.** The rule's own call at the same minute, on the same windows, paired by window. The statistic is the predictor's accuracy minus the rule's, with a 95% interval from resampling whole days. The two-sided p comes from giving each day's sum of the paired differences a random sign. Holm's adjustment runs over every predictor and threshold cell.
+- **The eight predictors.** The walk-forward fits eight rows at every minute, and two of them are different models at minute 0 and after. One is the previous window's direction at the open and the lead z-score after. The other is the logistic on the previous window's move at the open and the logistic on the lead after. The rows are matched by position. The row named "rule" is the rule itself and must show a difference of exactly zero, and "other one-feature" is the second one-feature model. The row named "majority" never reaches a threshold. The run stops if the rule differs from itself or majority makes a call.
+- **Fixed before the run.** The design, the decision rule and the checks were committed with the code and tests before any result file existed. The block below was generated from them. After the first run the early-call column printed the all-calls difference beside the early-call interval; the display was fixed with a regression test and no statistic changed.
+
+<!-- table:confidence_by_minute_prereg:start -->
+Pre-registration of the confidence-by-minute study, written 2026-10-08 18:46 UTC at commit 438913df87, before any result of the study was computed. It is generated by `python -m models.btc_15m.confidence_by_minute --prereg` and is not edited afterwards.
+
+**Question.** Is an early confident call worth more than the window's own move?
+
+**Data.** The out-of-fold probabilities (`oof_k0.parquet` to `oof_k14.parquet`) of the walk-forward on the data 2025-10 to 2026-08, whose first three months are training only, so the scored windows run from 2026-01-01 to 2026-08-31: 23,328 windows on 243 days, one row per window per entry minute 0 to 14, joined on `t`. The study stops if the windows or labels differ between minutes. The SHA-256 of each file is in the json beside this block.
+
+**Predictors.** The eight rows the walk-forward fits at every minute, matched by position because two of them are different models at minute 0 and after: majority (majority); rule (prev-window at minute 0, lead-z after); other one-feature (win1-logistic at minute 0, lead-only after); logistic-all (logistic-all); forest (forest); hgb-all (hgb-all); xgb-price (xgb-price); xgb-all (xgb-all).
+
+**The rule.** The one-feature rule of the minute: the previous window's direction at minute 0, the lead z-score after. It is also one of the eight predictors, as a check: scored against itself it must differ by exactly zero.
+
+**The call.** For each window, predictor and threshold in 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, the called side is the side with the larger probability and its probability is max(p, 1 - p); a probability of exactly 0.5 is not a call. The call is made at the first minute from 0 to 14 at which the called-side probability reaches the threshold (at or above, within 1e-12 for floating-point rounding), and the side is that minute's side. A window that never reaches the threshold makes no call: it counts in the share called, whose denominator is all windows, and is left out of the accuracies.
+
+**The comparison.** On the same windows and at the same minute, the rule's own call (up when its probability is above 0.5, down otherwise). Both calls are scored against the window's final direction.
+
+**Primary statistic.** Accuracy of the predictor's calls minus accuracy of the rule's calls on the called windows, paired by window, in points. Interval: 95%, resampling whole days (2,000 resamples, `stats.paired_difference_ci`). p: two-sided, giving a random sign to each day's sum of the paired differences (20,000 draws, seed 0, so the smallest p is 0.00005). Holm's step-down adjustment across the 48 (predictor, threshold) cells at level 0.05; a cell with no call has p = 1.
+
+**Decision rule.** A cell is 'ahead of the rule' when its Holm-adjusted p is under 0.05 and its difference is positive, 'behind the rule' when the p is under 0.05 and the difference is negative, and 'not separated from the rule' otherwise. The answer to the question is yes only if at least one cell with at least 200 calls is ahead of the rule. Cells with fewer than 200 calls stay in the table and are left out of the sentences that name the largest and smallest difference.
+
+**Secondary.** The share called, the mean and median crossing minute, the predictor's accuracy and the rule's, and the same paired difference restricted to calls made at minutes 1 to 3 (interval from days, no adjustment, descriptive).
+
+**Calibration table.** For each minute 0 to 14 and each threshold in 0.65, 0.75: the share of windows where xgb-all's called-side probability is at or above the threshold and the hit rate of those calls, beside the same for the rule at that minute. Descriptive, no test.
+
+**Checks that stop the run.** The rule scored against itself differs by exactly zero in every cell with calls, the constant predictor makes no call, and the rule and at least one fitted predictor make calls. If any fails the run stops before it writes a result file.
+
+**Not tested here.** The comparison is with the window's own move, not with a market price. Whether a recorded bid and ask, with fees, lags the move at minutes 1 to 3 is a separate study on the tracking side.
+<!-- table:confidence_by_minute_prereg:end -->
+
+<!-- table:confidence_by_minute:start -->
+Is an early confident call worth more than the window's own move? Out-of-fold probabilities of the walk-forward, 2026-01-01 to 2026-08-31, 23,328 windows on 243 days, entry minutes 0 to 14. For each predictor and threshold, a window's call is made at the first minute at which the probability of the called side (the larger of p and 1 - p; exactly 0.5 is not a call) reaches the threshold, on that minute's side. The comparison is the one-feature rule's call at the same minute (prev-window at minute 0, lead-z after), on the same windows. A window that never reaches the threshold makes no call: it counts in the share called and is left out of both accuracies. Difference = accuracy of the predictor's calls minus accuracy of the rule's calls, in points, paired by window, with a 95% interval from resampling whole days (2,000 resamples). The p is a two-sided sign-flip test on whole-day sums of the paired differences (20,000 draws; a Holm-adjusted p printed with "<" comes from a raw p at the test's floor), adjusted by Holm over the 48 cells. The rows named "rule" are the rule scored against itself and must show exactly zero; majority never reaches a threshold. "other one-feature" is win1-logistic at minute 0 and lead-only after. The last two columns count only calls made at minutes 1 to 3 (descriptive, not adjusted).
+
+| predictor | threshold | share called | crossing minute, mean / median | accuracy, predictor | accuracy, rule | difference (points) [95% interval] | Holm p | calls at minutes 1 to 3 | difference at minutes 1 to 3 (points) [95% interval] |
+|---|---|---|---|---|---|---|---|---|---|
+| majority | 0.55 | 0.0% | - | - | - | - | - | 0 | - |
+| majority | 0.60 | 0.0% | - | - | - | - | - | 0 | - |
+| majority | 0.65 | 0.0% | - | - | - | - | - | 0 | - |
+| majority | 0.70 | 0.0% | - | - | - | - | - | 0 | - |
+| majority | 0.75 | 0.0% | - | - | - | - | - | 0 | - |
+| majority | 0.80 | 0.0% | - | - | - | - | - | 0 | - |
+| rule | 0.55 | 99.9% | 1.6 / 1 | 63.45% | 63.45% | +0.00 [+0.00, +0.00] | 1.0000 | 21,851 | +0.00 [+0.00, +0.00] |
+| rule | 0.60 | 99.9% | 2.6 / 2 | 67.55% | 67.55% | +0.00 [+0.00, +0.00] | 1.0000 | 17,856 | +0.00 [+0.00, +0.00] |
+| rule | 0.65 | 99.6% | 3.8 / 3 | 72.61% | 72.61% | +0.00 [+0.00, +0.00] | 1.0000 | 13,017 | +0.00 [+0.00, +0.00] |
+| rule | 0.70 | 98.8% | 5.1 / 4 | 77.14% | 77.14% | +0.00 [+0.00, +0.00] | 1.0000 | 8,703 | +0.00 [+0.00, +0.00] |
+| rule | 0.75 | 96.6% | 6.3 / 6 | 81.70% | 81.70% | +0.00 [+0.00, +0.00] | 1.0000 | 5,565 | +0.00 [+0.00, +0.00] |
+| rule | 0.80 | 93.0% | 7.5 / 7 | 85.80% | 85.80% | +0.00 [+0.00, +0.00] | 1.0000 | 3,268 | +0.00 [+0.00, +0.00] |
+| other one-feature | 0.55 | 99.6% | 2.3 / 2 | 66.14% | 66.14% | +0.00 [+0.00, +0.00] | 1.0000 | 17,788 | +0.00 [+0.00, +0.00] |
+| other one-feature | 0.60 | 98.7% | 4.0 / 3 | 72.71% | 72.71% | +0.00 [+0.00, +0.00] | 1.0000 | 12,804 | +0.00 [+0.00, +0.00] |
+| other one-feature | 0.65 | 96.4% | 5.4 / 5 | 77.81% | 77.81% | +0.00 [+0.00, +0.00] | 1.0000 | 8,385 | +0.00 [+0.00, +0.00] |
+| other one-feature | 0.70 | 92.8% | 6.6 / 6 | 81.99% | 81.99% | +0.00 [+0.00, +0.00] | 1.0000 | 5,458 | +0.00 [+0.00, +0.00] |
+| other one-feature | 0.75 | 88.4% | 7.6 / 8 | 85.10% | 85.10% | +0.00 [+0.00, +0.00] | 1.0000 | 3,532 | +0.00 [+0.00, +0.00] |
+| other one-feature | 0.80 | 83.0% | 8.4 / 9 | 88.48% | 88.48% | +0.00 [+0.00, +0.00] | 1.0000 | 2,239 | +0.00 [+0.00, +0.00] |
+| logistic-all | 0.55 | 100.0% | 1.2 / 1 | 60.87% | 60.69% | +0.18 [-0.11, +0.45] | 1.0000 | 15,619 | -0.02 [-0.34, +0.29] |
+| logistic-all | 0.60 | 99.7% | 2.9 / 2 | 68.55% | 68.54% | +0.00 [-0.10, +0.12] | 1.0000 | 16,107 | +0.11 [-0.01, +0.24] |
+| logistic-all | 0.65 | 98.0% | 4.6 / 4 | 74.80% | 74.79% | +0.02 [-0.03, +0.07] | 1.0000 | 10,802 | +0.03 [-0.03, +0.09] |
+| logistic-all | 0.70 | 94.7% | 6.1 / 6 | 80.10% | 80.11% | -0.01 [-0.02, +0.00] | 1.0000 | 6,543 | +0.00 [+0.00, +0.00] |
+| logistic-all | 0.75 | 90.4% | 7.3 / 7 | 84.22% | 84.23% | -0.00 [-0.02, +0.01] | 1.0000 | 3,940 | -0.03 [-0.08, +0.00] |
+| logistic-all | 0.80 | 85.4% | 8.3 / 8 | 87.83% | 87.83% | +0.00 [-0.01, +0.01] | 1.0000 | 2,336 | +0.00 [+0.00, +0.00] |
+| forest | 0.55 | 100.0% | 1.0 / 1 | 60.01% | 59.52% | +0.49 [+0.18, +0.80] | 0.0840 | 15,515 | +0.24 [+0.05, +0.45] |
+| forest | 0.60 | 100.0% | 2.1 / 2 | 65.65% | 65.58% | +0.07 [-0.00, +0.15] | 1.0000 | 18,455 | +0.03 [-0.03, +0.09] |
+| forest | 0.65 | 99.9% | 3.4 / 3 | 70.37% | 70.36% | +0.00 [+0.00, +0.01] | 1.0000 | 14,727 | +0.00 [+0.00, +0.00] |
+| forest | 0.70 | 99.7% | 4.7 / 4 | 75.22% | 75.22% | +0.00 [+0.00, +0.00] | 1.0000 | 10,061 | +0.00 [+0.00, +0.00] |
+| forest | 0.75 | 98.8% | 6.1 / 6 | 79.93% | 79.93% | +0.00 [+0.00, +0.00] | 1.0000 | 5,797 | +0.00 [+0.00, +0.00] |
+| forest | 0.80 | 95.9% | 7.4 / 7 | 84.39% | 84.39% | +0.00 [+0.00, +0.00] | 1.0000 | 2,556 | +0.00 [+0.00, +0.00] |
+| hgb-all | 0.55 | 100.0% | 1.3 / 1 | 61.23% | 61.09% | +0.14 [-0.07, +0.36] | 1.0000 | 19,172 | +0.05 [-0.12, +0.22] |
+| hgb-all | 0.60 | 100.0% | 2.3 / 2 | 66.15% | 66.15% | -0.00 [-0.08, +0.08] | 1.0000 | 18,853 | -0.04 [-0.09, +0.02] |
+| hgb-all | 0.65 | 99.8% | 3.4 / 3 | 70.61% | 70.63% | -0.01 [-0.05, +0.02] | 1.0000 | 14,413 | -0.01 [-0.04, +0.01] |
+| hgb-all | 0.70 | 99.6% | 4.8 / 4 | 75.30% | 75.31% | -0.00 [-0.02, +0.01] | 1.0000 | 9,739 | +0.00 [+0.00, +0.00] |
+| hgb-all | 0.75 | 98.5% | 6.3 / 6 | 80.31% | 80.31% | +0.00 [+0.00, +0.00] | 1.0000 | 4,980 | +0.00 [+0.00, +0.00] |
+| hgb-all | 0.80 | 95.8% | 7.7 / 7 | 84.76% | 84.76% | +0.00 [+0.00, +0.00] | 1.0000 | 1,700 | +0.00 [+0.00, +0.00] |
+| xgb-price | 0.55 | 100.0% | 1.0 / 1 | 59.53% | 59.11% | +0.42 [+0.09, +0.74] | 0.7291 | 14,864 | +0.03 [-0.14, +0.20] |
+| xgb-price | 0.60 | 100.0% | 2.1 / 2 | 65.34% | 65.24% | +0.09 [-0.01, +0.20] | 1.0000 | 18,283 | +0.05 [-0.02, +0.11] |
+| xgb-price | 0.65 | 99.8% | 3.3 / 3 | 70.45% | 70.44% | +0.00 [-0.02, +0.03] | 1.0000 | 14,789 | +0.01 [-0.02, +0.04] |
+| xgb-price | 0.70 | 99.5% | 4.6 / 4 | 74.88% | 74.87% | +0.01 [+0.00, +0.02] | 1.0000 | 10,392 | +0.00 [+0.00, +0.00] |
+| xgb-price | 0.75 | 98.6% | 6.0 / 6 | 79.74% | 79.74% | +0.00 [+0.00, +0.00] | 1.0000 | 6,184 | +0.00 [+0.00, +0.00] |
+| xgb-price | 0.80 | 96.2% | 7.4 / 7 | 84.19% | 84.19% | +0.00 [+0.00, +0.00] | 1.0000 | 2,689 | +0.00 [+0.00, +0.00] |
+| xgb-all | 0.55 | 100.0% | 1.0 / 1 | 59.62% | 59.12% | +0.50 [+0.15, +0.86] | 0.3196 | 14,744 | +0.10 [-0.13, +0.34] |
+| xgb-all | 0.60 | 100.0% | 2.1 / 2 | 65.17% | 65.10% | +0.07 [-0.06, +0.20] | 1.0000 | 18,235 | -0.07 [-0.15, +0.02] |
+| xgb-all | 0.65 | 99.9% | 3.3 / 3 | 70.01% | 70.00% | +0.00 [-0.03, +0.04] | 1.0000 | 14,837 | +0.03 [+0.00, +0.06] |
+| xgb-all | 0.70 | 99.6% | 4.6 / 4 | 74.49% | 74.49% | +0.00 [+0.00, +0.00] | 1.0000 | 10,394 | +0.00 [+0.00, +0.00] |
+| xgb-all | 0.75 | 98.6% | 6.0 / 6 | 79.48% | 79.48% | +0.00 [+0.00, +0.00] | 1.0000 | 6,127 | +0.00 [+0.00, +0.00] |
+| xgb-all | 0.80 | 96.3% | 7.4 / 7 | 83.97% | 83.97% | +0.00 [+0.00, +0.00] | 1.0000 | 2,682 | +0.00 [+0.00, +0.00] |
+
+The largest paired difference among the cells with at least 200 calls is +0.50 [+0.15, +0.86] points for xgb-all at 0.55 (23,328 calls); its Holm-adjusted p is 0.3196, not under 0.05.
+
+The smallest paired difference among the cells with at least 200 calls is -0.01 [-0.05, +0.02] points for hgb-all at 0.65 (23,286 calls); its Holm-adjusted p is 1.0000, not under 0.05.
+
+0 of the 48 cells have a Holm-adjusted p under 0.05: 0 with the predictor ahead of the rule and 0 behind it.
+
+The rule scored against itself differs by exactly zero in all 6 of its cells that make a call, and the constant predictor (majority) makes no call at any threshold; the run stops if either fails.
+
+6 cells make fewer than 200 calls; they are listed above and left out of the two sentences that name the largest and smallest difference.
+<!-- table:confidence_by_minute:end -->
+
+The calibration table shows how often a call at a given confidence is right, minute by minute, for xgb-all and for the rule.
+
+<!-- table:confidence_by_minute_calibration:start -->
+Calibration of the confident calls by entry minute, 2026-01-01 to 2026-08-31, 23,328 windows. For each minute and threshold: the share of windows whose called-side probability (the larger of p and 1 - p; exactly 0.5 is not a call) is at or above the threshold, and the hit rate of those calls against the window's final direction, for xgb-all and for the one-feature rule at that minute (prev-window at minute 0, lead-z after). A dash means no window reached the threshold. Descriptive: no test.
+
+| minute | xgb-all, share at 0.65 or more | xgb-all, hit rate at 0.65 or more | rule, share at 0.65 or more | rule, hit rate at 0.65 or more | xgb-all, share at 0.75 or more | xgb-all, hit rate at 0.75 or more | rule, share at 0.75 or more | rule, hit rate at 0.75 or more |
+|---|---|---|---|---|---|---|---|---|
+| 0 | 1.3% | 64.0% (314) | 0.0% | - | 0.0% | 0.0% (1) | 0.0% | - |
+| 1 | 23.0% | 68.7% (5,376) | 17.7% | 71.5% (4,140) | 3.0% | 76.4% (709) | 4.0% | 77.3% (931) |
+| 2 | 39.9% | 71.5% (9,306) | 34.5% | 73.4% (8,041) | 11.1% | 79.3% (2,581) | 11.9% | 79.7% (2,777) |
+| 3 | 52.2% | 74.2% (12,174) | 45.3% | 75.9% (10,579) | 22.7% | 79.7% (5,289) | 20.2% | 81.6% (4,709) |
+| 4 | 58.7% | 76.0% (13,699) | 52.9% | 77.5% (12,347) | 31.3% | 81.8% (7,306) | 27.4% | 83.1% (6,391) |
+| 5 | 62.3% | 78.0% (14,531) | 57.4% | 79.5% (13,383) | 37.7% | 83.9% (8,788) | 33.8% | 85.1% (7,883) |
+| 6 | 70.0% | 79.3% (16,324) | 64.3% | 80.9% (14,990) | 45.5% | 85.0% (10,611) | 41.5% | 86.4% (9,680) |
+| 7 | 75.0% | 81.2% (17,491) | 69.5% | 82.7% (16,213) | 52.7% | 86.4% (12,299) | 48.6% | 87.5% (11,335) |
+| 8 | 77.9% | 83.3% (18,170) | 74.7% | 84.3% (17,433) | 59.5% | 87.7% (13,890) | 56.0% | 88.7% (13,068) |
+| 9 | 81.2% | 84.9% (18,952) | 78.2% | 85.8% (18,249) | 66.0% | 88.5% (15,399) | 61.5% | 90.0% (14,345) |
+| 10 | 85.2% | 86.3% (19,865) | 81.4% | 87.6% (18,998) | 71.7% | 89.7% (16,732) | 66.8% | 90.9% (15,591) |
+| 11 | 87.0% | 88.1% (20,307) | 84.2% | 89.2% (19,635) | 75.7% | 91.1% (17,651) | 72.3% | 92.1% (16,870) |
+| 12 | 88.8% | 89.9% (20,709) | 86.9% | 90.6% (20,280) | 80.7% | 92.1% (18,817) | 76.7% | 93.3% (17,893) |
+| 13 | 92.2% | 91.8% (21,505) | 89.2% | 92.8% (20,804) | 84.6% | 93.9% (19,742) | 80.9% | 94.8% (18,863) |
+| 14 | 96.1% | 93.7% (22,410) | 92.2% | 94.9% (21,498) | 91.2% | 95.0% (21,285) | 85.8% | 96.4% (20,012) |
+
+At minute 2: at 0.65, xgb-all has 39.9% of windows at or above it and those calls are right 71.5% of the time (9,306 calls), the rule 34.5% and 73.4% (8,041 calls); at 0.75, xgb-all has 11.1% of windows at or above it and those calls are right 79.3% of the time (2,581 calls), the rule 11.9% and 79.7% (2,777 calls).
+
+At minute 7: at 0.65, xgb-all has 75.0% of windows at or above it and those calls are right 81.2% of the time (17,491 calls), the rule 69.5% and 82.7% (16,213 calls); at 0.75, xgb-all has 52.7% of windows at or above it and those calls are right 86.4% of the time (12,299 calls), the rule 48.6% and 87.5% (11,335 calls).
+<!-- table:confidence_by_minute_calibration:end -->
+
+What it does not say:
+
+- **It does not say what a trade would earn.** The comparison is with the window's own move, not with a market price. Whether a recorded bid and ask, with fees, lags the move at minutes 1 to 3 is a separate study on the tracking side.
+- **It does not say whether the predictors and the rule call the same side.** The first table shows equal accuracy at the high thresholds. It does not show how often the two sides coincide on the same windows, and that count is not in the tables.
+- **It covers one grid on one test period.** Six thresholds, eight test months, and a call made at the first crossing; a rule that waits for a second confirming minute was not tried.
 
 ## What remains open
 

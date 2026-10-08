@@ -32,7 +32,10 @@ Checks (models/btc_15m/stats.py), all keeping the serial dependence between wind
                    because back-to-back windows share one boundary price
     calibration    predicted-probability deciles vs the observed rate (xgb-all, k = 0)
 
-Writes results/btc_15m/*.md and *.csv. Every number in the README comes from here.
+Writes results/btc_15m/*.md and *.csv. Every number in the README comes from here. Every entry
+minute 0 to 14 is evaluated; walk_forward.md (the table the report splices) keeps the minutes in
+walk_forward_by_minute.PUBLISHED_MINUTES, walk_forward_all.md has them all, and
+walk_forward_by_minute.csv / .md put the minute's one-feature rule beside each fitted family.
 
     python -m models.btc_15m.evaluate --start 2025-10 --end 2026-08
 """
@@ -56,6 +59,7 @@ from xgboost import XGBClassifier
 from models.btc_15m.data import load
 from models.btc_15m.features import FLOW_FEATURES, PRICE_FEATURES, WINDOW, Series, dataset
 from models.btc_15m.stats import block_bootstrap_ci, circular_shift_pvalue, day_sign_test, month_block_bootstrap_ci, paired_difference_ci
+from models.btc_15m.walk_forward_by_minute import PUBLISHED_MINUTES, render_walk_forward, write_tables as write_by_minute_tables
 
 warnings.filterwarnings("ignore")
 OUT = Path("results/btc_15m")
@@ -153,7 +157,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--start", default="2025-10")
     ap.add_argument("--end", default="2026-08")
-    ap.add_argument("--minutes", default="0,1,3,5,8")
+    ap.add_argument("--minutes", default=",".join(str(k) for k in range(WINDOW)), help="entry minutes to evaluate; the walk_forward.md the report splices keeps only PUBLISHED_MINUTES of them")
     ap.add_argument("--n-perm", type=int, default=2000, help="draws for the sign-flip and circular-shift tests")
     a = ap.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
@@ -206,11 +210,10 @@ def main():
     pd.DataFrame(monthly).to_csv(OUT / "walk_forward_monthly.csv", index=False)
     C = pd.DataFrame(checks)
     C.to_csv(OUT / "checks.csv", index=False)
-    with open(OUT / "walk_forward.md", "w") as f:
-        f.write(f"Walk-forward results, {a.start} to {a.end}, test months after the first three.\n\n")
-        f.write("| minute | model | n test | accuracy | AUC | log loss |\n|---|---|---|---|---|---|\n")
-        for r in rows:
-            f.write(f"| {r['minute']} | {r['model']} | {r['n_test']:,} | {r['accuracy']*100:.2f}% | {r['auc']:.3f} | {r['log_loss']:.4f} |\n")
+    R = pd.DataFrame(rows)
+    (OUT / "walk_forward.md").write_text(render_walk_forward(R, a.start, a.end, PUBLISHED_MINUTES), encoding="utf-8")     # the table the report splices
+    (OUT / "walk_forward_all.md").write_text(render_walk_forward(R, a.start, a.end), encoding="utf-8")
+    write_by_minute_tables(OUT, a.start, a.end)
     with open(OUT / "checks.md", "w") as f:
         f.write("Accuracy with 95% intervals from resampling whole days and whole months; \"vs baseline\" is accuracy minus the one-feature baseline on the same windows (the previous window's direction at the open, the lead z-score after), with the same two intervals. "
                 f"Day sign test: share of days on which the model beats the baseline, and a one-sided p for the mean daily difference under random sign flips. Circular shift: one-sided p for accuracy above what the labels' own structure gives, rotating the labels within each month. {a.n_perm:,} draws each; a p shown as below a value is at the test's floor. Each p belongs to the model on its row.\n\n")
