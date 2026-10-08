@@ -2015,6 +2015,16 @@ What it does not say:
 - **It does not say whether the predictors and the rule call the same side.** The first table shows equal accuracy at the high thresholds. It does not show how often the two sides coincide on the same windows, and that count is not in the tables.
 - **It covers one grid on one test period.** Six thresholds, eight test months, and a call made at the first crossing; a rule that waits for a second confirming minute was not tried.
 
+**Entries at every minute, frozen 2026-10-08.** This is a record, not a study. A second set of frozen entries now sits beside the two from 2026-10-01. For each entry minute from 0 to 14 it holds two models fitted on 2025-10 to 2026-08, the same months as the first set: xgb-all, with the same features and settings as the minute-3 entry, and the one-bit rule of that minute. The rule is the training up-rate after an up window and after a down window at minute 0, and after that a logistic regression on the lead divided by the volatility expected over the minutes left (the "lead-z" row of the walk-forward). That is 30 entries, in `results/btc_15m/models_minutes/` with their own manifest (model id 8b7ad18f460b).
+
+Why one family. The by-minute table in Main results sets the rule beside every fitted family at every minute, and study 33 above found no cell of its grid ahead of the rule once the comparison was adjusted for the number of cells. A record that freezes every family at every minute would be 75 entries and 75 comparisons; xgb-all is the family the first set already uses at minute 3, so the record is read against one model, and the rule is its baseline at each minute.
+
+The record starts on 2026-10-09, the day after the freeze. No window from before the freeze is scored into it. It is written to `results/btc_15m/predictions_minutes.csv` by the same daily runner as the first log, under its own hash chain, and `python -m models.btc_15m.log --verify` checks both chains.
+
+The primary comparison, fixed now: xgb-all against the one-bit rule at its minute, paired accuracy per minute and pooled over minutes, day-clustered.
+
+The other families stay in the backtest comparison. They may be frozen later as a third version, and their table would carry the caveat that they were chosen after the backtest was seen. The first two entries are untouched: the same two models, the same log, version dbba22d74696.
+
 ## What remains open
 
 - **Whether the forest's increment over the one-bit rule exists is decided by the forward log.** The forward log from October 2026 is the only test of the frozen models that nobody can revise. It answers one narrow question: does the increment, about half a point in the backtest and absent in 2025, show up at all. If it stays absent, the report already says what the project found.
