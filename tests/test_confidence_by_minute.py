@@ -207,3 +207,38 @@ def test_engagement_check_fails_when_the_rule_differs_from_itself_or_the_constan
     bad.loc[bad.predictor == "majority", "called"] = 3
     with pytest.raises(AssertionError):
         C.check_engaged(bad)
+
+
+# ---------------- generated sentences ----------------
+
+def test_minute_runs_names_contiguous_ranges_and_gaps():
+    assert C.minute_runs(range(1, 15)) == "minutes 1 to 14"
+    assert C.minute_runs([0, 3, 4, 5]) == "minutes 0 and 3 to 5"
+    assert C.minute_runs([0, 2, 3, 7]) == "minutes 0, 2 to 3 and 7"
+    assert C.minute_runs([4]) == "minute 4" and C.minute_runs([]) == "no minute"
+
+
+def test_comparison_sentence_reads_hit_rate_and_share_from_the_rows():
+    rows = []
+    for thr in C.CALIBRATION_THRESHOLDS:
+        for k in range(4):
+            # xgb-all: hit below the rule's at minutes 1 to 3 (minute 0 has no rule call); share above the rule's at minutes 0 and 2 to 3
+            rows.append({"minute": k, "threshold": thr, "who": "xgb-all", "n_called": 5, "share": [0.1, 0.2, 0.4, 0.5][k], "hit": 0.7})
+            rows.append({"minute": k, "threshold": thr, "who": "rule", "n_called": 0 if k == 0 else 5, "share": [0.0, 0.3, 0.3, 0.4][k], "hit": np.nan if k == 0 else 0.8})
+    s = C.comparison_sentence(pd.DataFrame(rows), 0.65)
+    assert s == "At 0.65, xgb-all's hit rate is below the rule's at minutes 1 to 3 and its share is above the rule's at minutes 0 and 2 to 3."
+
+
+def test_interval_and_high_threshold_sentences_name_cells_from_the_table():
+    base = {"called": 500, "p_holm": 1.0, "diff": 0.0, "diff_low": -0.01, "diff_high": 0.01}
+    cells = pd.DataFrame([
+        {**base, "predictor": "forest", "threshold": 0.55, "diff": 0.005, "diff_low": 0.001, "diff_high": 0.009, "p_holm": 0.084},
+        {**base, "predictor": "hgb-all", "threshold": 0.60, "diff": -0.004, "diff_low": -0.008, "diff_high": -0.001, "p_holm": 0.5},
+        {**base, "predictor": "xgb-all", "threshold": 0.65, "diff": -0.0003},
+        {**base, "predictor": "forest", "threshold": 0.80, "diff": 0.0002}])
+    s = C.interval_sentence(cells)
+    assert s.startswith("1 cells have an unadjusted interval entirely above zero (forest at 0.55) and 1 have one entirely below zero (hgb-all at 0.60)")
+    assert "0.0840 (above) and 0.5000 (below)" in s
+    assert C.high_threshold_sentence(cells) == "Among the cells at thresholds of 0.65 and above, the largest absolute paired difference is 0.03 points (xgb-all at 0.65)."
+    none = C.interval_sentence(cells.iloc[2:])
+    assert "0 cells have an unadjusted interval entirely above zero (none)" in none and "not applicable (above)" in none

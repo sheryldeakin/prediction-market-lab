@@ -210,6 +210,25 @@ def verdict(r) -> str:
     return "ahead of the rule" if r["diff"] > 0 else "behind the rule"
 
 
+def _names(d: pd.DataFrame) -> str:
+    return "none" if not len(d) else ", ".join(f"{r.predictor} at {r.threshold:.2f}" for r in d.itertuples())
+
+
+def interval_sentence(cells: pd.DataFrame) -> str:
+    """The cells whose unadjusted day-block interval lies entirely above (below) zero, by name, with their Holm p."""
+    up, down = cells[cells.diff_low > 0], cells[cells.diff_high < 0]
+    ps = lambda d: ", ".join(f"{p:.4f}" for p in d.p_holm) or "not applicable"
+    return (f"{len(up)} cells have an unadjusted interval entirely above zero ({_names(up)}) and {len(down)} have one entirely below zero ({_names(down)}); "
+            f"their Holm-adjusted p is {ps(up)} (above) and {ps(down)} (below).")
+
+
+def high_threshold_sentence(cells: pd.DataFrame, floor: float = 0.65) -> str:
+    """The largest absolute paired difference among the cells at thresholds of `floor` and above."""
+    g = cells[(cells.threshold >= floor - TOL) & np.isfinite(cells["diff"])]
+    r = g.loc[g["diff"].abs().idxmax()]
+    return f"Among the cells at thresholds of {floor:.2f} and above, the largest absolute paired difference is {abs(r['diff']) * 100:.2f} points ({r['predictor']} at {r['threshold']:.2f})."
+
+
 def render_cells(cells: pd.DataFrame, info: dict) -> str:
     nd = info["n_draws"]
     intro = (f"Is an early confident call worth more than the window's own move? Out-of-fold probabilities of the walk-forward, {info['first']} to {info['last']}, {info['windows']:,} windows on {info['days']} days, entry minutes 0 to 14. "
@@ -232,6 +251,8 @@ def render_cells(cells: pd.DataFrame, info: dict) -> str:
         lines.append(f"The {word} paired difference among the cells with at least {MIN_CALLS} calls is {_iv(r)} points for {r['predictor']} at {r['threshold']:.2f} ({int(r['called']):,} calls); its Holm-adjusted p is {_holm_p(r, nd).replace('< ', 'below ')}, {under} {LEVEL}.\n")
     sig = cells[(cells.called > 0) & (cells.p_holm < LEVEL)]
     lines.append(f"{len(sig)} of the {len(cells)} cells have a Holm-adjusted p under {LEVEL}: {int((sig['diff'] > 0).sum())} with the predictor ahead of the rule and {int((sig['diff'] < 0).sum())} behind it.\n")
+    lines.append(interval_sentence(cells) + "\n")
+    lines.append(high_threshold_sentence(cells) + "\n")
     own = cells[(cells.predictor == "rule") & (cells.called > 0)]
     lines.append(f"The rule scored against itself differs by exactly zero in all {len(own)} of its cells that make a call, and the constant predictor (majority) makes no call at any threshold; the run stops if either fails.\n")
     few = cells[cells.called < MIN_CALLS]
@@ -258,6 +279,30 @@ def calibration_sentence(cal: pd.DataFrame, minute: int) -> str:
     return f"At minute {minute}: " + "; ".join(bits) + "."
 
 
+def minute_runs(minutes) -> str:
+    """Minutes as 'minutes 1 to 14' when contiguous, 'minutes 0 and 3 to 14' with several runs, 'no minute' when empty."""
+    ms = sorted(int(m) for m in minutes)
+    if not ms:
+        return "no minute"
+    runs, start = [], ms[0]
+    for a, b in zip(ms, ms[1:] + [None]):
+        if b != a + 1:
+            runs.append((start, a))
+            start = b
+    parts = [str(a) if a == b else f"{a} to {b}" for a, b in runs]
+    word = "minute" if len(ms) == 1 else "minutes"
+    return f"{word} " + (parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " and " + parts[-1])
+
+
+def comparison_sentence(cal: pd.DataFrame, thr: float) -> str:
+    """Where xgb-all's hit rate is below the rule's, and where its share is above the rule's, at one threshold."""
+    x = cal[(cal.threshold == thr) & (cal.who == CALIBRATION_MODEL)].set_index("minute")
+    r = cal[(cal.threshold == thr) & (cal.who == "rule")].set_index("minute")
+    hit = [k for k in x.index if x.n_called[k] > 0 and r.n_called[k] > 0 and x.hit[k] < r.hit[k]]
+    share = [k for k in x.index if x.share[k] > r.share[k]]
+    return f"At {thr:.2f}, {CALIBRATION_MODEL}'s hit rate is below the rule's at {minute_runs(hit)} and its share is above the rule's at {minute_runs(share)}."
+
+
 def render_calibration(cal: pd.DataFrame, info: dict) -> str:
     intro = (f"Calibration of the confident calls by entry minute, {info['first']} to {info['last']}, {info['windows']:,} windows. For each minute and threshold: the share of windows whose called-side probability (the larger of p and 1 - p; exactly 0.5 is not a call) is at or above the threshold, "
              f"and the hit rate of those calls against the window's final direction, for {CALIBRATION_MODEL} and for the one-feature rule at that minute (prev-window at minute 0, lead-z after). A dash means no window reached the threshold. Descriptive: no test.")
@@ -271,6 +316,8 @@ def render_calibration(cal: pd.DataFrame, info: dict) -> str:
                 cells += [_pct(r.share, 1), f"{_pct(r.hit, 1)} ({int(r.n_called):,})" if r.n_called else "-"]
         lines.append(f"| {k} | " + " | ".join(cells) + " |")
     lines += ["", calibration_sentence(cal, 2), "", calibration_sentence(cal, 7), ""]
+    for thr in CALIBRATION_THRESHOLDS:
+        lines += [comparison_sentence(cal, thr), ""]
     return "\n".join(lines).rstrip() + "\n"
 
 
