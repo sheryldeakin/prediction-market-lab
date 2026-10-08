@@ -18,7 +18,8 @@ import pandas as pd
 from models.btc_15m import indicators as _indicators
 from models.btc_15m.indicators import INDICATOR_FEATURES, compute as compute_indicators
 
-_INDICATOR_SOURCE = hashlib.sha1(Path(_indicators.__file__).read_bytes()).hexdigest()[:12]
+# line endings are normalised so a checkout that converts them hashes the same file as the committed one
+_INDICATOR_SOURCE = hashlib.sha1(Path(_indicators.__file__).read_bytes().replace(b"\r\n", b"\n")).hexdigest()[:12]
 HISTORY = 1500          # minutes of history a window needs (24h volume baseline + margin)
 WINDOW = 15
 
