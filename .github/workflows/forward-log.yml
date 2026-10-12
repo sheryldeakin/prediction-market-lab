@@ -50,7 +50,7 @@ jobs:
         run: |
           git config user.name "forward-log runner"
           git config user.email "forward-log-runner@users.noreply.github.com"
-          git add results/btc_15m/predictions.csv results/btc_15m/forward_log.png README.md docs/btc_15m.md
+          git add results/btc_15m/predictions.csv results/btc_15m/predictions_minutes.csv results/btc_15m/forward_log.png README.md docs/btc_15m.md
           if git diff --cached --quiet; then
             echo "nothing new"
           else
