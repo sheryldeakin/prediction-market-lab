@@ -161,12 +161,12 @@ Holdout (September 2026): 2026-09-01 to 2026-09-30.
 | 0 | forest | 2,880 | 50.94% |
 | 3 | xgb-all | 2,880 | 66.67% |
 
-Forward log (from October 2026): 2026-10-01 to 2026-10-24.
+Forward log (from October 2026): 2026-10-01 to 2026-10-25.
 
 | minute | model | windows | accuracy |
 |---|---|---|---|
-| 0 | forest | 2,304 | 50.74% |
-| 3 | xgb-all | 2,304 | 65.10% |
+| 0 | forest | 2,400 | 50.79% |
+| 3 | xgb-all | 2,400 | 65.21% |
 
 <!-- forward:end -->
 
